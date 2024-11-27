@@ -1,0 +1,12 @@
+[project]
+name = "repl-nix-sheetsyncweb"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.11"
+dependencies = [
+    "google-api-python-client>=2.154.0",
+    "google-auth-httplib2>=0.2.0",
+    "google-auth-oauthlib>=1.2.1",
+    "python-dotenv>=1.0.1",
+    "streamlit>=1.40.2",
+]
