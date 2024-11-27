@@ -64,7 +64,7 @@ os.environ['GOOGLE_SERVICE_ACCOUNT_JSON'] = load_service_account_json()
 
 # Configure page
 st.set_page_config(
-    page_title="Google Sheets Manager",
+    page_title="Instapp",
     page_icon="📊",
     layout="wide"
 )
@@ -124,8 +124,11 @@ if 'sheets_client' not in st.session_state:
 def main():
     logger.debug("Starting main application")
     
+    # Check for admin access
+    is_admin = "admin" in st.experimental_get_query_params()
+    
     # Always display the title
-    st.title("📊 Google Sheets Manager")
+    st.title("📊 Instapp")
     
     # Always display connection status
     display_connection_status(st.session_state.sheets_client.connection_status)
@@ -281,10 +284,11 @@ def main():
                                         st.write(f"  Missing in rows: {', '.join(map(str, null_rows))}")
                 
                 # Data modification section
-                    st.subheader("📤 Data Upload")
-                    
-                    # CSV upload section
-                    with st.expander("Upload CSV Data"):
+                    if is_admin:
+                        st.subheader("📤 Data Upload")
+                        
+                        # CSV upload section
+                        with st.expander("Upload CSV Data"):
                         st.info("Upload a CSV file to replace the current sheet data")
                         uploaded_file = st.file_uploader("Choose CSV file", type="csv", key='csv_uploader')
                         
