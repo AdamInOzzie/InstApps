@@ -7,9 +7,9 @@ import logging
 import time
 import json
 
-# Configure Streamlit server
-os.environ['STREAMLIT_SERVER_PORT'] = '8501'
-os.environ['STREAMLIT_SERVER_ADDRESS'] = '0.0.0.0'
+# Initialize error handlers for unhandled promises
+st.set_option('client.showErrorDetails', True)
+st.set_option('client.toolbarMode', 'minimal')
 
 # Configure logging
 logging.basicConfig(
@@ -283,67 +283,67 @@ def main():
                                         st.write(f"- {col}: {len(null_rows)} missing values ({percentage:.1f}%)")
                                         st.write(f"  Missing in rows: {', '.join(map(str, null_rows))}")
                 
-                # Data modification section
+                    # Data modification section
                     if is_admin:
                         st.subheader("📤 Data Upload")
                         
                         # CSV upload section
                         with st.expander("Upload CSV Data"):
-                        st.info("Upload a CSV file to replace the current sheet data")
-                        uploaded_file = st.file_uploader("Choose CSV file", type="csv", key='csv_uploader')
-                        
-                        if uploaded_file is not None:
-                            logger.debug(f"Processing uploaded CSV file: {uploaded_file.name}")
+                            st.info("Upload a CSV file to replace the current sheet data")
+                            uploaded_file = st.file_uploader("Choose CSV file", type="csv", key='csv_uploader')
                             
-                            try:
-                                # Read and validate CSV
-                                new_df = pd.read_csv(uploaded_file)
-                                logger.debug(f"Successfully read CSV: {new_df.shape[0]} rows, {new_df.shape[1]} columns")
+                            if uploaded_file is not None:
+                                logger.debug(f"Processing uploaded CSV file: {uploaded_file.name}")
                                 
-                                # Display upload information
-                                st.success("CSV file read successfully!")
-                                col1, col2 = st.columns(2)
-                                with col1:
-                                    st.metric("CSV Rows", new_df.shape[0])
-                                with col2:
-                                    st.metric("CSV Columns", new_df.shape[1])
+                                try:
+                                    # Read and validate CSV
+                                    new_df = pd.read_csv(uploaded_file)
+                                    logger.debug(f"Successfully read CSV: {new_df.shape[0]} rows, {new_df.shape[1]} columns")
+                                    
+                                    # Display upload information
+                                    st.success("CSV file read successfully!")
+                                    col1, col2 = st.columns(2)
+                                    with col1:
+                                        st.metric("CSV Rows", new_df.shape[0])
+                                    with col2:
+                                        st.metric("CSV Columns", new_df.shape[1])
+                                    
+                                    # Preview data
+                                    st.write("Preview of uploaded data:")
+                                    st.dataframe(new_df.head())
+                                    
+                                    # Upload confirmation
+                                    if st.button("📤 Confirm Upload", key='confirm_upload'):
+                                        try:
+                                            with st.spinner("Uploading data to Google Sheets..."):
+                                                logger.debug("Converting DataFrame to values list")
+                                                values = [new_df.columns.tolist()] + new_df.values.tolist()
+                                                
+                                                logger.debug(f"Writing data to sheet: {range_name}")
+                                                if st.session_state.sheets_client.write_to_spreadsheet(
+                                                    selected_sheet['id'],
+                                                    range_name,
+                                                    values
+                                                ):
+                                                    logger.info("Successfully uploaded data to sheet")
+                                                    st.success("✅ Data successfully uploaded!")
+                                                    st.info("Refreshing page to show updated data...")
+                                                    time.sleep(2)  # Give user time to read the message
+                                                    st.rerun()
+                                        except Exception as e:
+                                            logger.error(f"Failed to upload data: {str(e)}")
+                                            st.error("⚠️ Upload failed!")
+                                            st.error(f"Error: {str(e)}")
+                                            st.info("Please check your permissions and try again")
                                 
-                                # Preview data
-                                st.write("Preview of uploaded data:")
-                                st.dataframe(new_df.head())
-                                
-                                # Upload confirmation
-                                if st.button("📤 Confirm Upload", key='confirm_upload'):
-                                    try:
-                                        with st.spinner("Uploading data to Google Sheets..."):
-                                            logger.debug("Converting DataFrame to values list")
-                                            values = [new_df.columns.tolist()] + new_df.values.tolist()
-                                            
-                                            logger.debug(f"Writing data to sheet: {range_name}")
-                                            if st.session_state.sheets_client.write_to_spreadsheet(
-                                                selected_sheet['id'],
-                                                range_name,
-                                                values
-                                            ):
-                                                logger.info("Successfully uploaded data to sheet")
-                                                st.success("✅ Data successfully uploaded!")
-                                                st.info("Refreshing page to show updated data...")
-                                                time.sleep(2)  # Give user time to read the message
-                                                st.rerun()
-                                    except Exception as e:
-                                        logger.error(f"Failed to upload data: {str(e)}")
-                                        st.error("⚠️ Upload failed!")
-                                        st.error(f"Error: {str(e)}")
-                                        st.info("Please check your permissions and try again")
-                            
-                            except pd.errors.EmptyDataError:
-                                logger.warning("Uploaded CSV file is empty")
-                                st.warning("The uploaded CSV file is empty")
-                            except Exception as e:
-                                logger.error(f"Failed to read CSV file: {str(e)}")
-                                st.error("⚠️ Failed to read CSV file")
-                                st.error(f"Error: {str(e)}")
-                                st.info("Please ensure your CSV file is properly formatted")
+                                except pd.errors.EmptyDataError:
+                                    logger.warning("Uploaded CSV file is empty")
+                                    st.warning("The uploaded CSV file is empty")
+                                except Exception as e:
+                                    logger.error(f"Failed to read CSV file: {str(e)}")
+                                    st.error("⚠️ Failed to read CSV file")
+                                    st.error(f"Error: {str(e)}")
+                                    st.info("Please ensure your CSV file is properly formatted")
                 
                 except Exception as e:
                     logger.error(f"Error loading sheet data: {str(e)}")
