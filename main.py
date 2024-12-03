@@ -344,6 +344,79 @@ def main():
                                     st.error("⚠️ Failed to read CSV file")
                                     st.error(f"Error: {str(e)}")
                                     st.info("Please ensure your CSV file is properly formatted")
+                                    
+                
+                # Dynamic form generation from INPUTS sheet
+                if selected_sheet_name == 'INPUTS':
+                    st.subheader("📝 Dynamic Form")
+                    try:
+                        # Read specific cells from INPUTS sheet
+                        inputs_range = "INPUTS!A2:B2"  # Read A2 and B2
+                        cell_data = st.session_state.sheets_client.read_spreadsheet(selected_sheet['id'], inputs_range)
+                        
+                        if not cell_data.empty:
+                            field_name = cell_data.iloc[0, 0]  # A2 value
+                            current_value = cell_data.iloc[0, 1]  # B2 value
+                            
+                            # Create form
+                            with st.form("dynamic_form"):
+                                try:
+                                    # Handle numeric input, including percentage values
+                                    if isinstance(current_value, str) and '%' in current_value:
+                                        numeric_value = float(current_value.strip('%')) / 100
+                                        input_value = st.number_input(
+                                            field_name,
+                                            value=numeric_value,
+                                            format="%.2f",
+                                            step=0.01,
+                                            key="input_value"
+                                        )
+                                        display_value = f"{input_value * 100:.2f}%"
+                                    elif isinstance(current_value, (int, float)) or (
+                                        isinstance(current_value, str) and current_value.replace('.', '').isdigit()
+                                    ):
+                                        numeric_value = float(current_value)
+                                        input_value = st.number_input(
+                                            field_name,
+                                            value=numeric_value,
+                                            key="input_value"
+                                        )
+                                        display_value = str(input_value)
+                                    else:
+                                        input_value = st.text_input(
+                                            field_name,
+                                            value=str(current_value),
+                                            key="input_value"
+                                        )
+                                        display_value = input_value
+                                    
+                                    # Calculate button
+                                    if st.form_submit_button("Calculate"):
+                                        try:
+                                            # Update B3 with the calculated value
+                                            update_range = "INPUTS!B3"
+                                            if st.session_state.sheets_client.write_to_spreadsheet(
+                                                selected_sheet['id'],
+                                                update_range,
+                                                [[display_value]]  # Single cell update
+                                            ):
+                                                st.success("✅ Calculation complete! Updated cell B3")
+                                                logger.info("Successfully updated cell B3")
+                                                st.rerun()
+                                        except Exception as e:
+                                            logger.error(f"Failed to update cell B3: {str(e)}")
+                                            st.error("⚠️ Failed to update calculation")
+                                            st.error(f"Error: {str(e)}")
+                                except ValueError as e:
+                                    logger.error(f"Error converting value for {field_name}: {str(e)}")
+                                    st.error(f"Invalid value for {field_name}")
+                        else:
+                            st.warning("No data found in cells A2 and B2. Please ensure the INPUTS sheet has data in these cells.")
+                            
+                    except Exception as e:
+                        logger.error(f"Error processing INPUTS sheet: {str(e)}")
+                        st.error("⚠️ Failed to process INPUTS sheet")
+                        st.error(f"Error: {str(e)}")
                 
                 except Exception as e:
                     logger.error(f"Error loading sheet data: {str(e)}")

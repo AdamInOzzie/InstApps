@@ -699,6 +699,7 @@ dependencies = [
     { name = "google-api-python-client" },
     { name = "google-auth-httplib2" },
     { name = "google-auth-oauthlib" },
+    { name = "pandas" },
     { name = "python-dotenv" },
     { name = "streamlit" },
 ]
@@ -708,6 +709,7 @@ requires-dist = [
     { name = "google-api-python-client", specifier = ">=2.154.0" },
     { name = "google-auth-httplib2", specifier = ">=0.2.0" },
     { name = "google-auth-oauthlib", specifier = ">=1.2.1" },
+    { name = "pandas", specifier = ">=2.2.3" },
     { name = "python-dotenv", specifier = ">=1.0.1" },
     { name = "streamlit", specifier = ">=1.40.2" },
 ]
