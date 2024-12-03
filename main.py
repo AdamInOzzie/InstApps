@@ -22,42 +22,21 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 
 def load_service_account_json():
-    """Load service account JSON from environment or file."""
+    """Load service account JSON from environment."""
     service_account_json = os.getenv('GOOGLE_SERVICE_ACCOUNT_JSON')
     
-    if service_account_json:
-        try:
-            # Validate JSON from environment variable
-            json.loads(service_account_json)
-            logger.info("Successfully loaded service account JSON from environment variable")
-            return service_account_json
-        except json.JSONDecodeError as e:
-            logger.warning(f"Invalid JSON in environment variable: {str(e)}")
-            logger.info("Falling back to JSON file")
-    else:
-        logger.info("GOOGLE_SERVICE_ACCOUNT_JSON not set, attempting to load from file")
+    if not service_account_json:
+        logger.error("GOOGLE_SERVICE_ACCOUNT_JSON environment variable is not set")
+        raise ValueError("Service account credentials are missing. Please set GOOGLE_SERVICE_ACCOUNT_JSON environment variable.")
     
     try:
-        with open('flash-etching-442206-j6-be4ff873a719.json', 'r') as f:
-            try:
-                # Load and validate JSON from file
-                json_content = f.read()
-                json_obj = json.loads(json_content)
-                
-                # Convert to single-line JSON string
-                formatted_json = json.dumps(json_obj, separators=(',', ':'))
-                logger.info("Successfully loaded and formatted service account JSON from file")
-                return formatted_json
-            except json.JSONDecodeError as e:
-                logger.error(f"JSON parsing error: {str(e)}")
-                logger.error(f"Error at line {e.lineno}, column {e.colno}: {e.msg}")
-                raise ValueError(f"Invalid JSON in service account file: {str(e)}")
-    except FileNotFoundError:
-        logger.error("Service account JSON file not found")
-        raise ValueError("Service account JSON file not found")
-    except Exception as e:
-        logger.error(f"Unexpected error reading service account file: {str(e)}")
-        raise ValueError(f"Error reading service account JSON file: {str(e)}")
+        # Validate JSON from environment variable
+        json.loads(service_account_json)
+        logger.info("Successfully loaded service account JSON from environment")
+        return service_account_json
+    except json.JSONDecodeError as e:
+        logger.error(f"Invalid JSON in environment variable: {str(e)}")
+        raise ValueError("Invalid service account JSON format. Please check your credentials.")
 
 # Set service account JSON in environment
 os.environ['GOOGLE_SERVICE_ACCOUNT_JSON'] = load_service_account_json()

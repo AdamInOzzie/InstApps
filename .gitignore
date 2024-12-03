@@ -39,9 +39,16 @@ ENV/
 
 # Service account
 *.json
+!.streamlit/config.toml
 
 # Logs
 *.log
+*.pyc
+
+# Environment files
+*.env
+.env.*
+!.env.example
 
 # System Files
 .DS_Store
