@@ -25,19 +25,37 @@ load_dotenv()
 
 def load_service_account_json():
     """Load service account JSON from environment."""
-    service_account_json = os.getenv('GOOGLE_SERVICE_ACCOUNT_JSON')
-    
-    if not service_account_json:
-        logger.error("GOOGLE_SERVICE_ACCOUNT_JSON environment variable is not set")
-        raise ValueError("Service account credentials are missing. Please set GOOGLE_SERVICE_ACCOUNT_JSON environment variable.")
-    
     try:
-        json.loads(service_account_json)
-        logger.info("Successfully loaded service account JSON from environment")
-        return service_account_json
-    except json.JSONDecodeError as e:
-        logger.error(f"Invalid JSON in environment variable: {str(e)}")
-        raise ValueError("Invalid service account JSON format. Please check your credentials.")
+        # Read the service account JSON from environment
+        service_account_json = os.getenv('GOOGLE_SERVICE_ACCOUNT_JSON')
+        if not service_account_json:
+            logger.error("GOOGLE_SERVICE_ACCOUNT_JSON environment variable is not set")
+            raise ValueError("Service account credentials are missing. Please set GOOGLE_SERVICE_ACCOUNT_JSON environment variable.")
+        
+        # Load and validate JSON
+        try:
+            # Try to parse it as a JSON string first
+            json_data = json.loads(service_account_json)
+        except json.JSONDecodeError:
+            # If that fails, try to load it as a file path
+            if os.path.exists(service_account_json):
+                with open(service_account_json, 'r') as f:
+                    json_data = json.load(f)
+            else:
+                raise ValueError("Invalid service account JSON format and not a valid file path")
+        
+        # Validate required fields
+        required_fields = ['type', 'project_id', 'private_key_id', 'private_key', 'client_email']
+        missing_fields = [field for field in required_fields if field not in json_data]
+        if missing_fields:
+            raise ValueError(f"Missing required fields in service account JSON: {', '.join(missing_fields)}")
+        
+        logger.info("Successfully loaded and validated service account JSON")
+        return json.dumps(json_data)  # Return formatted JSON string
+        
+    except Exception as e:
+        logger.error(f"Error loading service account JSON: {str(e)}")
+        raise ValueError(f"Failed to load service account credentials: {str(e)}")
 
 # Set service account JSON in environment
 os.environ['GOOGLE_SERVICE_ACCOUNT_JSON'] = load_service_account_json()
