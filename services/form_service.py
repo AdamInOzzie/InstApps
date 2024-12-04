@@ -13,15 +13,26 @@ class FormService:
     def get_input_field_data(self, spreadsheet_id: str) -> Tuple[str, Any]:
         """Get input field data from INPUTS sheet."""
         try:
-            inputs_range = "INPUTS!A2:B2"
+            inputs_range = "INPUTS!A2:B3"  # Extended range to include both rows
             cell_data = self.sheets_client.read_spreadsheet(spreadsheet_id, inputs_range)
             
-            if cell_data.empty:
-                logger.warning("No data found in INPUTS sheet cells A2:B2")
+            if cell_data.empty or len(cell_data.index) < 1:
+                logger.warning("No data found in INPUTS sheet cells A2:B3")
                 return None, None
+            
+            try:
+                field_name = cell_data.iloc[0, 0]  # A2 value
+                current_value = cell_data.iloc[0, 1]  # B2 value
                 
-            field_name = cell_data.iloc[0, 0]  # A2 value
-            current_value = cell_data.iloc[0, 1]  # B2 value
+                if pd.isna(field_name) or pd.isna(current_value):
+                    logger.warning("Empty values found in cells A2 or B2")
+                    return None, None
+                    
+                logger.info(f"Successfully read field_name: {field_name}, current_value: {current_value}")
+                return field_name, current_value
+            except Exception as e:
+                logger.error(f"Error accessing values: {str(e)}")
+                return None, None
             return field_name, current_value
             
         except Exception as e:
