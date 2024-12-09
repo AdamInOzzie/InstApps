@@ -37,15 +37,19 @@ ENV/
 # Environment variables
 .env
 
-# Service account
+# Service account and credentials
 *.json
+*credentials*
+.git-credentials
 !.streamlit/config.toml
 !pyproject.toml
 !package.json
 
-# Logs
+# Logs and cache
 *.log
 *.pyc
+__pycache__/
+.pytest_cache/
 
 # Environment files
 *.env
