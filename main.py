@@ -564,26 +564,11 @@ def main():
                         key='additional_sheet_selector'
                     )
                     
-                    # Add tabs for viewing data and adding new entries (if user has permission)
+                    # Add tabs for viewing data and adding new entries
                     if selected_sheet_name:
-                        # Check if user has append permission for this sheet
-                        has_append_permission = False
-                        if st.session_state.username:  # Only check if user is logged in
-                            has_append_permission = st.session_state.form_builder_service.check_append_permission(
-                                st.session_state.sheets_client,
-                                selected_sheet['id'],
-                                st.session_state.username,
-                                selected_sheet_name
-                            )
+                        tab1, tab2 = st.tabs(["📊 View Data", "📝 New Entry"])
                         
-                        # Create tabs - only show New Entry tab if user has permission
-                        tabs = ["📊 View Data"]
-                        if has_append_permission:
-                            tabs.append("📝 New Entry")
-                        
-                        current_tab = st.tabs(tabs)
-                        
-                        with current_tab[0]:  # View Data tab
+                        with tab1:  # View Data tab
                             df = st.session_state.spreadsheet_service.read_sheet_data(
                                 selected_sheet['id'],
                                 selected_sheet_name
