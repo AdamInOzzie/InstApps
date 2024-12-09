@@ -27,7 +27,7 @@ import logging
 import json
 import random  # Added for jitter calculation
 from utils import GoogleSheetsClient
-from services import SpreadsheetService, FormService, UIService
+from services import SpreadsheetService, FormService, UIService, FormBuilderService
 
 # Configure logging
 logging.basicConfig(
@@ -268,6 +268,7 @@ def main():
             st.session_state.sheets_client = GoogleSheetsClient()
             st.session_state.spreadsheet_service = SpreadsheetService(st.session_state.sheets_client)
             st.session_state.form_service = FormService(st.session_state.sheets_client)
+            st.session_state.form_builder_service = FormBuilderService()
             st.session_state.ui_service = UIService()
             logger.info("Services initialized successfully")
         except Exception as e:
@@ -550,10 +551,9 @@ def main():
                 )
                 UIService.display_sheet_data(outputs_df, sheet_type='outputs')
             
-            # Show data checkbox and sheet selector for additional sheets
-            show_data = st.checkbox("Show data", value=False, key='show_data_checkbox')
-            if show_data:
-                # Filter out special sheets if they exist
+            # Show data and form options for additional sheets
+            show_options = st.checkbox("Show additional options", value=False, key='show_options_checkbox')
+            if show_options:
                 # Filter out special sheets and ensure USERS is always hidden
                 available_sheets = [s for s in sheet_names if s not in ['INPUTS', 'OUTPUTS', 'USERS']]
                 
@@ -564,7 +564,67 @@ def main():
                         key='additional_sheet_selector'
                     )
                     
+                    # Add tabs for viewing data and adding new entries (if user has permission)
                     if selected_sheet_name:
+                        # Check if user has append permission for this sheet
+                        has_append_permission = False
+                        if st.session_state.username:  # Only check if user is logged in
+                            has_append_permission = st.session_state.form_builder_service.check_append_permission(
+                                st.session_state.sheets_client,
+                                selected_sheet['id'],
+                                st.session_state.username,
+                                selected_sheet_name
+                            )
+                        
+                        # Create tabs - only show New Entry tab if user has permission
+                        tabs = ["📊 View Data"]
+                        if has_append_permission:
+                            tabs.append("📝 New Entry")
+                        
+                        current_tab = st.tabs(tabs)
+                        
+                        with current_tab[0]:  # View Data tab
+                            df = st.session_state.spreadsheet_service.read_sheet_data(
+                                selected_sheet['id'],
+                                selected_sheet_name
+                            )
+                            UIService.display_sheet_data(df, sheet_type='general')
+                            if is_admin:
+                                UIService.display_data_quality_report(df)
+                            
+                        if has_append_permission and len(current_tab) > 1:
+                            with current_tab[1]:  # New Entry tab
+                                # Get sheet data for form generation
+                                sheet_df = st.session_state.spreadsheet_service.read_sheet_data(
+                                    selected_sheet['id'],
+                                    selected_sheet_name
+                                )
+                                
+                                # Generate form fields excluding formula fields
+                                form_fields = st.session_state.form_builder_service.get_form_fields(sheet_df)
+                                
+                                # Render the form
+                                form_data = st.session_state.form_builder_service.render_form(form_fields)
+                                
+                                # Add submit button
+                                if st.button("Submit", key=f"submit_{selected_sheet_name}"):
+                                    try:
+                                        success = st.session_state.form_builder_service.append_form_data(
+                                            selected_sheet['id'],
+                                            selected_sheet_name,
+                                            form_data,
+                                            st.session_state.sheets_client
+                                        )
+                                        if success:
+                                            st.success("✅ Data successfully added!")
+                                            st.rerun()  # Refresh to show updated data
+                                        else:
+                                            st.error("Failed to add data. Please try again.")
+                                    except Exception as e:
+                                        logger.error(f"Error submitting form: {str(e)}")
+                                        st.error(f"Error: {str(e)}")
+                        elif not has_append_permission:
+                            st.info("ℹ️ You don't have permission to add new entries to this sheet.")
                         df = st.session_state.spreadsheet_service.read_sheet_data(
                             selected_sheet['id'],
                             selected_sheet_name
