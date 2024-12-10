@@ -13,7 +13,13 @@ class FormBuilderService:
         if pd.isna(value):
             return False
         str_value = str(value).strip()
-        return str_value.startswith('=') and any(op in str_value for op in ['+', '-', '*', '/', '(', ')', 'SUM', 'AVERAGE', 'COUNT'])
+        # Check for more Excel/Google Sheets formula patterns
+        return (str_value.startswith('=') and 
+                any(op in str_value.upper() for op in [
+                    '+', '-', '*', '/', '(', ')', 
+                    'SUM', 'AVERAGE', 'COUNT', 'IF', 
+                    'VLOOKUP', 'INDEX', 'MATCH', 'CONCATENATE'
+                ]))
 
     @staticmethod
     def get_field_type(value: Any) -> str:
@@ -36,13 +42,13 @@ class FormBuilderService:
             return 'text'
 
     def get_form_fields(self, sheet_data: pd.DataFrame) -> List[Dict[str, Any]]:
-        """Extract form fields from sheet headers (Row A).
+        """Extract form fields from sheet headers and check row 2 for formulas.
         
         Args:
             sheet_data: DataFrame containing the sheet data
             
         Returns:
-            List of form field definitions based on header row
+            List of form field definitions with formula detection
         """
         try:
             # Add debug logging
@@ -79,21 +85,27 @@ class FormBuilderService:
                     field_info = {
                         'name': col,
                         'type': 'text',
-                        'required': True
+                        'required': True,
+                        'is_formula': False,
+                        'formula_value': None
                     }
                     
-                    # Try to determine field type from data if available
+                    # Check row 2 for formulas if available
+                    if len(sheet_data) > 1:  # Make sure we have at least 2 rows
+                        row2_value = sheet_data.iloc[1][col] if len(sheet_data) > 1 else None
+                        if row2_value is not None and isinstance(row2_value, str) and self.is_formula(row2_value):
+                            logger.info(f"Found formula in column {col}: {row2_value}")
+                            field_info['is_formula'] = True
+                            field_info['formula_value'] = row2_value
+                            field_info['type'] = 'formula_display'
+                            continue
+                    
+                    # For non-formula fields, determine type from data
                     if len(sheet_data) > 0:
                         sample_values = sheet_data[col].dropna()
                         if not sample_values.empty:
                             sample_value = sample_values.iloc[0]
                             logger.debug(f"Sample value for {col}: {sample_value}")
-                            
-                            # Skip formula fields
-                            if isinstance(sample_value, str) and self.is_formula(sample_value):
-                                logger.info(f"Skipping formula field: {col}")
-                                continue
-                                
                             field_info['type'] = self.get_field_type(sample_value)
                     
                     # Add numeric constraints if we have sample data
@@ -121,11 +133,15 @@ class FormBuilderService:
             return []
 
     def render_form(self, fields: List[Dict[str, Any]], sheet_name: str = "") -> Dict[str, Any]:
-        """Render a dynamic form based on field definitions."""
+        """Render a dynamic form based on field definitions, handling formula fields differently."""
         form_data = {}
         
         if not fields:  # Don't show anything if no fields are provided
             return form_data
+            
+        # Track which fields are formulas for later use
+        if 'formula_fields' not in st.session_state:
+            st.session_state.formula_fields = {}
             
         st.markdown(f"""
             <div style="
@@ -175,7 +191,18 @@ class FormBuilderService:
                     )
                     form_data[field_name] = f"${value:.2f}"
                 else:
-                    form_data[field_name] = st.text_input(field_name, value="")
+                    if field.get('type') == 'formula_display':
+                        # Display formula fields as read-only
+                        st.text_input(
+                            f"{field_name} (Formula)",
+                            value=field.get('formula_value', ''),
+                            disabled=True
+                        )
+                        # Store formula information for later
+                        st.session_state.formula_fields[field_name] = field.get('formula_value')
+                        # Don't add to form_data as we don't want to update formula fields
+                    else:
+                        form_data[field_name] = st.text_input(field_name, value="")
                     
             except Exception as e:
                 logger.error(f"Error rendering field {field_name}: {str(e)}")
@@ -184,20 +211,36 @@ class FormBuilderService:
         return form_data
 
     def append_form_data(self, spreadsheet_id: str, sheet_name: str, form_data: Dict[str, Any], sheets_client) -> bool:
-        """Append form data as a new row in the sheet."""
+        """Append form data as a new row in the sheet, copying the last row for formula fields."""
         try:
             range_name = f"{sheet_name}!A1:Z1000"
             df = sheets_client.read_spreadsheet(spreadsheet_id, range_name)
-            next_row = len(df) + 2
             
-            headers = list(form_data.keys())
-            values = [[form_data[header] for header in headers]]
+            if df.empty:
+                logger.error("Sheet is empty")
+                return False
+                
+            next_row = len(df) + 2
+            last_data_row = df.iloc[-1].to_dict()  # Get the last row with data
+            
+            # Create new row by copying the last row
+            new_row = []
+            for col in df.columns:
+                if col in st.session_state.get('formula_fields', {}):
+                    # For formula fields, copy from last row
+                    new_row.append(last_data_row[col])
+                elif col in form_data:
+                    # For non-formula fields, use form input
+                    new_row.append(form_data[col])
+                else:
+                    # For any other fields, copy from last row
+                    new_row.append(last_data_row[col])
             
             append_range = f"{sheet_name}!A{next_row}"
             success = sheets_client.write_to_spreadsheet(
                 spreadsheet_id,
                 append_range,
-                values
+                [new_row]  # Wrap in list as write_to_spreadsheet expects list of rows
             )
             
             if success:
