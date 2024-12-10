@@ -230,33 +230,60 @@ class FormBuilderService:
     def append_form_data(self, spreadsheet_id: str, sheet_name: str, form_data: Dict[str, Any], sheets_client) -> bool:
         """Append form data as a new row in the sheet, copying row 2 as template."""
         try:
-            # Step 1: Read the current sheet data
-            range_name = f"{sheet_name}!A1:Z1000"
-            df = sheets_client.read_spreadsheet(spreadsheet_id, range_name)
+            # Step 1: Get template row (row 2) directly
+            template_range = f"{sheet_name}!A2:Z2"
+            result = sheets_client.sheets_service.spreadsheets().values().get(
+                spreadsheetId=spreadsheet_id,
+                range=template_range,
+                valueRenderOption='FORMULA'
+            ).execute()
             
-            if len(df) < 2:
-                logger.error("Sheet needs at least 2 rows (header + template)")
+            if not result or 'values' not in result:
+                logger.error("Could not fetch template row")
                 return False
+                
+            template_row = result['values'][0]
             
-            # Step 2: Get template row (row 2) and prepare new row
-            template_row = df.iloc[1].tolist()  # Get row 2 as list
-            next_row = len(df) + 2  # Calculate next row number
+            # Step 2: Get the last row number
+            metadata_range = f"{sheet_name}!A:A"
+            result = sheets_client.sheets_service.spreadsheets().values().get(
+                spreadsheetId=spreadsheet_id,
+                range=metadata_range
+            ).execute()
+            next_row = len(result.get('values', [])) + 1
             
-            # Step 3: Create new row data
-            new_row = template_row.copy()  # Start with template row
+            # Step 3: Get header row to map columns
+            header_range = f"{sheet_name}!A1:Z1"
+            header_result = sheets_client.sheets_service.spreadsheets().values().get(
+                spreadsheetId=spreadsheet_id,
+                range=header_range
+            ).execute()
             
-            # Step 4: Update only the non-formula fields from form data
-            for idx, col in enumerate(df.columns):
-                if col in form_data:
-                    new_row[idx] = form_data[col]
+            if not header_result or 'values' not in header_result:
+                logger.error("Could not fetch header row")
+                return False
+                
+            headers = header_result['values'][0]
             
-            # Step 5: Write the new row
+            # Step 4: Create new row by copying template
+            new_row = template_row.copy()
+            
+            # Step 5: Update form fields
+            for i, header in enumerate(headers):
+                if header in form_data and i < len(new_row):
+                    new_row[i] = form_data[header]
+            
+            # Step 6: Write the new row
             append_range = f"{sheet_name}!A{next_row}"
-            return sheets_client.write_to_spreadsheet(
-                spreadsheet_id,
-                append_range,
-                [new_row]
-            )
+            result = sheets_client.sheets_service.spreadsheets().values().update(
+                spreadsheetId=spreadsheet_id,
+                range=append_range,
+                valueInputOption='USER_ENTERED',
+                body={'values': [new_row]}
+            ).execute()
+            
+            logger.info(f"Successfully appended row: {result}")
+            return True
             
         except Exception as e:
             logger.error(f"Error in append_form_data: {str(e)}")
