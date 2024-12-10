@@ -126,40 +126,62 @@ class UIService:
             # Render the form with sheet name
             form_data = form_builder_service.render_form(form_fields, sheet_name)
             
-            # Add submit button
+            # Add submit button with loading state
             if st.button("Submit Entry", type="primary"):
-                try:
-                    logger.info("="*50)
-                    logger.info("FORM SUBMISSION START")
-                    logger.info("="*50)
-                    logger.info(f"Sheet Name: {sheet_name}")
-                    logger.info(f"Form Data: {form_data}")
-                    
-                    if not form_data:
-                        logger.error("Form data is empty")
-                        st.error("No data to submit")
-                        return None
+                with st.spinner("Submitting entry..."):
+                    try:
+                        logger.info("="*50)
+                        logger.info("FORM SUBMISSION START")
+                        logger.info("="*50)
+                        logger.info(f"Sheet Name: {sheet_name}")
+                        logger.info(f"Form Data: {form_data}")
                         
-                    if not all(key in form_data for key in ['Name', 'Date']):
-                        logger.error(f"Missing required fields. Found fields: {list(form_data.keys())}")
-                        st.error("Please fill in all required fields")
-                        return None
-                    
-                    success = form_builder_service.append_form_data(
-                        spreadsheet_id,
-                        sheet_name,
-                        form_data,
-                        sheets_client
-                    )
-                    
-                    if success:
-                        logger.info("Form submission successful")
-                        st.success("✅ Entry added successfully!")
-                        return form_data
-                    else:
-                        logger.error("Form submission failed")
-                        st.error("Failed to add entry - Please check the data and try again")
-                        return None
+                        if not form_data:
+                            logger.error("Form data is empty")
+                            st.error("No data to submit")
+                            return None
+                            
+                        if not all(key in form_data for key in ['Name', 'Date']):
+                            logger.error(f"Missing required fields. Found fields: {list(form_data.keys())}")
+                            st.error("Please fill in all required fields")
+                            return None
+                        
+                        # Add timeout handling for API call
+                        import threading
+                        import queue
+
+                        def api_call():
+                            try:
+                                return form_builder_service.append_form_data(
+                                    spreadsheet_id,
+                                    sheet_name,
+                                    form_data,
+                                    sheets_client
+                                )
+                            except Exception as e:
+                                logger.error(f"API call error: {str(e)}")
+                                return None
+
+                        result_queue = queue.Queue()
+                        api_thread = threading.Thread(target=lambda: result_queue.put(api_call()))
+                        api_thread.start()
+                        api_thread.join(timeout=10)  # 10 second timeout
+                        
+                        if api_thread.is_alive():
+                            logger.error("API call timed out after 10 seconds")
+                            st.error("Request timed out - Please try again")
+                            return None
+                            
+                        success = result_queue.get()
+                        
+                        if success:
+                            logger.info("Form submission successful")
+                            st.success("✅ Entry added successfully!")
+                            return form_data
+                        else:
+                            logger.error("Form submission failed")
+                            st.error("Failed to add entry - Please check the data and try again")
+                            return None
                         
                 except Exception as e:
                     logger.error("="*50)
