@@ -157,6 +157,36 @@ class UIService:
             return None
 
     @staticmethod
+    def display_copy_test_button(spreadsheet_id: str, copy_service) -> None:
+        """Display test button for copy functionality."""
+        st.markdown("""
+            <div style="
+                background-color: #f0f8ff;
+                padding: 0.5rem 0.8rem;
+                border-radius: 8px;
+                border-left: 5px solid #1E88E5;
+                margin-bottom: 0.6rem;
+            ">
+                <h3 style="margin: 0; color: #1E88E5; font-size: 1rem;">🔄 Test Copy Function</h3>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        if st.button("TESTCopy", type="primary"):
+            try:
+                success = copy_service.copy_entry(
+                    spreadsheet_id=spreadsheet_id,
+                    sheet_name="Volunteers",
+                    source_range="A2:D2",
+                    target_row=6
+                )
+                if success:
+                    st.success("✅ Copy operation successful!")
+                else:
+                    st.error("Copy operation failed")
+            except Exception as e:
+                st.error(f"Error during copy: {str(e)}")
+
+    @staticmethod
     def display_sheet_data(df: pd.DataFrame, sheet_type: str = 'general'):
         """Display sheet data in appropriate format based on sheet type."""
         from services.table_service import TableService
