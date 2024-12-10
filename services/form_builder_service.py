@@ -13,13 +13,31 @@ class FormBuilderService:
         if pd.isna(value):
             return False
         str_value = str(value).strip()
-        # Check for more Excel/Google Sheets formula patterns
-        return (str_value.startswith('=') and 
-                any(op in str_value.upper() for op in [
-                    '+', '-', '*', '/', '(', ')', 
-                    'SUM', 'AVERAGE', 'COUNT', 'IF', 
-                    'VLOOKUP', 'INDEX', 'MATCH', 'CONCATENATE'
-                ]))
+        
+        # Log the value being checked
+        logger.debug(f"Checking if value is formula: {str_value}")
+        
+        # First check if it starts with =
+        if not str_value.startswith('='):
+            return False
+            
+        # Check for any formula patterns
+        formula_patterns = [
+            # Basic operators
+            '+', '-', '*', '/', '(', ')',
+            # Common functions
+            'SUM', 'AVERAGE', 'COUNT', 'IF', 'AND', 'OR',
+            # Lookup functions
+            'VLOOKUP', 'INDEX', 'MATCH',
+            # Text functions
+            'CONCATENATE', 'LEFT', 'RIGHT', 'MID',
+            # Date functions
+            'DATE', 'TODAY', 'NOW', 'EOMONTH', 'WEEKDAY'
+        ]
+        
+        is_formula = any(op in str_value.upper() for op in formula_patterns)
+        logger.debug(f"Formula detection result for {str_value}: {is_formula}")
+        return is_formula
 
     @staticmethod
     def get_field_type(value: Any) -> str:
@@ -93,12 +111,21 @@ class FormBuilderService:
                     # Check row 2 for formulas if available
                     if len(sheet_data) > 1:  # Make sure we have at least 2 rows
                         row2_value = sheet_data.iloc[1][col] if len(sheet_data) > 1 else None
-                        if row2_value is not None and isinstance(row2_value, str) and self.is_formula(row2_value):
-                            logger.info(f"Found formula in column {col}: {row2_value}")
-                            field_info['is_formula'] = True
-                            field_info['formula_value'] = row2_value
-                            field_info['type'] = 'formula_display'
-                            continue
+                        logger.info(f"Checking row 2 value for column {col}: {row2_value}")
+                        
+                        # Convert to string for formula checking
+                        if row2_value is not None:
+                            str_value = str(row2_value)
+                            is_formula = self.is_formula(str_value)
+                            logger.info(f"Column {col} formula check result: {is_formula}")
+                            
+                            if is_formula:
+                                logger.info(f"Found formula in column {col}: {str_value}")
+                                field_info['is_formula'] = True
+                                field_info['formula_value'] = str_value
+                                field_info['type'] = 'formula_display'
+                                form_fields.append(field_info)
+                                continue
                     
                     # For non-formula fields, determine type from data
                     if len(sheet_data) > 0:
