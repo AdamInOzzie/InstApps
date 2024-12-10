@@ -120,11 +120,14 @@ class FormBuilderService:
             logger.error(f"Error generating form fields: {str(e)}")
             return []
 
-    def render_form(self, fields: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def render_form(self, fields: List[Dict[str, Any]], sheet_name: str = "") -> Dict[str, Any]:
         """Render a dynamic form based on field definitions."""
         form_data = {}
         
-        st.markdown("""
+        if not fields:  # Don't show anything if no fields are provided
+            return form_data
+            
+        st.markdown(f"""
             <div style="
                 background-color: #f0f8ff;
                 padding: 0.5rem 0.8rem;
@@ -132,7 +135,7 @@ class FormBuilderService:
                 border-left: 5px solid #1E88E5;
                 margin-bottom: 0.6rem;
             ">
-                <h3 style="margin: 0; color: #1E88E5; font-size: 1rem;">📝 New Entry Form</h3>
+                <h3 style="margin: 0; color: #1E88E5; font-size: 1rem;">📝 New Entry for {sheet_name}</h3>
             </div>
         """, unsafe_allow_html=True)
         

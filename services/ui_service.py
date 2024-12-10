@@ -2,22 +2,14 @@
 import logging
 import streamlit as st
 import pandas as pd
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 logger = logging.getLogger(__name__)
 
 class UIService:
     @staticmethod
     def format_output_value(value_str: str, field_name: str) -> str:
-        """Format output values while preserving original formatting.
-        
-        Args:
-            value_str: The original string value from the sheet
-            field_name: The name of the field
-            
-        Returns:
-            The formatted string value, preserving original formatting
-        """
+        """Format output values while preserving original formatting."""
         try:
             # Remove any commas from the original string
             original_value = str(value_str).strip()
@@ -28,32 +20,29 @@ class UIService:
                 
             # Check if it's a currency value (should have $ prefix)
             if "Portfolio" in field_name:
-                # Add $ prefix if missing
                 clean_value = original_value.replace('$', '').replace(',', '')
                 try:
                     float_value = float(clean_value)
-                    return f"${float_value:,.0f}"  # Preserve commas in large numbers
+                    return f"${float_value:,.0f}"
                 except ValueError:
                     return original_value
                     
             # Check if it's a percentage/allocation value
             if "Allocation" in field_name or "Rate" in field_name:
                 try:
-                    # Convert decimal to percentage if needed
                     clean_value = original_value.replace('%', '').replace('$', '').replace(',', '').strip()
                     float_value = float(clean_value)
                     if float_value <= 1:  # Decimal format (e.g., 0.59)
                         float_value *= 100
-                    return f"{float_value:.0f}%"  # Format with no decimal places
+                    return f"{float_value:.0f}%"
                 except ValueError:
                     return original_value
                     
-            # For all other values, return as is
             return original_value
             
         except Exception as e:
             logger.error(f"Error formatting output value: {str(e)}")
-            return value_str  # Return original value if any error occurs
+            return value_str
 
     @staticmethod
     def display_admin_sidebar(status: Dict[str, Any]):
@@ -61,7 +50,6 @@ class UIService:
         with st.sidebar:
             st.subheader("Admin Dashboard")
             
-            # System Status Section
             st.markdown("### System Status")
             
             st.markdown("**API Connection**")
@@ -108,18 +96,8 @@ class UIService:
                         st.write(f"  Missing in rows: {', '.join(map(str, null_rows))}")
 
     @staticmethod
-    def handle_append_entry(spreadsheet_id: str, sheet_name: str, sheets_client, form_builder_service) -> dict:
-        """Handle the dynamic form generation and submission for appending entries.
-        
-        Args:
-            spreadsheet_id: The ID of the spreadsheet
-            sheet_name: The name of the sheet to append to
-            sheets_client: The GoogleSheetsClient instance
-            form_builder_service: The FormBuilderService instance
-            
-        Returns:
-            dict: The form data if submitted, None otherwise
-        """
+    def handle_append_entry(spreadsheet_id: str, sheet_name: str, sheets_client, form_builder_service) -> Optional[Dict[str, Any]]:
+        """Handle the dynamic form generation and submission for appending entries."""
         try:
             # Read the sheet data to get structure
             range_name = f"{sheet_name}!A1:Z1000"
@@ -142,11 +120,9 @@ class UIService:
                 return None
             
             logger.info(f"Generated {len(form_fields)} form fields")
-            for field in form_fields:
-                logger.debug(f"Field: {field['name']}, Type: {field['type']}")
-                
-            # Render the form
-            form_data = form_builder_service.render_form(form_fields)
+            
+            # Render the form with sheet name
+            form_data = form_builder_service.render_form(form_fields, sheet_name)
             
             # Add submit button
             if st.button("Submit Entry", type="primary"):
