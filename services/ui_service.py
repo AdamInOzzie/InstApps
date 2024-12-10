@@ -159,32 +159,45 @@ class UIService:
     @staticmethod
     def display_copy_test_button(spreadsheet_id: str, copy_service) -> None:
         """Display test button for copy functionality."""
-        st.markdown("""
-            <div style="
-                background-color: #f0f8ff;
-                padding: 0.5rem 0.8rem;
-                border-radius: 8px;
-                border-left: 5px solid #1E88E5;
-                margin-bottom: 0.6rem;
-            ">
-                <h3 style="margin: 0; color: #1E88E5; font-size: 1rem;">🔄 Test Copy Function</h3>
-            </div>
-        """, unsafe_allow_html=True)
-        
-        if st.button("TESTCopy", type="primary"):
-            try:
-                success = copy_service.copy_entry(
-                    spreadsheet_id=spreadsheet_id,
-                    sheet_name="Volunteers",
-                    source_range="A2:D2",
-                    target_row=6
-                )
-                if success:
-                    st.success("✅ Copy operation successful!")
-                else:
-                    st.error("Copy operation failed")
-            except Exception as e:
-                st.error(f"Error during copy: {str(e)}")
+        try:
+            logger.info("Rendering TESTCopy button section")
+            st.markdown("""
+                <div style="
+                    background-color: #f0f8ff;
+                    padding: 0.5rem 0.8rem;
+                    border-radius: 8px;
+                    border-left: 5px solid #1E88E5;
+                    margin-bottom: 0.6rem;
+                ">
+                    <h3 style="margin: 0; color: #1E88E5; font-size: 1rem;">🔄 Test Copy Function</h3>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            # Add some visual separation
+            st.markdown("---")
+            
+            if st.button("TESTCopy", type="primary", key="test_copy_button"):
+                try:
+                    logger.info("TESTCopy button clicked - attempting copy operation")
+                    success = copy_service.copy_entry(
+                        spreadsheet_id=spreadsheet_id,
+                        sheet_name="Volunteers",
+                        source_range="A2:D2",
+                        target_row=6
+                    )
+                    if success:
+                        st.success("✅ Copy operation successful!")
+                        logger.info("Copy operation completed successfully")
+                    else:
+                        st.error("Copy operation failed")
+                        logger.error("Copy operation failed without exception")
+                except Exception as e:
+                    error_msg = f"Error during copy: {str(e)}"
+                    logger.error(error_msg)
+                    st.error(error_msg)
+        except Exception as e:
+            logger.error(f"Error displaying copy test button: {str(e)}")
+            st.error("Failed to display copy test button")
 
     @staticmethod
     def display_sheet_data(df: pd.DataFrame, sheet_type: str = 'general'):

@@ -566,21 +566,29 @@ def main():
                     logger.error(f"Error processing INPUTS sheet: {str(e)}")
                     st.error(f"⚠️ Failed to process INPUTS sheet: {str(e)}")
                 
-                # Display OUTPUTS data if it exists
+                # Log available sheets for debugging
+            logger.info(f"Available sheets: {sheet_names}")
+            
+            # Check for special sheets
+            has_volunteers = 'Volunteers' in sheet_names
+            logger.info(f"Has Volunteers sheet: {has_volunteers}")
+            
+            # Display OUTPUTS data if it exists
             if has_outputs:
+                logger.info("Displaying OUTPUTS sheet data")
                 outputs_df = st.session_state.spreadsheet_service.read_sheet_data(
                     selected_sheet['id'],
                     'OUTPUTS'
                 )
                 UIService.display_sheet_data(outputs_df, sheet_type='outputs')
-                
-                # Add TESTCopy button after outputs display only if Volunteers sheet exists
-                has_volunteers = 'Volunteers' in sheet_names
-                if has_volunteers:
-                    UIService.display_copy_test_button(selected_sheet['id'], st.session_state.copy_service)
-                    logger.info("TESTCopy button displayed - Volunteers sheet found")
-                else:
-                    logger.info("TESTCopy button not displayed - Volunteers sheet not found")
+            
+            # Add TESTCopy button if Volunteers sheet exists (regardless of OUTPUTS)
+            if has_volunteers:
+                logger.info("Attempting to display TESTCopy button")
+                UIService.display_copy_test_button(selected_sheet['id'], st.session_state.copy_service)
+                logger.info("TESTCopy button display completed")
+            else:
+                logger.info("Skipping TESTCopy button - Volunteers sheet not found")
             
             # Check for USERS sheet and get allowed sheets for the current user
             has_users_sheet = 'USERS' in sheet_names
