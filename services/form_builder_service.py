@@ -225,7 +225,7 @@ class FormBuilderService:
         return form_data
 
     def append_form_data(self, spreadsheet_id: str, sheet_name: str, form_data: Dict[str, Any], sheets_client) -> bool:
-        """Append form data as a new row in the sheet, preserving formulas from row 2."""
+        """Append form data as a new row in the sheet, first copying row 2 template and then updating with form data."""
         try:
             range_name = f"{sheet_name}!A1:Z1000"
             df = sheets_client.read_spreadsheet(spreadsheet_id, range_name)
@@ -234,35 +234,41 @@ class FormBuilderService:
                 logger.error("Sheet is empty or doesn't have a template row")
                 return False
                 
-            # Get the second row (index 1) as our template
-            template_row = df.iloc[1].to_dict()
-            logger.info(f"Using template row: {template_row}")
-            
-            # Get form fields and formula fields
-            form_fields, formula_fields = self.get_form_fields(df)
-            logger.info(f"Formula fields found: {formula_fields}")
-            
             next_row = len(df) + 2
+            logger.info(f"Next available row: {next_row}")
             
-            # Create new row by combining form data and formulas
-            new_row = []
+            # First, copy row 2 to the next available row
+            from services import CopyService
+            copy_service = CopyService(sheets_client)
+            copy_success = copy_service.copy_entry(
+                spreadsheet_id=spreadsheet_id,
+                sheet_name=sheet_name,
+                source_range="A2:Z2",  # Copy all columns from row 2
+                target_row=next_row
+            )
+            
+            if not copy_success:
+                logger.error("Failed to copy template row")
+                return False
+                
+            logger.info("Successfully copied template row")
+            
+            # Now update only the form fields in the copied row
+            update_row = []
             for col in df.columns:
-                if col in formula_fields:
-                    # For formula fields, use the formula from row 2
-                    new_row.append(formula_fields[col])
-                elif col in form_data:
+                if col in form_data:
                     # For form fields, use the submitted data
-                    new_row.append(form_data[col])
+                    update_row.append(form_data[col])
                 else:
-                    # For any other fields, copy from template row
-                    new_row.append(template_row[col])
+                    # For non-form fields (including formulas), leave as is
+                    update_row.append(None)
             
-            logger.info(f"New row data: {new_row}")
+            logger.info(f"Updating form fields in row {next_row}")
             append_range = f"{sheet_name}!A{next_row}"
             success = sheets_client.write_to_spreadsheet(
                 spreadsheet_id,
                 append_range,
-                [new_row]  # Wrap in list as write_to_spreadsheet expects list of rows
+                [update_row]  # Wrap in list as write_to_spreadsheet expects list of rows
             )
             
             if success:
