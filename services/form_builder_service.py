@@ -246,16 +246,16 @@ class FormBuilderService:
             success = copy_service.copy_entry(
                 spreadsheet_id=spreadsheet_id,
                 sheet_name=sheet_name,
-                source_range="A2:Z2",  # Copy all columns from row 2
-                target_row=next_row
+                source_range="A2:D2",  # Use exact same range as working copy function
+                target_row=int(next_row)  # Ensure target_row is int
             )
             
-            if success:
-                logger.info(f"Successfully copied template to row {next_row}")
-                return True
-            else:
-                logger.error(f"Failed to copy template to row {next_row}")
+            if not success:
+                logger.error("Failed to copy template row")
                 return False
+                
+            logger.info("Successfully copied template row")
+            return True
                 
         except Exception as e:
             logger.error(f"Error in append_form_data: {str(e)}")
