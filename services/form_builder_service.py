@@ -125,12 +125,8 @@ class FormBuilderService:
                             logger.info(f"Column {col} formula check result: {is_formula}")
                             
                             if is_formula:
-                                logger.info(f"Found formula in column {col}: {str_value}")
-                                field_info['is_formula'] = True
-                                field_info['formula_value'] = str_value
-                                field_info['type'] = 'formula_display'
-                                form_fields.append(field_info)
-                                continue  # Skip the rest of processing for this field
+                                logger.info(f"Skipping formula field {col}: {str_value}")
+                                continue  # Skip adding this field entirely since it's a formula
                     
                     # For non-formula fields, determine type from data
                     if len(sheet_data) > 0:
@@ -223,18 +219,7 @@ class FormBuilderService:
                     )
                     form_data[field_name] = f"${value:.2f}"
                 else:
-                    if field.get('type') == 'formula_display':
-                        # Display formula fields as read-only
-                        st.text_input(
-                            f"{field_name} (Formula)",
-                            value=field.get('formula_value', ''),
-                            disabled=True
-                        )
-                        # Store formula information for later
-                        st.session_state.formula_fields[field_name] = field.get('formula_value')
-                        # Don't add to form_data as we don't want to update formula fields
-                    else:
-                        form_data[field_name] = st.text_input(field_name, value="")
+                    form_data[field_name] = st.text_input(field_name, value="")
                     
             except Exception as e:
                 logger.error(f"Error rendering field {field_name}: {str(e)}")
