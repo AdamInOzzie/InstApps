@@ -108,6 +108,61 @@ class UIService:
                         st.write(f"  Missing in rows: {', '.join(map(str, null_rows))}")
 
     @staticmethod
+    def handle_append_entry(spreadsheet_id: str, sheet_name: str, sheets_client, form_builder_service) -> dict:
+        """Handle the dynamic form generation and submission for appending entries.
+        
+        Args:
+            spreadsheet_id: The ID of the spreadsheet
+            sheet_name: The name of the sheet to append to
+            sheets_client: The GoogleSheetsClient instance
+            form_builder_service: The FormBuilderService instance
+            
+        Returns:
+            dict: The form data if submitted, None otherwise
+        """
+        try:
+            # Read the sheet data to get structure
+            df = sheets_client.read_spreadsheet(spreadsheet_id, f"{sheet_name}!A1:Z1000")
+            if df.empty:
+                st.warning(f"No data found in sheet {sheet_name}")
+                return None
+
+            # Get form fields from sheet structure
+            form_fields = form_builder_service.get_form_fields(df)
+            
+            if not form_fields:
+                st.warning("No form fields could be generated from the sheet structure")
+                return None
+                
+            # Render the form
+            form_data = form_builder_service.render_form(form_fields)
+            
+            # Add submit button
+            if st.button("Submit Entry", type="primary"):
+                try:
+                    success = form_builder_service.append_form_data(
+                        spreadsheet_id,
+                        sheet_name,
+                        form_data,
+                        sheets_client
+                    )
+                    if success:
+                        st.success("✅ Entry added successfully!")
+                        return form_data
+                    else:
+                        st.error("Failed to add entry")
+                except Exception as e:
+                    logger.error(f"Error submitting form: {str(e)}")
+                    st.error(f"Error submitting form: {str(e)}")
+            
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error handling append entry: {str(e)}")
+            st.error(f"Error generating form: {str(e)}")
+            return None
+
+    @staticmethod
     def display_sheet_data(df: pd.DataFrame, sheet_type: str = 'general'):
         """Display sheet data in appropriate format based on sheet type."""
         from services.table_service import TableService

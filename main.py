@@ -591,11 +591,20 @@ def main():
                                 # Create Add button and dropdown for allowed sheets
                                 if allowed_sheets:
                                     st.markdown("### Add New Entry")
-                                    st.selectbox(
+                                    selected_append_sheet = st.selectbox(
                                         "Add an entry for:",
                                         options=allowed_sheets,
                                         key='append_sheet_selector'
                                     )
+                                    
+                                    # Handle form generation and submission for selected sheet
+                                    if selected_append_sheet:
+                                        st.session_state.ui_service.handle_append_entry(
+                                            selected_sheet['id'],
+                                            selected_append_sheet,
+                                            st.session_state.sheets_client,
+                                            st.session_state.form_builder_service
+                                        )
                 except Exception as e:
                     logger.error(f"Error reading USERS sheet: {str(e)}")
                     if is_admin:
