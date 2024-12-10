@@ -245,7 +245,7 @@ class FormBuilderService:
             
             # First, copy row 2 to the next available row
             logger.info(f"Attempting to copy template row 2 to row {next_row}")
-            source_range = f"A2:Z2"  # Copy all columns from row 2
+            source_range = f"{sheet_name}!A2:Z2"  # Copy all columns from row 2
             copy_success = copy_service.copy_entry(
                 spreadsheet_id=spreadsheet_id,
                 sheet_name=sheet_name,
@@ -259,16 +259,26 @@ class FormBuilderService:
                 
             logger.info(f"Successfully copied template row to row {next_row}")
             
-            # Now update only the form fields in the copied row
-            logger.info("Preparing to update form fields in copied row")
-            update_row = []
+            # Wait briefly for the copy operation to complete
+            import time
+            time.sleep(1)
+            
+            # Read the current values in the copied row
+            row_range = f"{sheet_name}!A{next_row}:Z{next_row}"
+            current_row_df = sheets_client.read_spreadsheet(spreadsheet_id, row_range)
+            if current_row_df.empty:
+                logger.error("Failed to read newly copied row")
+                return False
+            
+            # Create update row preserving existing values
+            update_row = list(current_row_df.iloc[0])
+            
+            # Only update the form fields, preserving all other values
             for col in df.columns:
                 if col in form_data:
-                    logger.debug(f"Adding form field value for column {col}: {form_data[col]}")
-                    update_row.append(form_data[col])
-                else:
-                    logger.debug(f"Skipping column {col} (formula or non-form field)")
-                    update_row.append(None)
+                    col_idx = df.columns.get_loc(col)
+                    logger.debug(f"Updating form field {col} at index {col_idx} with value: {form_data[col]}")
+                    update_row[col_idx] = form_data[col]
             
             logger.info(f"Updating form fields in row {next_row}")
             append_range = f"{sheet_name}!A{next_row}"
@@ -279,10 +289,10 @@ class FormBuilderService:
             )
             
             if success:
-                logger.info(f"Successfully appended new row to {sheet_name}")
+                logger.info(f"Successfully updated row {next_row} in {sheet_name}")
                 return True
             else:
-                logger.error("Failed to append row")
+                logger.error(f"Failed to update row {next_row}")
                 return False
                 
         except Exception as e:
