@@ -62,14 +62,15 @@ class FormBuilderService:
                 return 'currency'
             return 'text'
 
-    def get_form_fields(self, sheet_data: pd.DataFrame) -> List[Dict[str, Any]]:
+    def get_form_fields(self, sheet_data: pd.DataFrame) -> Tuple[List[Dict[str, Any]], Dict[str, str]]:
         """Extract form fields from sheet headers and check row 2 for formulas.
         
         Args:
             sheet_data: DataFrame containing the sheet data
             
         Returns:
-            List of form field definitions with formula detection
+            Tuple of (form field definitions, formula fields dictionary)
+            where formula fields dictionary maps column names to their formula strings
         """
         try:
             # Add debug logging
