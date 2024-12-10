@@ -129,20 +129,49 @@ class UIService:
             # Add submit button
             if st.button("Submit Entry", type="primary"):
                 try:
+                    logger.info("="*50)
+                    logger.info("FORM SUBMISSION START")
+                    logger.info("="*50)
+                    logger.info(f"Sheet Name: {sheet_name}")
+                    logger.info(f"Form Data: {form_data}")
+                    
+                    if not form_data:
+                        logger.error("Form data is empty")
+                        st.error("No data to submit")
+                        return None
+                        
+                    if not all(key in form_data for key in ['Name', 'Date']):
+                        logger.error(f"Missing required fields. Found fields: {list(form_data.keys())}")
+                        st.error("Please fill in all required fields")
+                        return None
+                    
                     success = form_builder_service.append_form_data(
                         spreadsheet_id,
                         sheet_name,
                         form_data,
                         sheets_client
                     )
+                    
                     if success:
+                        logger.info("Form submission successful")
                         st.success("✅ Entry added successfully!")
                         return form_data
                     else:
-                        st.error("Failed to add entry")
+                        logger.error("Form submission failed")
+                        st.error("Failed to add entry - Please check the data and try again")
+                        return None
+                        
                 except Exception as e:
-                    logger.error(f"Error submitting form: {str(e)}")
+                    logger.error("="*50)
+                    logger.error("FORM SUBMISSION ERROR")
+                    logger.error("="*50)
+                    logger.error(f"Error Type: {type(e).__name__}")
+                    logger.error(f"Error Message: {str(e)}")
+                    logger.error("Full traceback:")
+                    import traceback
+                    logger.error(traceback.format_exc())
                     st.error(f"Error submitting form: {str(e)}")
+                    return None
             
             return form_data if form_data else None
             
