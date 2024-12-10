@@ -592,7 +592,7 @@ def main():
                                 if allowed_sheets:
                                     st.markdown("### Add New Entry")
                                     st.selectbox(
-                                        "Select sheet to add entry",
+                                        "Add an entry for:",
                                         options=allowed_sheets,
                                         key='append_sheet_selector'
                                     )
