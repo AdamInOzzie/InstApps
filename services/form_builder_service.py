@@ -3,6 +3,7 @@ import logging
 from typing import List, Dict, Tuple, Any, Optional
 import pandas as pd
 import streamlit as st
+from services.copy_service import CopyService
 
 logger = logging.getLogger(__name__)
 
@@ -227,6 +228,7 @@ class FormBuilderService:
     def append_form_data(self, spreadsheet_id: str, sheet_name: str, form_data: Dict[str, Any], sheets_client) -> bool:
         """Append form data as a new row in the sheet, first copying row 2 template and then updating with form data."""
         try:
+            logger.info("Starting form data append process")
             range_name = f"{sheet_name}!A1:Z1000"
             df = sheets_client.read_spreadsheet(spreadsheet_id, range_name)
             
@@ -235,32 +237,37 @@ class FormBuilderService:
                 return False
                 
             next_row = len(df) + 2
-            logger.info(f"Next available row: {next_row}")
+            logger.info(f"Next available row determined: {next_row}")
+            
+            # Initialize copy service
+            logger.info("Initializing copy service")
+            copy_service = CopyService(sheets_client)
             
             # First, copy row 2 to the next available row
-            from services import CopyService
-            copy_service = CopyService(sheets_client)
+            logger.info(f"Attempting to copy template row 2 to row {next_row}")
+            source_range = f"A2:Z2"  # Copy all columns from row 2
             copy_success = copy_service.copy_entry(
                 spreadsheet_id=spreadsheet_id,
                 sheet_name=sheet_name,
-                source_range="A2:Z2",  # Copy all columns from row 2
+                source_range=source_range,
                 target_row=next_row
             )
             
             if not copy_success:
-                logger.error("Failed to copy template row")
+                logger.error(f"Failed to copy template row from {source_range} to row {next_row}")
                 return False
                 
-            logger.info("Successfully copied template row")
+            logger.info(f"Successfully copied template row to row {next_row}")
             
             # Now update only the form fields in the copied row
+            logger.info("Preparing to update form fields in copied row")
             update_row = []
             for col in df.columns:
                 if col in form_data:
-                    # For form fields, use the submitted data
+                    logger.debug(f"Adding form field value for column {col}: {form_data[col]}")
                     update_row.append(form_data[col])
                 else:
-                    # For non-form fields (including formulas), leave as is
+                    logger.debug(f"Skipping column {col} (formula or non-form field)")
                     update_row.append(None)
             
             logger.info(f"Updating form fields in row {next_row}")
@@ -280,4 +287,5 @@ class FormBuilderService:
                 
         except Exception as e:
             logger.error(f"Error appending form data: {str(e)}")
+            logger.exception("Full traceback:")
             raise
