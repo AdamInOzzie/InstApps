@@ -551,7 +551,38 @@ def main():
                 )
                 UIService.display_sheet_data(outputs_df, sheet_type='outputs')
             
-            # Show data and form options for additional sheets
+            # Check for USERS sheet and get allowed sheets for the current user
+            has_users_sheet = 'USERS' in sheet_names
+            allowed_sheets = []
+            
+            if has_users_sheet and st.session_state.username:
+                try:
+                    users_df = st.session_state.spreadsheet_service.read_sheet_data(
+                        selected_sheet['id'],
+                        'USERS'
+                    )
+                    if not users_df.empty:
+                        user_row = users_df[users_df['User Name'].str.lower() == st.session_state.username.lower()]
+                        if not user_row.empty and 'AppendAll' in user_row.columns:
+                            append_permissions = user_row['AppendAll'].iloc[0]
+                            if not pd.isna(append_permissions):
+                                allowed_sheets = [s.strip() for s in str(append_permissions).split(',')]
+                                
+                                # Create Add button and dropdown for allowed sheets
+                                col1, col2 = st.columns([1, 3])
+                                with col1:
+                                    st.button("Add", key="add_button", disabled=True)
+                                with col2:
+                                    if allowed_sheets:
+                                        st.selectbox(
+                                            "Select sheet to add entry",
+                                            options=allowed_sheets,
+                                            key='append_sheet_selector'
+                                        )
+                except Exception as e:
+                    logger.error(f"Error reading USERS sheet: {str(e)}")
+            
+            # Show data view options
             show_options = st.checkbox("Show additional options", value=False, key='show_options_checkbox')
             if show_options:
                 # Filter out special sheets and ensure USERS is always hidden
@@ -559,54 +590,20 @@ def main():
                 
                 if available_sheets:
                     selected_sheet_name = st.selectbox(
-                        "Select sheet",
+                        "Select sheet to view",
                         options=available_sheets,
-                        key='additional_sheet_selector'
+                        key='view_sheet_selector'
                     )
                     
-                    # Add tabs for viewing data and adding new entries
+                    # Display selected sheet data
                     if selected_sheet_name:
-                        tab1, tab2 = st.tabs(["📊 View Data", "📝 New Entry"])
-                        
-                        with tab1:  # View Data tab
-                            df = st.session_state.spreadsheet_service.read_sheet_data(
-                                selected_sheet['id'],
-                                selected_sheet_name
-                            )
-                            UIService.display_sheet_data(df, sheet_type='general')
-                            if is_admin:
-                                UIService.display_data_quality_report(df)
-                        
-                        with tab2:  # New Entry tab
-                            # Get sheet data for form generation
-                            sheet_df = st.session_state.spreadsheet_service.read_sheet_data(
-                                selected_sheet['id'],
-                                selected_sheet_name
-                            )
-                            
-                            # Generate form fields excluding formula fields
-                            form_fields = st.session_state.form_builder_service.get_form_fields(sheet_df)
-                            
-                            # Render the form
-                            form_data = st.session_state.form_builder_service.render_form(form_fields)
-                            
-                            # Add submit button
-                            if st.button("Submit", key=f"submit_{selected_sheet_name}"):
-                                try:
-                                    success = st.session_state.form_builder_service.append_form_data(
-                                        selected_sheet['id'],
-                                        selected_sheet_name,
-                                        form_data,
-                                        st.session_state.sheets_client
-                                    )
-                                    if success:
-                                        st.success("✅ Data successfully added!")
-                                        st.rerun()  # Refresh to show updated data
-                                    else:
-                                        st.error("Failed to add data. Please try again.")
-                                except Exception as e:
-                                    logger.error(f"Error submitting form: {str(e)}")
-                                    st.error(f"Error: {str(e)}")
+                        df = st.session_state.spreadsheet_service.read_sheet_data(
+                            selected_sheet['id'],
+                            selected_sheet_name
+                        )
+                        UIService.display_sheet_data(df, sheet_type='general')
+                        if is_admin:
+                            UIService.display_data_quality_report(df)
                         df = st.session_state.spreadsheet_service.read_sheet_data(
                             selected_sheet['id'],
                             selected_sheet_name
