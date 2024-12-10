@@ -555,25 +555,46 @@ def main():
             has_users_sheet = 'USERS' in sheet_names
             allowed_sheets = []
             
-            if has_users_sheet and st.session_state.username:
+            # Add debug logging
+            logger.info(f"Has USERS sheet: {has_users_sheet}")
+            logger.info(f"Current username: {st.session_state.get('username')}")
+            logger.info(f"Is logged in: {st.session_state.get('is_logged_in')}")
+            
+            if has_users_sheet and st.session_state.get('is_logged_in', False):
                 try:
                     users_df = st.session_state.spreadsheet_service.read_sheet_data(
                         selected_sheet['id'],
                         'USERS'
                     )
+                    logger.info(f"Users sheet columns: {users_df.columns.tolist()}")
+                    
                     if not users_df.empty:
-                        user_row = users_df[users_df['User Name'].str.lower() == st.session_state.username.lower()]
-                        if not user_row.empty and 'AppendAll' in user_row.columns:
-                            append_permissions = user_row['AppendAll'].iloc[0]
+                        username = st.session_state.username.lower()
+                        user_row = users_df[users_df['User Name'].str.lower() == username]
+                        logger.info(f"Found user row: {not user_row.empty}")
+                        
+                        # Try both column names
+                        append_col = None
+                        for col in ['AppendAll', 'APPENDALL', 'Appendall']:
+                            if col in users_df.columns:
+                                append_col = col
+                                break
+                        
+                        if not user_row.empty and append_col:
+                            append_permissions = user_row[append_col].iloc[0]
+                            logger.info(f"Append permissions: {append_permissions}")
+                            
                             if not pd.isna(append_permissions):
                                 allowed_sheets = [s.strip() for s in str(append_permissions).split(',')]
+                                logger.info(f"Allowed sheets: {allowed_sheets}")
                                 
                                 # Create Add button and dropdown for allowed sheets
-                                col1, col2 = st.columns([1, 3])
-                                with col1:
-                                    st.button("Add", key="add_button", disabled=True)
-                                with col2:
-                                    if allowed_sheets:
+                                if allowed_sheets:
+                                    st.markdown("### Add New Entry")
+                                    col1, col2 = st.columns([1, 3])
+                                    with col1:
+                                        st.button("Add", key="add_button", disabled=True)
+                                    with col2:
                                         st.selectbox(
                                             "Select sheet to add entry",
                                             options=allowed_sheets,
@@ -581,6 +602,8 @@ def main():
                                         )
                 except Exception as e:
                     logger.error(f"Error reading USERS sheet: {str(e)}")
+                    if is_admin:
+                        st.error(f"Error reading USERS sheet: {str(e)}")
             
             # Show data view options
             show_options = st.checkbox("Show additional options", value=False, key='show_options_checkbox')
