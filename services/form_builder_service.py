@@ -228,31 +228,32 @@ class FormBuilderService:
         return form_data
 
     def append_form_data(self, spreadsheet_id: str, sheet_name: str, form_data: Dict[str, Any], sheets_client) -> bool:
-        """Append form data as a new row in the sheet, copying the last row for formula fields."""
+        """Append form data as a new row in the sheet, copying row 2 as template."""
         try:
             range_name = f"{sheet_name}!A1:Z1000"
             df = sheets_client.read_spreadsheet(spreadsheet_id, range_name)
             
-            if df.empty:
-                logger.error("Sheet is empty")
+            if df.empty or len(df) < 2:
+                logger.error("Sheet is empty or doesn't have a template row")
                 return False
                 
-            next_row = len(df) + 2
-            last_data_row = df.iloc[-1].to_dict()  # Get the last row with data
+            # Get the second row (index 1) as our template
+            template_row = df.iloc[1].to_dict()
+            logger.info(f"Using template row: {template_row}")
             
-            # Create new row by copying the last row
+            next_row = len(df) + 2
+            
+            # Create new row by copying the template row (row 2)
             new_row = []
             for col in df.columns:
-                if col in st.session_state.get('formula_fields', {}):
-                    # For formula fields, copy from last row
-                    new_row.append(last_data_row[col])
-                elif col in form_data:
-                    # For non-formula fields, use form input
+                if col in form_data:
+                    # For form fields, use the submitted data
                     new_row.append(form_data[col])
                 else:
-                    # For any other fields, copy from last row
-                    new_row.append(last_data_row[col])
+                    # For formula fields or any other fields, copy from template row
+                    new_row.append(template_row[col])
             
+            logger.info(f"New row data: {new_row}")
             append_range = f"{sheet_name}!A{next_row}"
             success = sheets_client.write_to_spreadsheet(
                 spreadsheet_id,
