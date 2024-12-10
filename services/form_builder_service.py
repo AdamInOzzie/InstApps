@@ -226,10 +226,9 @@ class FormBuilderService:
         return form_data
 
     def append_form_data(self, spreadsheet_id: str, sheet_name: str, form_data: Dict[str, Any], sheets_client) -> bool:
-        """Append form data as a new row in the sheet."""
+        """Append form data as a new row in the sheet by copying row 2 as template."""
         try:
             logger.info("Starting form data append process")
-            logger.info(f"Form data to append: {form_data}")
             
             # Get sheet data to determine next row
             range_name = f"{sheet_name}!A1:Z1000"
@@ -240,33 +239,25 @@ class FormBuilderService:
                 return False
             
             next_row = len(df) + 2  # Add to next empty row
-            logger.info(f"Appending to row {next_row}")
+            logger.info(f"Copying template to row {next_row}")
             
-            # Create new row from form data
-            new_row = []
-            for col in df.columns:
-                if col in form_data:
-                    logger.info(f"Adding form value for {col}: {form_data[col]}")
-                    new_row.append(form_data[col])
-                else:
-                    new_row.append(None)
-            
-            # Write the new row
-            append_range = f"{sheet_name}!A{next_row}"
-            success = sheets_client.write_to_spreadsheet(
-                spreadsheet_id,
-                append_range,
-                [new_row]  # Wrap in list as write_to_spreadsheet expects list of rows
+            # Use copy service to copy row 2 to the next row
+            copy_service = CopyService(sheets_client)
+            success = copy_service.copy_entry(
+                spreadsheet_id=spreadsheet_id,
+                sheet_name=sheet_name,
+                source_range="A2:Z2",  # Copy all columns from row 2
+                target_row=next_row
             )
             
             if success:
-                logger.info(f"Successfully appended row {next_row}")
+                logger.info(f"Successfully copied template to row {next_row}")
                 return True
             else:
-                logger.error(f"Failed to append row {next_row}")
+                logger.error(f"Failed to copy template to row {next_row}")
                 return False
                 
         except Exception as e:
-            logger.error(f"Error appending form data: {str(e)}")
+            logger.error(f"Error in append_form_data: {str(e)}")
             logger.exception("Full traceback:")
             return False
