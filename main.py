@@ -576,40 +576,37 @@ def main():
                             UIService.display_sheet_data(df, sheet_type='general')
                             if is_admin:
                                 UIService.display_data_quality_report(df)
+                        
+                        with tab2:  # New Entry tab
+                            # Get sheet data for form generation
+                            sheet_df = st.session_state.spreadsheet_service.read_sheet_data(
+                                selected_sheet['id'],
+                                selected_sheet_name
+                            )
                             
-                        if has_append_permission and len(current_tab) > 1:
-                            with current_tab[1]:  # New Entry tab
-                                # Get sheet data for form generation
-                                sheet_df = st.session_state.spreadsheet_service.read_sheet_data(
-                                    selected_sheet['id'],
-                                    selected_sheet_name
-                                )
-                                
-                                # Generate form fields excluding formula fields
-                                form_fields = st.session_state.form_builder_service.get_form_fields(sheet_df)
-                                
-                                # Render the form
-                                form_data = st.session_state.form_builder_service.render_form(form_fields)
-                                
-                                # Add submit button
-                                if st.button("Submit", key=f"submit_{selected_sheet_name}"):
-                                    try:
-                                        success = st.session_state.form_builder_service.append_form_data(
-                                            selected_sheet['id'],
-                                            selected_sheet_name,
-                                            form_data,
-                                            st.session_state.sheets_client
-                                        )
-                                        if success:
-                                            st.success("✅ Data successfully added!")
-                                            st.rerun()  # Refresh to show updated data
-                                        else:
-                                            st.error("Failed to add data. Please try again.")
-                                    except Exception as e:
-                                        logger.error(f"Error submitting form: {str(e)}")
-                                        st.error(f"Error: {str(e)}")
-                        elif not has_append_permission:
-                            st.info("ℹ️ You don't have permission to add new entries to this sheet.")
+                            # Generate form fields excluding formula fields
+                            form_fields = st.session_state.form_builder_service.get_form_fields(sheet_df)
+                            
+                            # Render the form
+                            form_data = st.session_state.form_builder_service.render_form(form_fields)
+                            
+                            # Add submit button
+                            if st.button("Submit", key=f"submit_{selected_sheet_name}"):
+                                try:
+                                    success = st.session_state.form_builder_service.append_form_data(
+                                        selected_sheet['id'],
+                                        selected_sheet_name,
+                                        form_data,
+                                        st.session_state.sheets_client
+                                    )
+                                    if success:
+                                        st.success("✅ Data successfully added!")
+                                        st.rerun()  # Refresh to show updated data
+                                    else:
+                                        st.error("Failed to add data. Please try again.")
+                                except Exception as e:
+                                    logger.error(f"Error submitting form: {str(e)}")
+                                    st.error(f"Error: {str(e)}")
                         df = st.session_state.spreadsheet_service.read_sheet_data(
                             selected_sheet['id'],
                             selected_sheet_name
