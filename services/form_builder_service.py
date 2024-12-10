@@ -312,59 +312,42 @@ class FormBuilderService:
 
             logger.info(f"Final new row values: {new_row_values}")
             
-            # Update the new row directly
+            # Prepare final values for the update
             update_range = f"{sheet_name}!A{next_row}:{chr(65 + len(headers) - 1)}{next_row}"
             logger.info(f"Updating range: {update_range}")
             
             try:
-                logger.info(f"Attempting to update range: {update_range}")
-                logger.info(f"Update payload: {{'values': [new_row_values]}}")
+                # Ensure all values are strings to avoid type issues
+                final_values = []
+                for value in new_row_values:
+                    if isinstance(value, (int, float)):
+                        final_values.append(str(value))
+                    else:
+                        final_values.append(value if value is not None else '')
+                
+                logger.info(f"Final values for update: {final_values}")
                 
                 update_response = sheets_client.sheets_service.spreadsheets().values().update(
                     spreadsheetId=spreadsheet_id,
                     range=update_range,
                     valueInputOption='USER_ENTERED',
-                    body={'values': [new_row_values]}
+                    body={'values': [final_values]}
                 ).execute()
                 
-                logger.info(f"Update successful. Response: {update_response}")
+                logger.info(f"Update response received: {update_response}")
                 
-                # Verify the update was successful
-                if 'updatedRange' in update_response:
-                    logger.info("Row update completed successfully")
+                if update_response.get('updatedRange'):
+                    logger.info(f"Successfully appended entry at row {next_row}")
                     return True
                 else:
-                    logger.error("Update response missing updatedRange field")
+                    logger.error("Update failed - no updatedRange in response")
                     return False
                     
             except Exception as e:
-                logger.error(f"Failed to update row: {str(e)}")
+                logger.error(f"Failed to update sheet: {type(e).__name__}: {str(e)}")
+                import traceback
+                logger.error(f"Traceback:\n{traceback.format_exc()}")
                 return False
-
-            # Step 5: Update the form data fields
-            updates = []
-            for i, header in enumerate(headers):
-                if header in form_data:
-                    column_letter = chr(65 + i) if i < 26 else chr(64 + i // 26) + chr(65 + (i % 26))
-                    range_name = f"{sheet_name}!{column_letter}{next_row}"
-                    updates.append({
-                        'range': range_name,
-                        'values': [[form_data[header]]]
-                    })
-            
-            if updates:
-                logger.info(f"Updating {len(updates)} fields with form data...")
-                update_response = sheets_client.sheets_service.spreadsheets().values().batchUpdate(
-                    spreadsheetId=spreadsheet_id,
-                    body={
-                        'valueInputOption': 'USER_ENTERED',
-                        'data': updates
-                    }
-                ).execute()
-                logger.info(f"Update response: {update_response}")
-
-            logger.info(f"Successfully completed append operation at row {next_row}")
-            return True
 
         except Exception as e:
             logger.error("="*50)
