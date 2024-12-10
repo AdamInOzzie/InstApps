@@ -176,20 +176,29 @@ class UIService:
             # Add some visual separation
             st.markdown("---")
             
-            if st.button("TESTCopy", type="primary", key="test_copy_button"):
+            # Add target row input
+            target_row = st.number_input(
+                "Target Row",
+                min_value=1,
+                value=6,
+                step=1,
+                help="Select the row number where you want to copy the data"
+            )
+            
+            if st.button("Copy to Selected Row", type="primary", key="test_copy_button"):
                 try:
-                    logger.info("TESTCopy button clicked - attempting copy operation")
+                    logger.info(f"Copy button clicked - attempting copy to row {target_row}")
                     success = copy_service.copy_entry(
                         spreadsheet_id=spreadsheet_id,
                         sheet_name="Volunteers",
                         source_range="A2:D2",
-                        target_row=6
+                        target_row=int(target_row)
                     )
                     if success:
-                        st.success("✅ Copy operation successful!")
+                        st.success(f"✅ Successfully copied to row {target_row}!")
                         logger.info("Copy operation completed successfully")
                     else:
-                        st.error("Copy operation failed")
+                        st.error(f"Failed to copy to row {target_row}")
                         logger.error("Copy operation failed without exception")
                 except Exception as e:
                     error_msg = f"Error during copy: {str(e)}"
