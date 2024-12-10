@@ -122,17 +122,22 @@ class UIService:
         """
         try:
             # Read the sheet data to get structure
-            df = sheets_client.read_spreadsheet(spreadsheet_id, f"{sheet_name}!A1:Z1000")
-            if df.empty:
-                st.warning(f"No data found in sheet {sheet_name}")
-                return None
-
+            range_name = f"{sheet_name}!A1:Z1000"
+            logger.info(f"Reading sheet data from {range_name}")
+            df = sheets_client.read_spreadsheet(spreadsheet_id, range_name)
+            
             # Get form fields from sheet structure
+            logger.info(f"Generating form fields for sheet {sheet_name}")
             form_fields = form_builder_service.get_form_fields(df)
             
             if not form_fields:
-                st.warning("No form fields could be generated from the sheet structure")
+                st.warning(f"Could not generate form fields from sheet '{sheet_name}'")
+                logger.error(f"No form fields generated for sheet {sheet_name}")
                 return None
+            
+            logger.info(f"Generated {len(form_fields)} form fields")
+            for field in form_fields:
+                logger.debug(f"Field: {field['name']}, Type: {field['type']}")
                 
             # Render the form
             form_data = form_builder_service.render_form(form_fields)
@@ -155,7 +160,7 @@ class UIService:
                     logger.error(f"Error submitting form: {str(e)}")
                     st.error(f"Error submitting form: {str(e)}")
             
-            return None
+            return form_data if form_data else None
             
         except Exception as e:
             logger.error(f"Error handling append entry: {str(e)}")

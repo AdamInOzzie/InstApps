@@ -36,42 +36,62 @@ class FormBuilderService:
             return 'text'
 
     def get_form_fields(self, sheet_data: pd.DataFrame) -> List[Dict[str, Any]]:
-        """Extract form fields from sheet headers, excluding formula fields."""
-        if sheet_data.empty or len(sheet_data.columns) == 0:
-            logger.warning("Empty sheet data provided")
+        """Extract form fields from sheet headers (Row A).
+        
+        Args:
+            sheet_data: DataFrame containing the sheet data
+            
+        Returns:
+            List of form field definitions based on header row
+        """
+        if len(sheet_data.columns) == 0:
+            logger.warning("No columns found in sheet")
             return []
 
+        logger.info(f"Processing {len(sheet_data.columns)} columns from header row")
         form_fields = []
-        first_row = sheet_data.iloc[0] if len(sheet_data) > 0 else pd.Series()
         
+        # Process each column header as a field
         for col in sheet_data.columns:
             try:
-                first_row_value = first_row[col] if not first_row.empty else None
+                logger.debug(f"Processing header field: {col}")
                 
-                if self.is_formula(first_row_value):
-                    logger.info(f"Skipping formula field: {col}")
-                    continue
+                # Get a sample value from data rows if any exist
+                sample_values = sheet_data[col].dropna()
+                sample_value = sample_values.iloc[0] if len(sample_values) > 0 else None
                 
-                field_type = self.get_field_type(first_row_value)
+                # Default to text type, then try to infer from sample data
+                field_type = 'text'
+                if sample_value is not None:
+                    if isinstance(sample_value, str) and self.is_formula(sample_value):
+                        logger.info(f"Skipping formula field: {col}")
+                        continue
+                    field_type = self.get_field_type(sample_value)
+                
                 field_info = {
                     'name': col,
                     'type': field_type,
-                    'sample_value': first_row_value,
                     'required': True
                 }
                 
-                if field_type == 'number':
-                    numeric_values = pd.to_numeric(sheet_data[col], errors='coerce')
-                    field_info['min_value'] = float(numeric_values.min()) if not numeric_values.empty else None
-                    field_info['max_value'] = float(numeric_values.max()) if not numeric_values.empty else None
+                # Add numeric constraints if we have sample data
+                if field_type == 'number' and len(sample_values) > 0:
+                    try:
+                        numeric_values = pd.to_numeric(sample_values, errors='coerce').dropna()
+                        if not numeric_values.empty:
+                            field_info['min_value'] = float(numeric_values.min())
+                            field_info['max_value'] = float(numeric_values.max())
+                    except Exception as e:
+                        logger.warning(f"Could not determine numeric constraints for {col}: {e}")
                 
                 form_fields.append(field_info)
-                logger.debug(f"Added field {col} of type {field_type}")
+                logger.info(f"Added field '{col}' of type '{field_type}'")
                 
             except Exception as e:
                 logger.error(f"Error processing field {col}: {str(e)}")
                 continue
             
+        logger.info(f"Generated {len(form_fields)} form fields from header row")
         return form_fields
 
     def render_form(self, fields: List[Dict[str, Any]]) -> Dict[str, Any]:
