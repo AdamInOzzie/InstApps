@@ -317,36 +317,65 @@ class FormBuilderService:
             logger.info(f"Updating range: {update_range}")
             
             try:
-                # Ensure all values are strings to avoid type issues
+                # Log the API request details
+                logger.info("="*50)
+                logger.info("GOOGLE SHEETS API REQUEST DETAILS")
+                logger.info("="*50)
+                logger.info(f"Spreadsheet ID: {spreadsheet_id}")
+                logger.info(f"Update Range: {update_range}")
+                logger.info(f"Row Values: {new_row_values}")
+                
+                # Convert all values to strings and handle None values
                 final_values = []
                 for value in new_row_values:
-                    if isinstance(value, (int, float)):
+                    if value is None:
+                        final_values.append('')
+                    elif isinstance(value, (int, float)):
                         final_values.append(str(value))
                     else:
-                        final_values.append(value if value is not None else '')
+                        final_values.append(str(value))
                 
-                logger.info(f"Final values for update: {final_values}")
+                logger.info(f"Processed Values: {final_values}")
                 
+                # Construct the update request
+                update_body = {'values': [final_values]}
+                logger.info(f"Request Body: {update_body}")
+                
+                # Execute the update request
+                logger.info("Executing update request...")
                 update_response = sheets_client.sheets_service.spreadsheets().values().update(
                     spreadsheetId=spreadsheet_id,
                     range=update_range,
                     valueInputOption='USER_ENTERED',
-                    body={'values': [final_values]}
+                    body=update_body
                 ).execute()
                 
-                logger.info(f"Update response received: {update_response}")
+                # Log the response details
+                logger.info("="*50)
+                logger.info("API RESPONSE DETAILS")
+                logger.info("="*50)
+                logger.info(f"Response: {update_response}")
                 
                 if update_response.get('updatedRange'):
-                    logger.info(f"Successfully appended entry at row {next_row}")
+                    logger.info(f"✅ Successfully appended entry at row {next_row}")
+                    logger.info(f"Updated Range: {update_response.get('updatedRange')}")
+                    logger.info(f"Updated Cells: {update_response.get('updatedCells')}")
                     return True
                 else:
-                    logger.error("Update failed - no updatedRange in response")
+                    logger.error("❌ Update failed - no updatedRange in response")
+                    logger.error(f"Unexpected response format: {update_response}")
                     return False
                     
             except Exception as e:
-                logger.error(f"Failed to update sheet: {type(e).__name__}: {str(e)}")
+                logger.error("="*50)
+                logger.error("API ERROR DETAILS")
+                logger.error("="*50)
+                logger.error(f"Error Type: {type(e).__name__}")
+                logger.error(f"Error Message: {str(e)}")
+                logger.error("Full traceback:")
                 import traceback
-                logger.error(f"Traceback:\n{traceback.format_exc()}")
+                logger.error(traceback.format_exc())
+                logger.error("="*50)
                 return False
 
         except Exception as e:
