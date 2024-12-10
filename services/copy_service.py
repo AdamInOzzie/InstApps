@@ -59,7 +59,9 @@ class CopyService:
             destination_range = {
                 "sheetId": sheet_id,
                 "startRowIndex": target_row - 1,  # Convert to 0-based index
-                "startColumnIndex": self._column_letter_to_index(start_col)
+                "endRowIndex": target_row,  # Exclusive end index
+                "startColumnIndex": self._column_letter_to_index(start_col),
+                "endColumnIndex": self._column_letter_to_index(end_col) + 1  # Exclusive end
             }
             
             # Create copy paste request
