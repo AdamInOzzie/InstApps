@@ -69,59 +69,56 @@ class FormBuilderService:
 
             logger.info(f"Processing {len(sheet_data.columns)} columns from header row")
             form_fields = []
-        
-        # Process each column header as a field
-        for col in sheet_data.columns:
-            try:
-                logger.info(f"Processing header field: {col}")
-                
-                # Always create a text field by default for each column header
-                field_info = {
-                    'name': col,
-                    'type': 'text',
-                    'required': True
-                }
-                
-                # Try to determine field type from data if available
-                if len(sheet_data) > 0:
-                    sample_values = sheet_data[col].dropna()
-                    if not sample_values.empty:
-                        sample_value = sample_values.iloc[0]
-                        logger.debug(f"Sample value for {col}: {sample_value}")
-                
-                # Default to text type, then try to infer from sample data
-                field_type = 'text'
-                if sample_value is not None:
-                    if isinstance(sample_value, str) and self.is_formula(sample_value):
-                        logger.info(f"Skipping formula field: {col}")
-                        continue
-                    field_type = self.get_field_type(sample_value)
-                
-                field_info = {
-                    'name': col,
-                    'type': field_type,
-                    'required': True
-                }
-                
-                # Add numeric constraints if we have sample data
-                if field_type == 'number' and len(sample_values) > 0:
-                    try:
-                        numeric_values = pd.to_numeric(sample_values, errors='coerce').dropna()
-                        if not numeric_values.empty:
-                            field_info['min_value'] = float(numeric_values.min())
-                            field_info['max_value'] = float(numeric_values.max())
-                    except Exception as e:
-                        logger.warning(f"Could not determine numeric constraints for {col}: {e}")
-                
-                form_fields.append(field_info)
-                logger.info(f"Added field '{col}' of type '{field_type}'")
-                
-            except Exception as e:
-                logger.error(f"Error processing field {col}: {str(e)}")
-                continue
             
-        logger.info(f"Generated {len(form_fields)} form fields from header row")
-        return form_fields
+            # Process each column header as a field
+            for col in sheet_data.columns:
+                try:
+                    logger.info(f"Processing header field: {col}")
+                    
+                    # Always create a text field by default for each column header
+                    field_info = {
+                        'name': col,
+                        'type': 'text',
+                        'required': True
+                    }
+                    
+                    # Try to determine field type from data if available
+                    if len(sheet_data) > 0:
+                        sample_values = sheet_data[col].dropna()
+                        if not sample_values.empty:
+                            sample_value = sample_values.iloc[0]
+                            logger.debug(f"Sample value for {col}: {sample_value}")
+                            
+                            # Skip formula fields
+                            if isinstance(sample_value, str) and self.is_formula(sample_value):
+                                logger.info(f"Skipping formula field: {col}")
+                                continue
+                                
+                            field_info['type'] = self.get_field_type(sample_value)
+                    
+                    # Add numeric constraints if we have sample data
+                    if field_info['type'] == 'number' and len(sheet_data) > 0:
+                        try:
+                            numeric_values = pd.to_numeric(sheet_data[col], errors='coerce').dropna()
+                            if not numeric_values.empty:
+                                field_info['min_value'] = float(numeric_values.min())
+                                field_info['max_value'] = float(numeric_values.max())
+                        except Exception as e:
+                            logger.warning(f"Could not determine numeric constraints for {col}: {e}")
+                    
+                    form_fields.append(field_info)
+                    logger.info(f"Added field '{col}' of type '{field_info['type']}'")
+                    
+                except Exception as e:
+                    logger.error(f"Error processing field {col}: {str(e)}")
+                    continue
+            
+            logger.info(f"Generated {len(form_fields)} form fields from header row")
+            return form_fields
+            
+        except Exception as e:
+            logger.error(f"Error generating form fields: {str(e)}")
+            return []
 
     def render_form(self, fields: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Render a dynamic form based on field definitions."""
@@ -143,14 +140,15 @@ class FormBuilderService:
             try:
                 field_name = field['name']
                 field_type = field['type']
-                sample_value = field.get('sample_value')
                 
                 if field_type == 'number':
-                    step_size = 0.01 if sample_value and abs(float(sample_value or 0)) < 10 else 1.0
+                    step_size = 0.01 if float(field.get('min_value', 0)) < 10 else 1.0
                     form_data[field_name] = st.number_input(
                         field_name,
+                        min_value=field.get('min_value', None),
+                        max_value=field.get('max_value', None),
                         step=step_size,
-                        value=float(sample_value) if sample_value and not pd.isna(sample_value) else 0.0
+                        value=0.0
                     )
                 elif field_type == 'date':
                     form_data[field_name] = st.date_input(field_name)
@@ -162,7 +160,7 @@ class FormBuilderService:
                         step=0.1,
                         min_value=0.0,
                         max_value=100.0,
-                        value=float(str(sample_value).rstrip('%')) if sample_value else 0.0
+                        value=0.0
                     )
                     form_data[field_name] = f"{value}%"
                 elif field_type == 'currency':
@@ -170,14 +168,11 @@ class FormBuilderService:
                         field_name,
                         step=0.01,
                         min_value=0.0,
-                        value=float(str(sample_value).lstrip('$').replace(',', '')) if sample_value else 0.0
+                        value=0.0
                     )
                     form_data[field_name] = f"${value:.2f}"
                 else:
-                    form_data[field_name] = st.text_input(
-                        field_name,
-                        value=str(sample_value) if sample_value and not pd.isna(sample_value) else ""
-                    )
+                    form_data[field_name] = st.text_input(field_name, value="")
                     
             except Exception as e:
                 logger.error(f"Error rendering field {field_name}: {str(e)}")
@@ -212,5 +207,3 @@ class FormBuilderService:
         except Exception as e:
             logger.error(f"Error appending form data: {str(e)}")
             raise
-
-    # Authentication methods will be added later
