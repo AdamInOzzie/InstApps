@@ -44,6 +44,10 @@ class FormBuilderService:
         Returns:
             List of form field definitions based on header row
         """
+        if sheet_data is None or sheet_data.empty:
+            logger.warning("Empty sheet data provided")
+            return []
+            
         if len(sheet_data.columns) == 0:
             logger.warning("No columns found in sheet")
             return []
@@ -54,11 +58,21 @@ class FormBuilderService:
         # Process each column header as a field
         for col in sheet_data.columns:
             try:
-                logger.debug(f"Processing header field: {col}")
+                logger.info(f"Processing header field: {col}")
                 
-                # Get a sample value from data rows if any exist
-                sample_values = sheet_data[col].dropna()
-                sample_value = sample_values.iloc[0] if len(sample_values) > 0 else None
+                # Always create a text field by default for each column header
+                field_info = {
+                    'name': col,
+                    'type': 'text',
+                    'required': True
+                }
+                
+                # Try to determine field type from data if available
+                if len(sheet_data) > 0:
+                    sample_values = sheet_data[col].dropna()
+                    if not sample_values.empty:
+                        sample_value = sample_values.iloc[0]
+                        logger.debug(f"Sample value for {col}: {sample_value}")
                 
                 # Default to text type, then try to infer from sample data
                 field_type = 'text'

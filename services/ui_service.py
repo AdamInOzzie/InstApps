@@ -126,6 +126,9 @@ class UIService:
             logger.info(f"Reading sheet data from {range_name}")
             df = sheets_client.read_spreadsheet(spreadsheet_id, range_name)
             
+            logger.info(f"Sheet {sheet_name} data loaded - Shape: {df.shape if df is not None else 'None'}")
+            logger.info(f"Columns found: {df.columns.tolist() if df is not None else []}")
+            
             # Get form fields from sheet structure
             logger.info(f"Generating form fields for sheet {sheet_name}")
             form_fields = form_builder_service.get_form_fields(df)
