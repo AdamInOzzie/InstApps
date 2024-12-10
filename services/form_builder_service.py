@@ -119,6 +119,8 @@ class FormBuilderService:
                         # Convert to string for formula checking
                         if row2_value is not None:
                             str_value = str(row2_value)
+                            logger.debug(f"Raw value for column {col}: {row2_value}")
+                            logger.debug(f"String value for column {col}: {str_value}")
                             is_formula = self.is_formula(str_value)
                             logger.info(f"Column {col} formula check result: {is_formula}")
                             

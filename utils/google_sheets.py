@@ -141,7 +141,7 @@ class GoogleSheetsClient:
             result = self.sheets_service.spreadsheets().values().get(
                 spreadsheetId=spreadsheet_id,
                 range=range_name,
-                valueRenderOption='FORMATTED_VALUE'
+                valueRenderOption='FORMULA'
             ).execute()
             
             # Extract values from the response
