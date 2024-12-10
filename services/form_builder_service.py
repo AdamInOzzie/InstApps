@@ -32,7 +32,10 @@ class FormBuilderService:
             # Text functions
             'CONCATENATE', 'LEFT', 'RIGHT', 'MID',
             # Date functions
-            'DATE', 'TODAY', 'NOW', 'EOMONTH', 'WEEKDAY'
+            'DATE', 'TODAY', 'NOW', 'EOMONTH', 'WEEKDAY',
+            'EDATE', 'DAY', 'MONTH', 'YEAR', 'WORKDAY',
+            # Special cases for date calculations
+            'DATEVALUE', '+7', '-7', '+14', '-14'  # Common date offset patterns
         ]
         
         is_formula = any(op in str_value.upper() for op in formula_patterns)
@@ -125,7 +128,7 @@ class FormBuilderService:
                                 field_info['formula_value'] = str_value
                                 field_info['type'] = 'formula_display'
                                 form_fields.append(field_info)
-                                continue
+                                continue  # Skip the rest of processing for this field
                     
                     # For non-formula fields, determine type from data
                     if len(sheet_data) > 0:

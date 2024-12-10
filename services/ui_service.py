@@ -106,8 +106,10 @@ class UIService:
             
             logger.info(f"Sheet {sheet_name} data loaded - Shape: {df.shape if df is not None else 'None'}")
             logger.info(f"Columns found: {df.columns.tolist() if df is not None else []}")
-            if df is not None:
+            if df is not None and not df.empty:
                 logger.info(f"First row values: {df.iloc[0].tolist() if not df.empty else 'No data'}")
+                logger.info(f"Second row values: {df.iloc[1].tolist() if len(df) > 1 else 'No second row'}")
+                logger.info(f"Second row types: {[type(x).__name__ for x in df.iloc[1]] if len(df) > 1 else 'No second row'}")
                 logger.info(f"DataFrame info: {df.info()}")
             
             # Get form fields from sheet structure
