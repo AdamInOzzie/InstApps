@@ -270,24 +270,31 @@ class FormBuilderService:
             logger.info(f"Found headers: {headers}")
 
             # Step 4: First copy row 2 (template) to the new row using copyPaste
+            # Define source range (row 2)
+            source_range = {
+                "sheetId": sheet_id,
+                "startRowIndex": 1,  # row 2 (0-based)
+                "endRowIndex": 2,    # exclusive end
+                "startColumnIndex": 0,
+                "endColumnIndex": len(headers)
+            }
+
+            # Define destination range (new row)
+            destination_range = {
+                "sheetId": sheet_id,
+                "startRowIndex": next_row - 1,  # convert to 0-based index
+                "endRowIndex": next_row,
+                "startColumnIndex": 0,
+                "endColumnIndex": len(headers)
+            }
+
+            # Create the copyPaste request
             copy_request = {
                 'requests': [{
                     'copyPaste': {
-                        'source': {
-                            'sheetId': sheet_id,
-                            'startRowIndex': 1,
-                            'endRowIndex': 2,
-                            'startColumnIndex': 0,
-                            'endColumnIndex': len(headers)
-                        },
-                        'destination': {
-                            'sheetId': sheet_id,
-                            'startRowIndex': next_row - 1,
-                            'endRowIndex': next_row,
-                            'startColumnIndex': 0,
-                            'endColumnIndex': len(headers)
-                        },
-                        'pasteType': 'PASTE_NORMAL',
+                        'source': source_range,
+                        'destination': destination_range,
+                        'pasteType': 'PASTE_FORMULA',  # This ensures formulas are adjusted
                         'pasteOrientation': 'NORMAL'
                     }
                 }]
