@@ -574,8 +574,13 @@ def main():
                 )
                 UIService.display_sheet_data(outputs_df, sheet_type='outputs')
                 
-                # Add TESTCopy button after outputs display
-                UIService.display_copy_test_button(selected_sheet['id'], st.session_state.copy_service)
+                # Add TESTCopy button after outputs display only if Volunteers sheet exists
+                has_volunteers = 'Volunteers' in sheet_names
+                if has_volunteers:
+                    UIService.display_copy_test_button(selected_sheet['id'], st.session_state.copy_service)
+                    logger.info("TESTCopy button displayed - Volunteers sheet found")
+                else:
+                    logger.info("TESTCopy button not displayed - Volunteers sheet not found")
             
             # Check for USERS sheet and get allowed sheets for the current user
             has_users_sheet = 'USERS' in sheet_names
