@@ -230,44 +230,75 @@ class FormBuilderService:
     def append_form_data(self, spreadsheet_id: str, sheet_name: str, form_data: Dict[str, Any], sheets_client) -> bool:
         """Append form data as a new row in the sheet, copying row 2 as template."""
         try:
+            logger.info(f"Starting append_form_data for sheet: {sheet_name}")
+            logger.debug(f"Form data received: {form_data}")
+            
             range_name = f"{sheet_name}!A1:Z1000"
+            logger.info(f"Reading sheet data from range: {range_name}")
             df = sheets_client.read_spreadsheet(spreadsheet_id, range_name)
             
-            if df.empty or len(df) < 2:
-                logger.error("Sheet is empty or doesn't have a template row")
+            if df.empty:
+                logger.error("Sheet is completely empty")
                 return False
-                
+            
+            if len(df) < 2:
+                logger.error("Sheet doesn't have enough rows for template (needs at least 2 rows)")
+                return False
+            
             # Get the second row (index 1) as our template
             template_row = df.iloc[1].to_dict()
-            logger.info(f"Using template row: {template_row}")
+            logger.info(f"Retrieved template row (row 2): {template_row}")
             
+            # Calculate next row number
             next_row = len(df) + 2
+            logger.info(f"Next row number will be: {next_row}")
             
             # Create new row by copying the template row (row 2)
             new_row = []
+            logger.info("Building new row...")
+            
             for col in df.columns:
-                if col in form_data:
-                    # For form fields, use the submitted data
-                    new_row.append(form_data[col])
-                else:
-                    # For formula fields or any other fields, copy from template row
-                    new_row.append(template_row[col])
+                try:
+                    if col in form_data:
+                        logger.debug(f"Using form data for column {col}: {form_data[col]}")
+                        new_row.append(form_data[col])
+                    else:
+                        logger.debug(f"Using template data for column {col}: {template_row[col]}")
+                        new_row.append(template_row[col])
+                except Exception as column_error:
+                    logger.error(f"Error processing column {col}: {str(column_error)}")
+                    raise
             
-            logger.info(f"New row data: {new_row}")
-            append_range = f"{sheet_name}!A{next_row}"
-            success = sheets_client.write_to_spreadsheet(
-                spreadsheet_id,
-                append_range,
-                [new_row]  # Wrap in list as write_to_spreadsheet expects list of rows
-            )
+            logger.info(f"Constructed new row data: {new_row}")
+            logger.info(f"Column count - template: {len(template_row)}, new row: {len(new_row)}")
             
-            if success:
-                logger.info(f"Successfully appended new row to {sheet_name}")
-                return True
-            else:
-                logger.error("Failed to append row")
+            # Verify new row has correct number of columns
+            if len(new_row) != len(df.columns):
+                logger.error(f"Column count mismatch - Expected: {len(df.columns)}, Got: {len(new_row)}")
                 return False
+            
+            append_range = f"{sheet_name}!A{next_row}"
+            logger.info(f"Attempting to write to range: {append_range}")
+            
+            try:
+                success = sheets_client.write_to_spreadsheet(
+                    spreadsheet_id,
+                    append_range,
+                    [new_row]  # Wrap in list as write_to_spreadsheet expects list of rows
+                )
+                
+                if success:
+                    logger.info(f"Successfully appended new row to {sheet_name}")
+                    return True
+                else:
+                    logger.error("Write operation failed")
+                    return False
+                    
+            except Exception as write_error:
+                logger.error(f"Error during write operation: {str(write_error)}")
+                raise
                 
         except Exception as e:
-            logger.error(f"Error appending form data: {str(e)}")
+            logger.error(f"Error in append_form_data: {str(e)}")
+            logger.exception("Full traceback:")
             raise
