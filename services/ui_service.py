@@ -112,14 +112,19 @@ class UIService:
                 logger.info(f"Second row types: {[type(x).__name__ for x in df.iloc[1]] if len(df) > 1 else 'No second row'}")
                 logger.info(f"DataFrame info: {df.info()}")
             
-            # Get form fields from sheet structure
+            # Get form fields and formula fields from sheet structure
             logger.info(f"Generating form fields for sheet {sheet_name}")
-            form_fields = form_builder_service.get_form_fields(df)
+            form_fields, formula_fields = form_builder_service.get_form_fields(df)
             
-            if not form_fields:
+            if not form_fields and not formula_fields:
                 st.warning(f"Could not generate form fields from sheet '{sheet_name}'")
-                logger.error(f"No form fields generated for sheet {sheet_name}")
+                logger.error(f"No form fields or formula fields generated for sheet {sheet_name}")
                 return None
+                
+            # Store formula fields in session state for use during form submission
+            if 'formula_fields' not in st.session_state:
+                st.session_state.formula_fields = {}
+            st.session_state.formula_fields[sheet_name] = formula_fields
             
             logger.info(f"Generated {len(form_fields)} form fields")
             

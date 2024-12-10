@@ -78,7 +78,7 @@ class FormBuilderService:
             
             if sheet_data is None:
                 logger.warning("Sheet data is None")
-                return []
+                return [], {}
                 
             if sheet_data.empty:
                 if not sheet_data.columns.empty:
@@ -91,29 +91,21 @@ class FormBuilderService:
                             'type': 'text',
                             'required': True
                         })
-                    return form_fields
+                    return form_fields, {}
                 logger.warning("Sheet is completely empty")
-                return []
+                return [], {}
 
             logger.info(f"Processing {len(sheet_data.columns)} columns from header row")
             form_fields = []
+            formula_fields = {}
             
             # Process each column header as a field
             for col in sheet_data.columns:
                 try:
                     logger.info(f"Processing header field: {col}")
                     
-                    # Always create a text field by default for each column header
-                    field_info = {
-                        'name': col,
-                        'type': 'text',
-                        'required': True,
-                        'is_formula': False,
-                        'formula_value': None
-                    }
-                    
                     # Check row 2 for formulas if available
-                    if len(sheet_data) > 1:  # Make sure we have at least 2 rows
+                    if len(sheet_data) > 1:
                         row2_value = sheet_data.iloc[1][col] if len(sheet_data) > 1 else None
                         logger.info(f"Checking row 2 value for column {col}: {row2_value}")
                         
@@ -126,10 +118,18 @@ class FormBuilderService:
                             logger.info(f"Column {col} formula check result: {is_formula}")
                             
                             if is_formula:
-                                logger.info(f"Skipping formula field {col}: {str_value}")
-                                continue  # Skip adding this field entirely since it's a formula
+                                logger.info(f"Found formula field {col}: {str_value}")
+                                formula_fields[col] = str_value
+                                continue  # Skip adding this field to form fields
                     
-                    # For non-formula fields, determine type from data
+                    # For non-formula fields, create form field
+                    field_info = {
+                        'name': col,
+                        'type': 'text',
+                        'required': True
+                    }
+                    
+                    # Determine type from data
                     if len(sheet_data) > 0:
                         sample_values = sheet_data[col].dropna()
                         if not sample_values.empty:
@@ -154,23 +154,19 @@ class FormBuilderService:
                     logger.error(f"Error processing field {col}: {str(e)}")
                     continue
             
-            logger.info(f"Generated {len(form_fields)} form fields from header row")
-            return form_fields
+            logger.info(f"Generated {len(form_fields)} form fields and {len(formula_fields)} formula fields")
+            return form_fields, formula_fields
             
         except Exception as e:
             logger.error(f"Error generating form fields: {str(e)}")
-            return []
+            return [], {}
 
     def render_form(self, fields: List[Dict[str, Any]], sheet_name: str = "") -> Dict[str, Any]:
-        """Render a dynamic form based on field definitions, handling formula fields differently."""
+        """Render a dynamic form based on field definitions."""
         form_data = {}
         
         if not fields:  # Don't show anything if no fields are provided
             return form_data
-            
-        # Track which fields are formulas for later use
-        if 'formula_fields' not in st.session_state:
-            st.session_state.formula_fields = {}
             
         st.markdown(f"""
             <div style="
@@ -229,7 +225,7 @@ class FormBuilderService:
         return form_data
 
     def append_form_data(self, spreadsheet_id: str, sheet_name: str, form_data: Dict[str, Any], sheets_client) -> bool:
-        """Append form data as a new row in the sheet, copying row 2 as template."""
+        """Append form data as a new row in the sheet, preserving formulas from row 2."""
         try:
             range_name = f"{sheet_name}!A1:Z1000"
             df = sheets_client.read_spreadsheet(spreadsheet_id, range_name)
@@ -242,16 +238,23 @@ class FormBuilderService:
             template_row = df.iloc[1].to_dict()
             logger.info(f"Using template row: {template_row}")
             
+            # Get form fields and formula fields
+            form_fields, formula_fields = self.get_form_fields(df)
+            logger.info(f"Formula fields found: {formula_fields}")
+            
             next_row = len(df) + 2
             
-            # Create new row by copying the template row (row 2)
+            # Create new row by combining form data and formulas
             new_row = []
             for col in df.columns:
-                if col in form_data:
+                if col in formula_fields:
+                    # For formula fields, use the formula from row 2
+                    new_row.append(formula_fields[col])
+                elif col in form_data:
                     # For form fields, use the submitted data
                     new_row.append(form_data[col])
                 else:
-                    # For formula fields or any other fields, copy from template row
+                    # For any other fields, copy from template row
                     new_row.append(template_row[col])
             
             logger.info(f"New row data: {new_row}")
