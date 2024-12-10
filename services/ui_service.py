@@ -134,17 +134,29 @@ class UIService:
             # Add submit button
             if st.button("Submit Entry", type="primary"):
                 try:
-                    success = form_builder_service.append_form_data(
-                        spreadsheet_id,
-                        sheet_name,
-                        form_data,
-                        sheets_client
+                    logger.info("Submit Entry button clicked")
+                    # Get the next available row
+                    range_name = f"{sheet_name}!A1:Z1000"
+                    df = sheets_client.read_spreadsheet(spreadsheet_id, range_name)
+                    next_row = len(df) + 2 if not df.empty else 2
+                    
+                    # Use copy service directly
+                    from services.copy_service import CopyService
+                    copy_service = CopyService(sheets_client)
+                    success = copy_service.copy_entry(
+                        spreadsheet_id=spreadsheet_id,
+                        sheet_name=sheet_name,
+                        source_range="A2:D2",
+                        target_row=int(next_row)
                     )
+                    
                     if success:
                         st.success("✅ Entry added successfully!")
+                        logger.info("Successfully copied template row")
                         return form_data
                     else:
                         st.error("Failed to add entry")
+                        logger.error("Failed to copy template row")
                 except Exception as e:
                     logger.error(f"Error submitting form: {str(e)}")
                     st.error(f"Error submitting form: {str(e)}")
