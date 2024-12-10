@@ -226,76 +226,47 @@ class FormBuilderService:
         return form_data
 
     def append_form_data(self, spreadsheet_id: str, sheet_name: str, form_data: Dict[str, Any], sheets_client) -> bool:
-        """Append form data as a new row in the sheet, first copying row 2 template and then updating with form data."""
+        """Append form data as a new row in the sheet."""
         try:
             logger.info("Starting form data append process")
+            logger.info(f"Form data to append: {form_data}")
+            
+            # Get sheet data to determine next row
             range_name = f"{sheet_name}!A1:Z1000"
             df = sheets_client.read_spreadsheet(spreadsheet_id, range_name)
             
-            if df.empty or len(df) < 2:
-                logger.error("Sheet is empty or doesn't have a template row")
-                return False
-                
-            next_row = len(df) + 2
-            logger.info(f"Next available row determined: {next_row}")
-            
-            # Initialize copy service
-            logger.info("Initializing copy service")
-            copy_service = CopyService(sheets_client)
-            
-            # First, copy row 2 to the next available row
-            logger.info(f"Attempting to copy template row 2 to row {next_row}")
-            source_range = f"{sheet_name}!A2:Z2"  # Copy all columns from row 2
-            copy_success = copy_service.copy_entry(
-                spreadsheet_id=spreadsheet_id,
-                sheet_name=sheet_name,
-                source_range=source_range,
-                target_row=next_row
-            )
-            
-            if not copy_success:
-                logger.error(f"Failed to copy template row from {source_range} to row {next_row}")
-                return False
-                
-            logger.info(f"Successfully copied template row to row {next_row}")
-            
-            # Wait briefly for the copy operation to complete
-            import time
-            time.sleep(1)
-            
-            # Read the current values in the copied row
-            row_range = f"{sheet_name}!A{next_row}:Z{next_row}"
-            current_row_df = sheets_client.read_spreadsheet(spreadsheet_id, row_range)
-            if current_row_df.empty:
-                logger.error("Failed to read newly copied row")
+            if df.empty:
+                logger.error("Sheet is empty")
                 return False
             
-            # Create update row preserving existing values
-            update_row = list(current_row_df.iloc[0])
+            next_row = len(df) + 2  # Add to next empty row
+            logger.info(f"Appending to row {next_row}")
             
-            # Only update the form fields, preserving all other values
+            # Create new row from form data
+            new_row = []
             for col in df.columns:
                 if col in form_data:
-                    col_idx = df.columns.get_loc(col)
-                    logger.debug(f"Updating form field {col} at index {col_idx} with value: {form_data[col]}")
-                    update_row[col_idx] = form_data[col]
+                    logger.info(f"Adding form value for {col}: {form_data[col]}")
+                    new_row.append(form_data[col])
+                else:
+                    new_row.append(None)
             
-            logger.info(f"Updating form fields in row {next_row}")
+            # Write the new row
             append_range = f"{sheet_name}!A{next_row}"
             success = sheets_client.write_to_spreadsheet(
                 spreadsheet_id,
                 append_range,
-                [update_row]  # Wrap in list as write_to_spreadsheet expects list of rows
+                [new_row]  # Wrap in list as write_to_spreadsheet expects list of rows
             )
             
             if success:
-                logger.info(f"Successfully updated row {next_row} in {sheet_name}")
+                logger.info(f"Successfully appended row {next_row}")
                 return True
             else:
-                logger.error(f"Failed to update row {next_row}")
+                logger.error(f"Failed to append row {next_row}")
                 return False
                 
         except Exception as e:
             logger.error(f"Error appending form data: {str(e)}")
             logger.exception("Full traceback:")
-            raise
+            return False
