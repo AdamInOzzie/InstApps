@@ -174,55 +174,24 @@ class GoogleSheetsClient:
             raise ConnectionError("Google Sheets client is not properly connected")
 
         try:
-            logger.info(f"Preparing to write to spreadsheet {spreadsheet_id}, range: {range_name}")
-            logger.debug(f"Data to write: {values}")
-            
-            # Validate input
-            if not values or not isinstance(values, list):
-                raise ValueError("No values provided or invalid format")
-            
-            if not all(isinstance(row, list) for row in values):
-                raise ValueError("All values must be lists (rows)")
-            
-            body = {'values': values}
-            logger.info("Executing spreadsheet update request...")
-            
-            response = self.sheets_service.spreadsheets().values().update(
+            # Simple validation
+            if not values or not isinstance(values, list) or not all(isinstance(row, list) for row in values):
+                logger.error("Invalid values format provided")
+                return False
+
+            # Direct API call with minimal complexity
+            self.sheets_service.spreadsheets().values().update(
                 spreadsheetId=spreadsheet_id,
                 range=range_name,
-                valueInputOption='USER_ENTERED',  # Changed from RAW to handle formulas better
-                body=body
+                valueInputOption='USER_ENTERED',
+                body={'values': values}
             ).execute()
             
-            logger.info(f"Write operation completed. Response: {response}")
-            logger.info(f"Successfully wrote {len(values)} rows to spreadsheet")
             return True
             
-        except HttpError as e:
-            error_msg = f"Failed to write to spreadsheet: {str(e)}"
-            error_details = {}
-            
-            try:
-                error_content = json.loads(e.content.decode('utf-8'))
-                error_details = error_content.get('error', {})
-                logger.error(f"API Error details: {error_details}")
-            except Exception:
-                pass
-                
-            if e.resp.status == 403:
-                error_msg = "Permission denied. Please check write permissions for this spreadsheet"
-            elif e.resp.status == 404:
-                error_msg = "Spreadsheet not found. Please check the spreadsheet ID"
-            elif e.resp.status == 400:
-                error_msg = f"Invalid request: {error_details.get('message', 'Unknown error')}"
-            
-            logger.error(error_msg)
-            raise Exception(error_msg)
-            
         except Exception as e:
-            logger.error(f"Unexpected error writing to spreadsheet: {str(e)}")
-            logger.exception("Full traceback:")
-            raise
+            logger.error(f"Failed to write to spreadsheet: {str(e)}")
+            return False
 
     def get_spreadsheet_metadata(self, spreadsheet_id: str) -> Dict[str, Any]:
         """Get metadata about a spreadsheet."""
