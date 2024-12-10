@@ -230,6 +230,9 @@ class FormBuilderService:
     def append_form_data(self, spreadsheet_id: str, sheet_name: str, form_data: Dict[str, Any], sheets_client) -> bool:
         """Append form data as a new row in the sheet, copying row 2 as template with proper formula adjustments."""
         try:
+            logger.info(f"Starting append operation for sheet: {sheet_name}")
+            logger.info(f"Form data received: {form_data}")
+            
             # Step 1: Get metadata to determine sheet ID
             metadata = sheets_client.sheets_service.spreadsheets().get(
                 spreadsheetId=spreadsheet_id
@@ -245,75 +248,84 @@ class FormBuilderService:
                 logger.error(f"Could not find sheet ID for {sheet_name}")
                 return False
 
-            # Step 2: Get the last row number
-            metadata_range = f"{sheet_name}!A:A"
+            logger.info(f"Found sheet ID: {sheet_id}")
+
+            # Step 2: Get current sheet data to determine next row
+            data_range = f"{sheet_name}!A1:Z1000"
             result = sheets_client.sheets_service.spreadsheets().values().get(
                 spreadsheetId=spreadsheet_id,
-                range=metadata_range
-            ).execute()
-            next_row = len(result.get('values', [])) + 1
-
-            # Step 3: Get headers for mapping
-            header_result = sheets_client.sheets_service.spreadsheets().values().get(
-                spreadsheetId=spreadsheet_id,
-                range=f"{sheet_name}!A1:Z1"
+                range=data_range
             ).execute()
             
-            if not header_result or 'values' not in header_result:
-                logger.error("Could not fetch headers")
+            values = result.get('values', [])
+            if not values:
+                logger.error("No data found in sheet")
                 return False
                 
-            headers = header_result['values'][0]
+            next_row = len(values) + 1
+            logger.info(f"Next row will be: {next_row}")
 
-            # Step 4: Use copyPaste to copy template row (row 2) to new row
-            copy_paste_request = {
-                'copyPaste': {
-                    'source': {
-                        'sheetId': sheet_id,
-                        'startRowIndex': 1,  # 0-based index for row 2
-                        'endRowIndex': 2,    # exclusive end
-                        'startColumnIndex': 0,
-                        'endColumnIndex': len(headers)
-                    },
-                    'destination': {
-                        'sheetId': sheet_id,
-                        'startRowIndex': next_row - 1,  # convert to 0-based index
-                        'endRowIndex': next_row,
-                        'startColumnIndex': 0,
-                        'endColumnIndex': len(headers)
-                    },
-                    'pasteType': 'PASTE_FORMULA',
-                    'pasteOrientation': 'NORMAL'
-                }
+            # Step 3: Get headers from first row
+            headers = values[0]
+            logger.info(f"Found headers: {headers}")
+
+            # Step 4: First copy row 2 (template) to the new row using copyPaste
+            copy_request = {
+                'requests': [{
+                    'copyPaste': {
+                        'source': {
+                            'sheetId': sheet_id,
+                            'startRowIndex': 1,
+                            'endRowIndex': 2,
+                            'startColumnIndex': 0,
+                            'endColumnIndex': len(headers)
+                        },
+                        'destination': {
+                            'sheetId': sheet_id,
+                            'startRowIndex': next_row - 1,
+                            'endRowIndex': next_row,
+                            'startColumnIndex': 0,
+                            'endColumnIndex': len(headers)
+                        },
+                        'pasteType': 'PASTE_NORMAL',
+                        'pasteOrientation': 'NORMAL'
+                    }
+                }]
             }
 
-            # Execute the copyPaste request
-            sheets_client.sheets_service.spreadsheets().batchUpdate(
+            logger.info("Executing copyPaste request...")
+            copy_response = sheets_client.sheets_service.spreadsheets().batchUpdate(
                 spreadsheetId=spreadsheet_id,
-                body={'requests': [copy_paste_request]}
+                body=copy_request
             ).execute()
+            logger.info(f"CopyPaste response: {copy_response}")
 
-            # Step 5: Update the non-formula fields with form data
+            # Step 5: Update the form data fields
             updates = []
             for i, header in enumerate(headers):
                 if header in form_data:
+                    column_letter = chr(65 + i) if i < 26 else chr(64 + i // 26) + chr(65 + (i % 26))
+                    range_name = f"{sheet_name}!{column_letter}{next_row}"
                     updates.append({
-                        'range': f'{sheet_name}!{chr(65+i)}{next_row}',
+                        'range': range_name,
                         'values': [[form_data[header]]]
                     })
-
+            
             if updates:
-                sheets_client.sheets_service.spreadsheets().values().batchUpdate(
+                logger.info(f"Updating {len(updates)} fields with form data...")
+                update_response = sheets_client.sheets_service.spreadsheets().values().batchUpdate(
                     spreadsheetId=spreadsheet_id,
                     body={
                         'valueInputOption': 'USER_ENTERED',
                         'data': updates
                     }
                 ).execute()
+                logger.info(f"Update response: {update_response}")
 
-            logger.info(f"Successfully appended row with formula adjustments at row {next_row}")
+            logger.info(f"Successfully completed append operation at row {next_row}")
             return True
 
         except Exception as e:
             logger.error(f"Error in append_form_data: {str(e)}")
+            logger.exception("Full traceback:")
             return False
