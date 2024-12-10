@@ -128,6 +128,9 @@ class UIService:
             
             logger.info(f"Sheet {sheet_name} data loaded - Shape: {df.shape if df is not None else 'None'}")
             logger.info(f"Columns found: {df.columns.tolist() if df is not None else []}")
+            if df is not None:
+                logger.info(f"First row values: {df.iloc[0].tolist() if not df.empty else 'No data'}")
+                logger.info(f"DataFrame info: {df.info()}")
             
             # Get form fields from sheet structure
             logger.info(f"Generating form fields for sheet {sheet_name}")
