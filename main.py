@@ -270,6 +270,7 @@ def main():
             st.session_state.form_service = FormService(st.session_state.sheets_client)
             st.session_state.form_builder_service = FormBuilderService()
             st.session_state.ui_service = UIService()
+            st.session_state.copy_service = CopyService(st.session_state.sheets_client)
             logger.info("Services initialized successfully")
         except Exception as e:
             st.error(f"Failed to initialize services: {str(e)}")
@@ -550,6 +551,9 @@ def main():
                     'OUTPUTS'
                 )
                 UIService.display_sheet_data(outputs_df, sheet_type='outputs')
+                
+                # Add TESTCopy button after outputs display
+                UIService.display_copy_test_button(selected_sheet['id'], st.session_state.copy_service)
             
             # Check for USERS sheet and get allowed sheets for the current user
             has_users_sheet = 'USERS' in sheet_names
