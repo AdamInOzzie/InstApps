@@ -279,43 +279,44 @@ class FormBuilderService:
             headers = values[0]
             logger.info(f"Found headers: {headers}")
 
-            # Step 4: First copy row 2 (template) to the new row using copyPaste
-            # Define source range (row 2)
-            source_range = {
-                "sheetId": sheet_id,
-                "startRowIndex": 1,  # row 2 (0-based)
-                "endRowIndex": 2,    # exclusive end
-                "startColumnIndex": 0,
-                "endColumnIndex": len(headers)
-            }
-
-            # Define destination range (new row)
-            destination_range = {
-                "sheetId": sheet_id,
-                "startRowIndex": next_row - 1,  # convert to 0-based index
-                "endRowIndex": next_row,
-                "startColumnIndex": 0,
-                "endColumnIndex": len(headers)
-            }
-
-            # Create the copyPaste request
-            copy_request = {
-                'requests': [{
-                    'copyPaste': {
-                        'source': source_range,
-                        'destination': destination_range,
-                        'pasteType': 'PASTE_FORMULA',  # This ensures formulas are adjusted
-                        'pasteOrientation': 'NORMAL'
-                    }
-                }]
-            }
-
-            logger.info("Executing copyPaste request...")
-            copy_response = sheets_client.sheets_service.spreadsheets().batchUpdate(
+            # Instead of copying formulas, let's directly get the formula from row 2 and adapt it
+            template_row_range = f"{sheet_name}!A2:Z2"
+            template_result = sheets_client.sheets_service.spreadsheets().values().get(
                 spreadsheetId=spreadsheet_id,
-                body=copy_request
+                range=template_row_range,
+                valueRenderOption='FORMULA'
             ).execute()
-            logger.info(f"CopyPaste response: {copy_response}")
+            
+            logger.info("Retrieved template row formulas")
+            template_values = template_result.get('values', [[]])[0]
+            logger.info(f"Template values: {template_values}")
+
+            # Prepare the values for the new row, adjusting row numbers in formulas
+            new_row_values = []
+            for i, value in enumerate(template_values[:len(headers)]):
+                if str(value).startswith('='):
+                    # Adjust row references in the formula
+                    adjusted_formula = value.replace('2', str(next_row))
+                    new_row_values.append(adjusted_formula)
+                elif headers[i] in form_data:
+                    new_row_values.append(form_data[headers[i]])
+                else:
+                    new_row_values.append(value)
+
+            logger.info(f"Prepared new row values: {new_row_values}")
+            
+            # Update the new row directly
+            update_range = f"{sheet_name}!A{next_row}:{chr(65 + len(headers) - 1)}{next_row}"
+            logger.info(f"Updating range: {update_range}")
+            
+            update_response = sheets_client.sheets_service.spreadsheets().values().update(
+                spreadsheetId=spreadsheet_id,
+                range=update_range,
+                valueInputOption='USER_ENTERED',
+                body={'values': [new_row_values]}
+            ).execute()
+            
+            logger.info(f"Update response: {update_response}")
 
             # Step 5: Update the form data fields
             updates = []
