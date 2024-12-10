@@ -27,7 +27,7 @@ import logging
 import json
 import random  # Added for jitter calculation
 from utils import GoogleSheetsClient
-from services import SpreadsheetService, FormService, UIService, FormBuilderService
+from services import SpreadsheetService, FormService, UIService, FormBuilderService, CopyService
 
 # Configure logging
 logging.basicConfig(
@@ -57,15 +57,37 @@ def load_service_account_json():
         # Get the service account JSON from environment variable
         service_account_json = os.getenv('GOOGLE_SERVICE_ACCOUNT_JSON')
         if not service_account_json:
+            logger.error("GOOGLE_SERVICE_ACCOUNT_JSON environment variable is not set")
             raise ValueError("GOOGLE_SERVICE_ACCOUNT_JSON environment variable is not set")
 
         # Parse and validate JSON structure
         try:
-            json.loads(service_account_json)
+            parsed_json = json.loads(service_account_json)
+            logger.info("Service account JSON parsed successfully")
+            
+            # Validate required fields
+            required_fields = ['type', 'project_id', 'private_key_id', 'private_key', 'client_email']
+            missing_fields = [field for field in required_fields if field not in parsed_json]
+            
+            if missing_fields:
+                error_msg = f"Missing required fields in service account JSON: {', '.join(missing_fields)}"
+                logger.error(error_msg)
+                raise ValueError(error_msg)
+                
+            if parsed_json['type'] != 'service_account':
+                error_msg = "Invalid credential type. Expected 'service_account'"
+                logger.error(error_msg)
+                raise ValueError(error_msg)
+                
+            logger.info(f"Service account email: {parsed_json.get('client_email')}")
+            logger.info(f"Project ID: {parsed_json.get('project_id')}")
+            
         except json.JSONDecodeError as e:
-            raise ValueError(f"Invalid JSON format in service account credentials: {str(e)}")
+            error_msg = f"Invalid JSON format in service account credentials: {str(e)}"
+            logger.error(error_msg)
+            raise ValueError(error_msg)
 
-        logger.info("Successfully loaded service account JSON")
+        logger.info("Successfully loaded and validated service account JSON")
         return service_account_json
 
     except Exception as e:
