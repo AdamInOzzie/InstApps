@@ -1,7 +1,6 @@
 import json
 import os
 import logging
-import random
 from typing import List, Dict, Any, Optional
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
@@ -131,77 +130,43 @@ class GoogleSheetsClient:
             logger.error(error_msg)
             raise Exception(error_msg)
 
-    def read_spreadsheet(self, spreadsheet_id: str, range_name: str, max_retries: int = 3) -> pd.DataFrame:
+    def read_spreadsheet(self, spreadsheet_id: str, range_name: str) -> pd.DataFrame:
         """Read data from a spreadsheet range with support for various data structures."""
         if not self.connection_status['connected']:
             raise ConnectionError("Google Sheets client is not properly connected")
 
-        import time
-        retry_count = 0
-        last_error = None
+        try:
+            logger.debug(f"Fetching data from spreadsheet {spreadsheet_id}, range: {range_name}")
+            # Get values with basic formatting
+            result = self.sheets_service.spreadsheets().values().get(
+                spreadsheetId=spreadsheet_id,
+                range=range_name,
+                valueRenderOption='FORMULA'
+            ).execute()
+            
+            # Extract values from the response
+            values = result.get('values', [])
+            if not values:
+                logger.warning(f"No data found for range {range_name}")
+                return pd.DataFrame()
 
-        while retry_count < max_retries:
-            try:
-                logger.debug(f"Fetching data from spreadsheet {spreadsheet_id}, range: {range_name} (attempt {retry_count + 1}/{max_retries})")
-                
-                # Get values with basic formatting and timeout
-                request = self.sheets_service.spreadsheets().values().get(
-                    spreadsheetId=spreadsheet_id,
-                    range=range_name,
-                    valueRenderOption='FORMULA'
-                )
-                request.uri = request.uri + "&timeout=30"  # Add 30-second timeout
-                result = request.execute()
-                
-                # Extract values from the response
-                values = result.get('values', [])
-                if not values:
-                    logger.warning(f"No data found for range {range_name}")
-                    return pd.DataFrame()
+            # Convert to DataFrame directly
+            df = pd.DataFrame(values)
+            
+            # Use first row as headers if available
+            if not df.empty:
+                df.columns = df.iloc[0]
+                df = df[1:].reset_index(drop=True)
+            return df
 
-                # Convert to DataFrame directly
-                df = pd.DataFrame(values)
-                
-                # Use first row as headers if available
-                if not df.empty:
-                    df.columns = df.iloc[0]
-                    df = df[1:].reset_index(drop=True)
-                return df
-
-            except HttpError as e:
-                error_msg = f"Failed to read spreadsheet (attempt {retry_count + 1}/{max_retries}): {str(e)}"
-                if e.resp.status == 403:
-                    error_msg = "Permission denied. Please check read permissions for this spreadsheet"
-                    raise Exception(error_msg)  # Don't retry permission errors
-                elif e.resp.status == 404:
-                    error_msg = "Spreadsheet not found. Please check the spreadsheet ID"
-                    raise Exception(error_msg)  # Don't retry not found errors
-                
-                last_error = error_msg
-                logger.warning(error_msg)
-                
-                retry_count += 1
-                if retry_count < max_retries:
-                    # Exponential backoff
-                    wait_time = (2 ** retry_count) + (random.randint(0, 1000) / 1000.0)
-                    logger.info(f"Waiting {wait_time:.2f} seconds before retry...")
-                    time.sleep(wait_time)
-                continue
-
-            except Exception as e:
-                error_msg = f"Unexpected error reading spreadsheet: {str(e)}"
-                logger.error(error_msg)
-                last_error = error_msg
-                
-                retry_count += 1
-                if retry_count < max_retries:
-                    wait_time = (2 ** retry_count) + (random.randint(0, 1000) / 1000.0)
-                    logger.info(f"Waiting {wait_time:.2f} seconds before retry...")
-                    time.sleep(wait_time)
-                continue
-
-        # If we get here, all retries failed
-        raise Exception(f"Failed after {max_retries} attempts. Last error: {last_error}")
+        except HttpError as e:
+            error_msg = f"Failed to read spreadsheet: {str(e)}"
+            if e.resp.status == 403:
+                error_msg = "Permission denied. Please check read permissions for this spreadsheet"
+            elif e.resp.status == 404:
+                error_msg = "Spreadsheet not found. Please check the spreadsheet ID"
+            logger.error(error_msg)
+            raise Exception(error_msg)
 
     def write_to_spreadsheet(self, spreadsheet_id: str, range_name: str, values: List[List[Any]]) -> bool:
         """Write data to a spreadsheet range."""
@@ -209,24 +174,23 @@ class GoogleSheetsClient:
             raise ConnectionError("Google Sheets client is not properly connected")
 
         try:
-            # Simple validation
-            if not values or not isinstance(values, list) or not all(isinstance(row, list) for row in values):
-                logger.error("Invalid values format provided")
-                return False
-
-            # Direct API call with minimal complexity
+            body = {'values': values}
             self.sheets_service.spreadsheets().values().update(
                 spreadsheetId=spreadsheet_id,
                 range=range_name,
-                valueInputOption='USER_ENTERED',
-                body={'values': values}
+                valueInputOption='RAW',
+                body=body
             ).execute()
-            
+            logger.info(f"Successfully wrote {len(values)} rows to spreadsheet")
             return True
-            
-        except Exception as e:
-            logger.error(f"Failed to write to spreadsheet: {str(e)}")
-            return False
+        except HttpError as e:
+            error_msg = f"Failed to write to spreadsheet: {str(e)}"
+            if e.resp.status == 403:
+                error_msg = "Permission denied. Please check write permissions for this spreadsheet"
+            elif e.resp.status == 404:
+                error_msg = "Spreadsheet not found. Please check the spreadsheet ID"
+            logger.error(error_msg)
+            raise Exception(error_msg)
 
     def get_spreadsheet_metadata(self, spreadsheet_id: str) -> Dict[str, Any]:
         """Get metadata about a spreadsheet."""
