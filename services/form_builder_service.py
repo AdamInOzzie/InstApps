@@ -44,16 +44,31 @@ class FormBuilderService:
         Returns:
             List of form field definitions based on header row
         """
-        if sheet_data is None or sheet_data.empty:
-            logger.warning("Empty sheet data provided")
-            return []
+        try:
+            # Add debug logging
+            logger.debug(f"Raw cell data:\n{sheet_data}")
             
-        if len(sheet_data.columns) == 0:
-            logger.warning("No columns found in sheet")
-            return []
+            if sheet_data is None:
+                logger.warning("Sheet data is None")
+                return []
+                
+            if sheet_data.empty:
+                if not sheet_data.columns.empty:
+                    # Sheet has headers but no data
+                    logger.info("Sheet has headers but no data rows")
+                    form_fields = []
+                    for col in sheet_data.columns:
+                        form_fields.append({
+                            'name': col,
+                            'type': 'text',
+                            'required': True
+                        })
+                    return form_fields
+                logger.warning("Sheet is completely empty")
+                return []
 
-        logger.info(f"Processing {len(sheet_data.columns)} columns from header row")
-        form_fields = []
+            logger.info(f"Processing {len(sheet_data.columns)} columns from header row")
+            form_fields = []
         
         # Process each column header as a field
         for col in sheet_data.columns:
