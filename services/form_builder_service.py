@@ -279,44 +279,67 @@ class FormBuilderService:
             headers = values[0]
             logger.info(f"Found headers: {headers}")
 
-            # Instead of copying formulas, let's directly get the formula from row 2 and adapt it
+            # Get the template row (row 2) with formulas
             template_row_range = f"{sheet_name}!A2:Z2"
+            logger.info(f"Fetching template row from range: {template_row_range}")
             template_result = sheets_client.sheets_service.spreadsheets().values().get(
                 spreadsheetId=spreadsheet_id,
                 range=template_row_range,
                 valueRenderOption='FORMULA'
             ).execute()
             
-            logger.info("Retrieved template row formulas")
             template_values = template_result.get('values', [[]])[0]
-            logger.info(f"Template values: {template_values}")
+            logger.info(f"Template row values: {template_values}")
 
-            # Prepare the values for the new row, adjusting row numbers in formulas
+            # Prepare new row values with form data and adjusted formulas
             new_row_values = []
-            for i, value in enumerate(template_values[:len(headers)]):
-                if str(value).startswith('='):
-                    # Adjust row references in the formula
-                    adjusted_formula = value.replace('2', str(next_row))
+            for i, header in enumerate(headers):
+                if i < len(template_values) and str(template_values[i]).startswith('='):
+                    # It's a formula - adjust row references
+                    formula = template_values[i]
+                    adjusted_formula = formula.replace(f'2', str(next_row))
+                    logger.info(f"Adjusted formula for {header}: {adjusted_formula}")
                     new_row_values.append(adjusted_formula)
-                elif headers[i] in form_data:
-                    new_row_values.append(form_data[headers[i]])
-                else:
+                elif header in form_data:
+                    # It's a form field - use the submitted value
+                    value = form_data[header]
+                    logger.info(f"Using form value for {header}: {value}")
                     new_row_values.append(value)
+                else:
+                    # Use empty string for any remaining fields
+                    logger.info(f"No value for {header}, using empty string")
+                    new_row_values.append('')
 
-            logger.info(f"Prepared new row values: {new_row_values}")
+            logger.info(f"Final new row values: {new_row_values}")
             
             # Update the new row directly
             update_range = f"{sheet_name}!A{next_row}:{chr(65 + len(headers) - 1)}{next_row}"
             logger.info(f"Updating range: {update_range}")
             
-            update_response = sheets_client.sheets_service.spreadsheets().values().update(
-                spreadsheetId=spreadsheet_id,
-                range=update_range,
-                valueInputOption='USER_ENTERED',
-                body={'values': [new_row_values]}
-            ).execute()
-            
-            logger.info(f"Update response: {update_response}")
+            try:
+                logger.info(f"Attempting to update range: {update_range}")
+                logger.info(f"Update payload: {{'values': [new_row_values]}}")
+                
+                update_response = sheets_client.sheets_service.spreadsheets().values().update(
+                    spreadsheetId=spreadsheet_id,
+                    range=update_range,
+                    valueInputOption='USER_ENTERED',
+                    body={'values': [new_row_values]}
+                ).execute()
+                
+                logger.info(f"Update successful. Response: {update_response}")
+                
+                # Verify the update was successful
+                if 'updatedRange' in update_response:
+                    logger.info("Row update completed successfully")
+                    return True
+                else:
+                    logger.error("Update response missing updatedRange field")
+                    return False
+                    
+            except Exception as e:
+                logger.error(f"Failed to update row: {str(e)}")
+                return False
 
             # Step 5: Update the form data fields
             updates = []
