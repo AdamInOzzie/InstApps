@@ -182,18 +182,17 @@ class UIService:
                             logger.error("Form submission failed")
                             st.error("Failed to add entry - Please check the data and try again")
                             return None
-                        
-                except Exception as e:
-                    logger.error("="*50)
-                    logger.error("FORM SUBMISSION ERROR")
-                    logger.error("="*50)
-                    logger.error(f"Error Type: {type(e).__name__}")
-                    logger.error(f"Error Message: {str(e)}")
-                    logger.error("Full traceback:")
-                    import traceback
-                    logger.error(traceback.format_exc())
-                    st.error(f"Error submitting form: {str(e)}")
-                    return None
+                    except Exception as e:
+                        logger.error("="*50)
+                        logger.error("FORM SUBMISSION ERROR")
+                        logger.error("="*50)
+                        logger.error(f"Error Type: {type(e).__name__}")
+                        logger.error(f"Error Message: {str(e)}")
+                        logger.error("Full traceback:")
+                        import traceback
+                        logger.error(traceback.format_exc())
+                        st.error(f"Error submitting form: {str(e)}")
+                        return None
             
             return form_data if form_data else None
             
