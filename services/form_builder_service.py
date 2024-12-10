@@ -230,8 +230,18 @@ class FormBuilderService:
     def append_form_data(self, spreadsheet_id: str, sheet_name: str, form_data: Dict[str, Any], sheets_client) -> bool:
         """Append form data as a new row in the sheet, copying row 2 as template with proper formula adjustments."""
         try:
-            logger.info(f"Starting append operation for sheet: {sheet_name}")
-            logger.info(f"Form data received: {form_data}")
+            logger.info("="*50)
+            logger.info("FORM SUBMISSION DETAILS")
+            # Validate form data
+            if not form_data:
+                logger.error("Form data is empty")
+                return False
+            logger.info(f"Form data validation passed with {len(form_data)} fields")
+
+            logger.info("="*50)
+            logger.info(f"Spreadsheet ID: {spreadsheet_id}")
+            logger.info(f"Sheet Name: {sheet_name}")
+            logger.info(f"Form Data: {form_data}")
             
             # Step 1: Get metadata to determine sheet ID
             metadata = sheets_client.sheets_service.spreadsheets().get(
@@ -333,6 +343,13 @@ class FormBuilderService:
             return True
 
         except Exception as e:
-            logger.error(f"Error in append_form_data: {str(e)}")
-            logger.exception("Full traceback:")
+            logger.error("="*50)
+            logger.error("FORM SUBMISSION ERROR")
+            logger.error("="*50)
+            logger.error(f"Error Type: {type(e).__name__}")
+            logger.error(f"Error Message: {str(e)}")
+            logger.error("Full traceback:")
+            import traceback
+            logger.error(traceback.format_exc())
+            logger.error("="*50)
             return False
