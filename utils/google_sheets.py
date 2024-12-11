@@ -130,18 +130,18 @@ class GoogleSheetsClient:
             logger.error(error_msg)
             raise Exception(error_msg)
 
-    def read_spreadsheet(self, spreadsheet_id: str, range_name: str) -> pd.DataFrame:
+    def read_spreadsheet(self, spreadsheet_id: str, range_name: str, value_render_option: str = 'FORMATTED_VALUE') -> pd.DataFrame:
         """Read data from a spreadsheet range with support for various data structures."""
         if not self.connection_status['connected']:
             raise ConnectionError("Google Sheets client is not properly connected")
 
         try:
             logger.debug(f"Fetching data from spreadsheet {spreadsheet_id}, range: {range_name}")
-            # Get values with basic formatting
+            # Get values with proper rendering option
             result = self.sheets_service.spreadsheets().values().get(
                 spreadsheetId=spreadsheet_id,
                 range=range_name,
-                valueRenderOption='FORMULA'
+                valueRenderOption=value_render_option
             ).execute()
             
             # Extract values from the response
@@ -178,7 +178,7 @@ class GoogleSheetsClient:
             self.sheets_service.spreadsheets().values().update(
                 spreadsheetId=spreadsheet_id,
                 range=range_name,
-                valueInputOption='RAW',
+                valueInputOption='USER_ENTERED',
                 body=body
             ).execute()
             logger.info(f"Successfully wrote {len(values)} rows to spreadsheet")

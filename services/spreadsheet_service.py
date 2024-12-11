@@ -38,7 +38,8 @@ class SpreadsheetService:
         try:
             range_name = f"{sheet_name}!A1:Z1000"
             logger.debug(f"Reading data from range: {range_name}")
-            df = self.sheets_client.read_spreadsheet(spreadsheet_id, range_name)
+            # Use FORMATTED_VALUE to get calculated results instead of formulas
+            df = self.sheets_client.read_spreadsheet(spreadsheet_id, range_name, value_render_option='FORMATTED_VALUE')
             
             # Process each column while preserving formatting
             for col in df.columns:

@@ -528,6 +528,7 @@ def main():
                                 def create_callback(row):
                                     def callback():
                                         value = st.session_state[f"input_{row}"]
+                                        logger.info(f"Updating input cell row {row} with value {value}")
                                         success = st.session_state.spreadsheet_service.update_input_cell(
                                             selected_sheet['id'],
                                             str(value),
@@ -535,6 +536,8 @@ def main():
                                         )
                                         if not success:
                                             st.error(f"Failed to update cell B{row}")
+                                        else:
+                                            logger.info(f"Successfully updated cell B{row} with value {value}")
                                     return callback
 
                                 # Determine format based on value and type
