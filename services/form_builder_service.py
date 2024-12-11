@@ -70,11 +70,50 @@ class FormBuilderService:
                 return 'currency'
             return 'text'
 
-    def get_form_fields(self, sheet_data: pd.DataFrame) -> Tuple[List[Dict[str, Any]], Dict[str, str]]:
+    def get_field_type_from_sheet(self, spreadsheet_id: str, sheet_name: str, column_index: int) -> str:
+        """Determine field type using Google Sheets API format information."""
+        try:
+            # Get the format information for the first data row (row 2)
+            client = GoogleSheetsClient()
+            sheet = client.sheets_service.spreadsheets().get(
+                spreadsheetId=spreadsheet_id,
+                ranges=[f"{sheet_name}!{chr(65 + column_index)}2"],
+                includeGridData=True
+            ).execute()
+
+            # Extract the cell data
+            if (sheet.get('sheets') and sheet['sheets'][0].get('data') and 
+                sheet['sheets'][0]['data'][0].get('rowData') and
+                sheet['sheets'][0]['data'][0]['rowData'][0].get('values')):
+                
+                cell_data = sheet['sheets'][0]['data'][0]['rowData'][0]['values'][0]
+                
+                # Check if it has an effectiveFormat and numberFormat
+                if ('effectiveFormat' in cell_data and 
+                    'numberFormat' in cell_data['effectiveFormat']):
+                    number_format = cell_data['effectiveFormat']['numberFormat']
+                    if number_format['type'] in ('DATE', 'DATE_TIME'):
+                        return 'date'
+                    elif number_format['type'] == 'PERCENT':
+                        return 'percentage'
+                    elif number_format['type'] == 'CURRENCY':
+                        return 'currency'
+                    elif number_format['type'] == 'NUMBER':
+                        return 'number'
+            
+            return 'text'  # Default to text if no specific format is found
+            
+        except Exception as e:
+            logger.error(f"Error getting field type from sheet: {str(e)}")
+            return 'text'  # Default to text on error
+
+    def get_form_fields(self, sheet_data: pd.DataFrame, spreadsheet_id: str = None, sheet_name: str = None) -> Tuple[List[Dict[str, Any]], Dict[str, str]]:
         """Extract form fields from sheet headers and check row 2 for formulas.
         
         Args:
             sheet_data: DataFrame containing the sheet data
+            spreadsheet_id: Optional spreadsheet ID for getting format information
+            sheet_name: Optional sheet name for getting format information
             
         Returns:
             Tuple of (form field definitions, formula fields dictionary)
@@ -137,13 +176,21 @@ class FormBuilderService:
                         'required': True
                     }
                     
-                    # Determine type from data
-                    if len(sheet_data) > 0:
-                        sample_values = sheet_data[col].dropna()
-                        if not sample_values.empty:
-                            sample_value = sample_values.iloc[0]
-                            logger.debug(f"Sample value for {col}: {sample_value}")
-                            field_info['type'] = self.get_field_type(sample_value)
+                    # Determine type from sheet format if spreadsheet_id and sheet_name are provided
+                    if spreadsheet_id and sheet_name:
+                        field_info['type'] = self.get_field_type_from_sheet(
+                            spreadsheet_id, 
+                            sheet_name, 
+                            sheet_data.columns.get_loc(col)
+                        )
+                    else:
+                        # Fall back to existing behavior for INPUTS form
+                        if len(sheet_data) > 0:
+                            sample_values = sheet_data[col].dropna()
+                            if not sample_values.empty:
+                                sample_value = sample_values.iloc[0]
+                                logger.debug(f"Sample value for {col}: {sample_value}")
+                                field_info['type'] = self.get_field_type(sample_value)
                     
                     # Add numeric constraints if we have sample data
                     if field_info['type'] == 'number' and len(sheet_data) > 0:

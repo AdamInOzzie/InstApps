@@ -115,7 +115,11 @@ class UIService:
             
             # Get form fields and formula fields from sheet structure
             logger.info(f"Generating form fields for sheet {sheet_name}")
-            form_fields, formula_fields = form_builder_service.get_form_fields(df)
+            form_fields, formula_fields = form_builder_service.get_form_fields(
+                df,
+                spreadsheet_id=spreadsheet_id,
+                sheet_name=sheet_name
+            )
             
             if not form_fields and not formula_fields:
                 st.warning(f"Could not generate form fields from sheet '{sheet_name}'")
