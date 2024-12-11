@@ -139,19 +139,21 @@ class UIService:
             # Add submit button
             if st.button("Submit Entry", type="primary"):
                 try:
-                    # Find the first empty row in the current sheet
                     entry_range = f"{sheet_name}!A:A"  # Only check column A
                     entry_df = sheets_client.read_spreadsheet(spreadsheet_id, entry_range)
-                    
-                    # Use copy functionality with next available row
-                    copy_service = CopyService(sheets_client)
                     next_row = 2 if entry_df.empty else entry_df[entry_df.columns[0]].notna().sum() + 2
+                    
                     success = copy_service.copy_entry(
                         spreadsheet_id=spreadsheet_id,
                         sheet_name=sheet_name,
                         source_range=f"{sheet_name}!A2:Z2",
                         target_row=next_row
                     )
+                    
+                    if success:
+                        st.success(f"✅ Successfully copied to row {next_row} in {sheet_name}!")
+                    else:
+                        st.error("Failed to copy entry")
                     return form_data if success else None
                         
                 except Exception as e:
