@@ -244,34 +244,34 @@ class FormBuilderService:
     def append_form_data(self, spreadsheet_id: str, sheet_name: str, form_data: Dict[str, Any], sheets_client) -> bool:
         """Append form data as a new row in the sheet by copying row 2 as template."""
         try:
-            logger.info("Starting form data append process")
+            logger.info(f"Starting form data append process for sheet: {sheet_name}")
             
             # Get sheet data to determine next row
-            range_name = f"{sheet_name}!A1:Z1000"
+            range_name = f"{sheet_name}!A1:Z"
             df = sheets_client.read_spreadsheet(spreadsheet_id, range_name)
             
-            if df.empty:
-                logger.error("Sheet is empty")
+            if df is None or df.empty:
+                logger.error("Sheet is empty or could not be read")
                 return False
             
-            next_row = len(df) + 2  # Add to next empty row
-            logger.info(f"Copying template to row {next_row}")
+            next_row = len(df) + 2  # Add to next empty row (1-based index)
+            logger.info(f"Will copy template to row {next_row}")
             
-            # Use copy service to copy row 2 to the next row
+            # Create copy service and copy the template row
             copy_service = CopyService(sheets_client)
             success = copy_service.copy_entry(
                 spreadsheet_id=spreadsheet_id,
                 sheet_name=sheet_name,
-                source_range="A2:D2",  # Use exact same range as working copy function
-                target_row=int(next_row)  # Ensure target_row is int
+                source_range="A2:D2",
+                target_row=next_row
             )
             
-            if not success:
+            if success:
+                logger.info(f"Successfully copied template row to row {next_row}")
+                return True
+            else:
                 logger.error("Failed to copy template row")
                 return False
-                
-            logger.info("Successfully copied template row")
-            return True
                 
         except Exception as e:
             logger.error(f"Error in append_form_data: {str(e)}")
