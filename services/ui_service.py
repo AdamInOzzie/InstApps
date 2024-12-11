@@ -258,11 +258,11 @@ class UIService:
     @staticmethod
     def display_copy_test_button(spreadsheet_id: str, copy_service: CopyService) -> None:
         """Display test buttons and forms for various functionalities."""
+        # Only show copy and test forms for admin users
+        if not UIService.is_admin():
+            return
+            
         try:
-            # Only show copy and test forms for admin users
-            if not UIService.is_admin():
-                return
-
             # 1. Copy to Selected Row Form
             st.markdown("""
                 <div style="
