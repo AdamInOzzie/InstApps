@@ -139,13 +139,19 @@ class UIService:
             # Add submit button
             if st.button("Submit Entry", type="primary"):
                 try:
-                    entry_range = f"{sheet_name}!A:A"  # Only check column A
+                    # Get next available row
+                    entry_range = f"{sheet_name}!A:A"
                     entry_df = sheets_client.read_spreadsheet(spreadsheet_id, entry_range)
                     next_row = 2 if entry_df.empty else entry_df[entry_df.columns[0]].notna().sum() + 2
                     
-                    # Initialize copy service
-                    copy_service = CopyService(sheets_client)
-                    success = copy_service.copy_entry(
+                    logger.info("=" * 60)
+                    logger.info("SUBMIT ENTRY OPERATION")
+                    logger.info("=" * 60)
+                    logger.info(f"Spreadsheet ID: {spreadsheet_id}")
+                    logger.info(f"Sheet Name: {sheet_name}")
+                    logger.info(f"Target Row: {next_row}")
+                    
+                    success = CopyService(sheets_client).copy_entry(
                         spreadsheet_id=spreadsheet_id,
                         sheet_name=sheet_name,
                         source_range=f"{sheet_name}!A2:Z2",
@@ -153,15 +159,21 @@ class UIService:
                     )
                     
                     if success:
-                        st.success(f"✅ Successfully copied to row {next_row} in {sheet_name}!")
+                        success_msg = f"✅ Successfully copied to row {next_row} in {sheet_name}!"
+                        logger.info(success_msg)
+                        st.success(success_msg)
                     else:
-                        st.error("Failed to copy entry")
-                    return form_data if success else None
-                        
+                        error_msg = "Failed to copy entry"
+                        logger.error(error_msg)
+                        st.error(error_msg)
+                    
                 except Exception as e:
-                    logger.error(f"Error in form submission: {str(e)}")
-                    st.error(f"Error: {str(e)}")
+                    error_msg = f"Error during submit: {str(e)}"
+                    logger.error(error_msg)
+                    st.error(error_msg)
                     return None
+                
+                return form_data
             
             # If no submission occurred, return the form data
             return form_data
