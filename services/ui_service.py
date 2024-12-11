@@ -252,8 +252,7 @@ class UIService:
     @staticmethod
     def is_admin() -> bool:
         """Check if current user has admin privileges based on URL parameter."""
-        query_params = st.experimental_get_query_params()
-        return 'admin' in query_params
+        return 'admin' in st.query_params
 
     @staticmethod
     def display_copy_test_button(spreadsheet_id: str, copy_service: CopyService) -> None:
