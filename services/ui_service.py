@@ -162,7 +162,31 @@ class UIService:
                     )
                     
                     if success:
-                        st.success(f"Entry added successfully at row {next_row}")
+                        # After successful copy, update cells with form data
+                        try:
+                            # Convert form data into cell updates format
+                            cell_updates = []
+                            for idx, (field_name, field_value) in enumerate(form_data.items(), start=1):
+                                # Add each field as a cell update
+                                cell_updates.extend([next_row, idx, str(field_value)])
+                            
+                            # Use SpreadsheetService to update cells
+                            from services.spreadsheet_service import SpreadsheetService
+                            update_success = SpreadsheetService.UpdateEntryCells(
+                                spreadsheet_id=spreadsheet_id,
+                                sheet_name=sheet_name,
+                                cell_updates=cell_updates
+                            )
+                            
+                            if update_success:
+                                st.success(f"Entry added and updated successfully at row {next_row}")
+                            else:
+                                st.warning(f"Entry copied to row {next_row} but field updates failed")
+                            
+                        except Exception as e:
+                            logger.error(f"Error updating cells after copy: {str(e)}")
+                            st.warning(f"Entry copied to row {next_row} but field updates failed: {str(e)}")
+                        
                         return form_data
                     else:
                         st.error("Failed to add entry")
