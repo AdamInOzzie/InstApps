@@ -251,6 +251,7 @@ class UIService:
                 st.error("Failed to load sheet names")
                 return
             
+            # Row selection for the selected sheet
             target_row = st.number_input(
                 "Target Row",
                 min_value=1,
@@ -260,7 +261,21 @@ class UIService:
             )
             
             if st.button("Copy to Selected Row", type="primary", key="test_copy_button"):
-                UIService.copy_volunteer_entry(spreadsheet_id, copy_service, target_row)
+                try:
+                    success = copy_service.copy_entry(
+                        spreadsheet_id=spreadsheet_id,
+                        sheet_name=selected_sheet,
+                        source_range=f"{selected_sheet}!A2:Z2",
+                        target_row=target_row
+                    )
+                    
+                    if success:
+                        st.success(f"✅ Successfully copied to row {target_row} in {selected_sheet}!")
+                    else:
+                        st.error("Failed to copy entry")
+                except Exception as e:
+                    logger.error(f"Error during copy: {str(e)}")
+                    st.error(f"Error: {str(e)}")
             
             st.markdown("<br>", unsafe_allow_html=True)
             
