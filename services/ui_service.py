@@ -238,9 +238,70 @@ class UIService:
             if st.button("Copy to Selected Row", type="primary", key="test_copy_button"):
                 UIService.copy_volunteer_entry(spreadsheet_id, copy_service, target_row)
                 
+            # Add Cell Updates Test Form
+            st.markdown("""
+                <div style="
+                    background-color: #f0f8ff;
+                    padding: 0.5rem 0.8rem;
+                    border-radius: 8px;
+                    border-left: 5px solid #1E88E5;
+                    margin: 2rem 0 0.6rem 0;
+                ">
+                    <h3 style="margin: 0; color: #1E88E5; font-size: 1rem;">📝 Test Cell Updates</h3>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            st.markdown("---")
+            
+            # Sheet name input
+            sheet_name = st.text_input("Sheet Name", value="Volunteers", 
+                                     help="Enter the name of the sheet to update")
+            
+            # Container for cell updates
+            st.markdown("### Cell Updates")
+            st.markdown("Enter row, column, and value for each cell to update")
+            
+            # Create 3 rows of inputs by default
+            num_updates = 3
+            cell_updates = []
+            
+            for i in range(num_updates):
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    row = st.number_input(f"Row #{i+1}", 
+                                        min_value=1, 
+                                        value=4,
+                                        key=f"row_{i}")
+                with col2:
+                    col = st.number_input(f"Column #{i+1}", 
+                                        min_value=1,
+                                        value=i+1,
+                                        help="1=A, 2=B, etc",
+                                        key=f"col_{i}")
+                with col3:
+                    val = st.text_input(f"Value #{i+1}",
+                                      value=f"test{i+1}",
+                                      key=f"val_{i}")
+                cell_updates.extend([row, col, val])
+            
+            if st.button("Test Cell Updates", type="primary", key="test_cell_updates"):
+                try:
+                    from services.spreadsheet_service import SpreadsheetService
+                    success = SpreadsheetService.UpdateEntryCells(
+                        spreadsheet_id=spreadsheet_id,
+                        sheet_name=sheet_name,
+                        cell_updates=cell_updates
+                    )
+                    if success:
+                        st.success("✅ Cells updated successfully!")
+                    else:
+                        st.error("❌ Failed to update cells")
+                except Exception as e:
+                    st.error(f"❌ Error: {str(e)}")
+                
         except Exception as e:
-            logger.error(f"Error displaying copy test button: {str(e)}")
-            st.error("Failed to display copy test button")
+            logger.error(f"Error displaying test buttons: {str(e)}")
+            st.error("Failed to display test buttons")
 
     @staticmethod
     def display_sheet_data(df: pd.DataFrame, sheet_type: str = 'general'):
