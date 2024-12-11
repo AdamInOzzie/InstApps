@@ -181,28 +181,37 @@ class UIService:
 
                     logger.info(f"Successfully copied template to row {next_row}")
                     
-                    # Update each form field using the stored column index
+                    # Only update non-formula fields after template copy
                     for field in form_fields:
                         field_name = field['name']
-                        if field_name in form_data:
+                        if field_name in form_data and field_name not in formula_fields:
                             try:
-                                # Use the stored column index to determine the target column
-                                col_idx = field['column_index']
-                                col_letter = chr(65 + col_idx)  # Convert to column letter (A=0, B=1, etc.)
-                                update_range = f"{sheet_name}!{col_letter}{next_row}"
+                                # Get the value from form_data
+                                value = form_data[field_name]
                                 
-                                logger.info(f"Writing {field_name}='{value}' to {update_range}")
-                                result = sheets_client.write_to_spreadsheet(
-                                    spreadsheet_id,
-                                    update_range,
-                                    [[value]]
-                                )
-                                logger.info(f"Write result for {field_name}: {result}")
-                            except ValueError:
-                                logger.error(f"Field {field_name} not found in headers: {headers}")
+                                # Get original column index from field definition
+                                col_idx = field.get('column_index')
+                                if col_idx is not None:
+                                    col_letter = chr(65 + col_idx)  # Convert to column letter (A=0, B=1, etc.)
+                                    update_range = f"{sheet_name}!{col_letter}{next_row}"
+                                    
+                                    logger.info(f"Writing field '{field_name}' with value '{value}' to cell {update_range}")
+                                    result = sheets_client.write_to_spreadsheet(
+                                        spreadsheet_id,
+                                        update_range,
+                                        [[value]]
+                                    )
+                                    if result:
+                                        logger.info(f"Successfully wrote {field_name} to {update_range}")
+                                    else:
+                                        logger.error(f"Failed to write {field_name} to {update_range}")
+                                        st.error(f"Failed to update {field_name}")
+                                else:
+                                    logger.warning(f"No column index found for field {field_name}")
                             except Exception as e:
-                                logger.error(f"Error writing {field_name}: {str(e)}")
+                                logger.error(f"Error writing field {field_name} to sheet: {str(e)}")
                                 st.error(f"Failed to update {field_name}")
+                                continue
 
                     logger.info("Successfully updated form fields in copied row")
                     st.success(f"✅ Entry added at row {next_row}")
