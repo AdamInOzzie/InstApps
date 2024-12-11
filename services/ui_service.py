@@ -284,7 +284,12 @@ class UIService:
                                       key=f"val_{i}")
                 cell_updates.extend([row, col, val])
             
+            # Preserve form state in session state
+            if 'cell_updates_active' not in st.session_state:
+                st.session_state.cell_updates_active = False
+                
             if st.button("Test Cell Updates", type="primary", key="test_cell_updates"):
+                st.session_state.cell_updates_active = True
                 try:
                     from services.spreadsheet_service import SpreadsheetService
                     success = SpreadsheetService.UpdateEntryCells(
@@ -298,6 +303,9 @@ class UIService:
                         st.error("❌ Failed to update cells")
                 except Exception as e:
                     st.error(f"❌ Error: {str(e)}")
+                finally:
+                    # Reset state after operation
+                    st.session_state.cell_updates_active = False
                 
         except Exception as e:
             logger.error(f"Error displaying test buttons: {str(e)}")
