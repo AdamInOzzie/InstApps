@@ -37,6 +37,12 @@ class CopyService:
             bool: True if successful, False otherwise
         """
         try:
+            # Check if sheet is reserved
+            reserved_sheets = ['USERS', 'INPUTS', 'OUTPUTS']
+            if sheet_name.upper() in reserved_sheets:
+                logger.error(f"Cannot copy to reserved sheet: {sheet_name}")
+                return False
+                
             logger.info("=" * 60)
             logger.info("COPY ENTRY OPERATION")
             logger.info("=" * 60)
