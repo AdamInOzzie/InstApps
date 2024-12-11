@@ -134,29 +134,40 @@ class UIService:
             # Add submit button
             if st.button("Submit Entry", type="primary"):
                 try:
-                    logger.info("Submit Entry button clicked")
+                    logger.info(f"Submit Entry clicked for sheet: {sheet_name}")
+                    logger.info(f"Spreadsheet ID: {spreadsheet_id}")
+                    
                     # Get the next available row
                     range_name = f"{sheet_name}!A1:Z1000"
+                    logger.info(f"Reading range: {range_name}")
                     df = sheets_client.read_spreadsheet(spreadsheet_id, range_name)
                     next_row = len(df) + 2 if not df.empty else 2
+                    logger.info(f"Calculated next row: {next_row}")
                     
                     # Use copy service directly
+                    logger.info("Initializing CopyService")
                     from services.copy_service import CopyService
                     copy_service = CopyService(sheets_client)
+                    
+                    # Use exact same parameters as working copy button
+                    source_range = "A2:D2"
+                    logger.info(f"Copying from {source_range} to row {next_row}")
                     success = copy_service.copy_entry(
                         spreadsheet_id=spreadsheet_id,
                         sheet_name=sheet_name,
-                        source_range="A2:D2",
+                        source_range=source_range,
                         target_row=int(next_row)
                     )
                     
                     if success:
                         st.success("✅ Entry added successfully!")
-                        logger.info("Successfully copied template row")
+                        logger.info(f"Successfully copied template row to {next_row}")
                         return form_data
                     else:
-                        st.error("Failed to add entry")
-                        logger.error("Failed to copy template row")
+                        error_msg = "Failed to copy template row"
+                        logger.error(error_msg)
+                        st.error(error_msg)
+                        return None
                 except Exception as e:
                     logger.error(f"Error submitting form: {str(e)}")
                     st.error(f"Error submitting form: {str(e)}")
@@ -199,19 +210,33 @@ class UIService:
             
             if st.button("Copy to Selected Row", type="primary", key="test_copy_button"):
                 try:
-                    logger.info(f"Copy button clicked - attempting copy to row {target_row}")
+                    logger.info("=" * 60)
+                    logger.info("COPY BUTTON DEBUG")
+                    logger.info("=" * 60)
+                    logger.info(f"Spreadsheet ID: {spreadsheet_id}")
+                    logger.info(f"Target Row: {target_row}")
+                    
+                    source_range = "A2:D2"
+                    sheet_name = "Volunteers"
+                    
+                    logger.info(f"Sheet Name: {sheet_name}")
+                    logger.info(f"Source Range: {source_range}")
+                    
                     success = copy_service.copy_entry(
                         spreadsheet_id=spreadsheet_id,
-                        sheet_name="Volunteers",
-                        source_range="A2:D2",
+                        sheet_name=sheet_name,
+                        source_range=source_range,
                         target_row=int(target_row)
                     )
+                    
                     if success:
-                        st.success(f"✅ Successfully copied to row {target_row}!")
-                        logger.info("Copy operation completed successfully")
+                        success_msg = f"✅ Successfully copied to row {target_row}!"
+                        logger.info(success_msg)
+                        st.success(success_msg)
                     else:
-                        st.error(f"Failed to copy to row {target_row}")
-                        logger.error("Copy operation failed without exception")
+                        error_msg = f"Failed to copy to row {target_row}"
+                        logger.error(error_msg)
+                        st.error(error_msg)
                 except Exception as e:
                     error_msg = f"Error during copy: {str(e)}"
                     logger.error(error_msg)
