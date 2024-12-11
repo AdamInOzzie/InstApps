@@ -161,14 +161,37 @@ class UIService:
                     # Now update just the form fields in the copied row
                     if form_data:
                         try:
-                            # Update each form field
-                            for field_name, value in form_data.items():
-                                update_range = f"Volunteers!{field_name}{next_row}"
-                                sheets_client.write_to_spreadsheet(
-                                    spreadsheet_id,
-                                    update_range,
-                                    [[value]]
-                                )
+                            # Get the sheet structure to map field names to columns
+                            metadata = sheets_client.get_spreadsheet_metadata(spreadsheet_id)
+                            sheets = metadata.get('sheets', [])
+                            for sheet in sheets:
+                                if sheet['properties']['title'] == 'Volunteers':
+                                    # Read header row to map field names to columns
+                                    header_range = "Volunteers!A1:Z1"
+                                    header_data = sheets_client.read_spreadsheet(
+                                        spreadsheet_id,
+                                        header_range
+                                    )
+                                    if not header_data.empty:
+                                        headers = header_data.iloc[0].tolist()
+                                        # Update each form field using column index
+                                        for field_name, value in form_data.items():
+                                            try:
+                                                # Find column index for field name
+                                                col_idx = headers.index(field_name)
+                                                # Convert to letter (0=A, 1=B, etc.)
+                                                col_letter = chr(65 + col_idx)  # A=65 in ASCII
+                                                update_range = f"Volunteers!{col_letter}{next_row}"
+                                                logger.info(f"Updating {field_name} at {update_range} with value {value}")
+                                                sheets_client.write_to_spreadsheet(
+                                                    spreadsheet_id,
+                                                    update_range,
+                                                    [[value]]
+                                                )
+                                            except ValueError as ve:
+                                                logger.warning(f"Field {field_name} not found in headers: {str(ve)}")
+                                                continue
+                                            
                             logger.info("Successfully updated form fields in copied row")
                             st.success(f"✅ Entry added at row {next_row}")
                             return form_data
