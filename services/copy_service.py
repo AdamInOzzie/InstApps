@@ -118,7 +118,11 @@ class CopyService:
         return result
         
     def _parse_a1_range(self, range_str: str) -> tuple:
-        """Parse A1 notation range (e.g., 'A2:D2') into components."""
+        """Parse A1 notation range (e.g., 'Sheet1!A2:D2') into components."""
+        # Remove sheet name if present
+        if '!' in range_str:
+            range_str = range_str.split('!')[1]
+            
         # Split into start and end cells
         start, end = range_str.split(':')
         
@@ -128,4 +132,5 @@ class CopyService:
         end_col = ''.join(c for c in end if c.isalpha())
         end_row = int(''.join(c for c in end if c.isdigit()))
         
+        logger.info(f"Parsed range components - Start Col: {start_col}, Start Row: {start_row}, End Col: {end_col}, End Row: {end_row}")
         return start_col, start_row, end_col, end_row
