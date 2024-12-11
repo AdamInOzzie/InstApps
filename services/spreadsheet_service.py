@@ -151,27 +151,25 @@ class SpreadsheetService:
             # Construct the range in A1 notation for column B
             update_range = f"INPUTS!B{row}"
             
-            # Log the update attempt
-            logger.info(f"Updating cell {update_range} with value: {value}")
+            # Format the value appropriately based on type
+            if isinstance(value, (int, float)):
+                if value <= 1 and value >= 0:  # Likely a percentage
+                    formatted_value = f"{value:.4f}"  # Keep precision for small decimals
+                else:
+                    formatted_value = f"{value:.2f}"  # Normal number formatting
+            else:
+                formatted_value = str(value).strip()
+            
+            logger.info(f"Updating cell {update_range} with value: {formatted_value}")
             
             try:
-                # Direct API call to update the cell value
-                request = {
-                    'range': update_range,
-                    'values': [[value]],  # Wrap in nested list as required by Sheets API
-                    'majorDimension': 'ROWS'
-                }
-                
                 result = self.sheets_client.sheets_service.spreadsheets().values().update(
                     spreadsheetId=spreadsheet_id,
                     range=update_range,
-                    valueInputOption='USER_ENTERED',  # This preserves formatting
-                    body=request
+                    valueInputOption='USER_ENTERED',
+                    body={'values': [[formatted_value]]}
                 ).execute()
                 
-                logger.info(f"Update response: {result}")
-                
-                # Verify the update was successful
                 updated_cells = result.get('updatedCells', 0)
                 if updated_cells > 0:
                     logger.info(f"Successfully updated cell {update_range}")
