@@ -297,25 +297,62 @@ class FormBuilderService:
     def append_form_data(self, spreadsheet_id: str, sheet_name: str, form_data: Dict[str, Any], sheets_client) -> bool:
         """Append form data as a new row in the sheet by copying row 2 as template."""
         try:
-            from services.ui_service import UIService
             logger.info(f"Starting form data append process for sheet: {sheet_name}")
             
-            # Use the existing working copy functionality from UIService
-            volunteer_range = "Volunteers!A:A"  # Only check column A
-            volunteer_df = sheets_client.read_spreadsheet(spreadsheet_id, volunteer_range)
+            # Get range for column A to find next available row
+            range_name = f"{sheet_name}!A:A"
+            df = sheets_client.read_spreadsheet(spreadsheet_id, range_name)
             
             # Calculate next available row
             next_row = 2  # Start from row 2 (after header)
-            if not volunteer_df.empty:
+            if not df.empty:
                 # Find last non-empty row and add 1
-                mask = volunteer_df.iloc[:, 0].notna()
+                mask = df.iloc[:, 0].notna()
                 if mask.any():
                     next_row = mask.values.nonzero()[0][-1] + 3  # +2 for header and +1 for next row
             
             logger.info(f"Calculated next available row: {next_row}")
-            from services.copy_service import CopyService
+            
+            # 1. Copy template row
             copy_service = CopyService(sheets_client)
-            return UIService.copy_volunteer_entry(spreadsheet_id, copy_service, next_row)
+            source_range = f"{sheet_name}!A2:Z2"
+            success = copy_service.copy_entry(
+                spreadsheet_id=spreadsheet_id,
+                sheet_name=sheet_name,
+                source_range=source_range,
+                target_row=next_row
+            )
+            
+            if not success:
+                logger.error("Failed to copy template row")
+                return False
+                
+            # 2. Update cells with form data
+            try:
+                from services.spreadsheet_service import SpreadsheetService
+                cell_updates = []
+                
+                # Convert form data to cell updates
+                for idx, (field_name, value) in enumerate(form_data.items(), start=1):
+                    cell_updates.extend([next_row, idx, str(value)])
+                    
+                # Execute cell updates
+                update_success = SpreadsheetService.UpdateEntryCells(
+                    spreadsheet_id=spreadsheet_id,
+                    sheet_name=sheet_name,
+                    cell_updates=cell_updates
+                )
+                
+                if update_success:
+                    logger.info(f"Successfully updated cells in row {next_row}")
+                    return True
+                else:
+                    logger.error(f"Failed to update cells in row {next_row}")
+                    return False
+                    
+            except Exception as cell_error:
+                logger.error(f"Error updating cells: {str(cell_error)}")
+                return False
                 
         except Exception as e:
             logger.error(f"Error in append_form_data: {str(e)}")
