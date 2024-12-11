@@ -153,7 +153,7 @@ class UIService:
                     
                     # Use copy functionality with calculated row
                     copy_service = CopyService(sheets_client)
-                    success = UIService.copy_entry(spreadsheet_id, copy_service, next_row, sheet_name)
+                    success = UIService.copy_entry(spreadsheet_id, copy_service, next_row, sheet_name, sheets_client)
                     
                     if success:
                         st.success(f"Entry added successfully at row {next_row}")
@@ -176,7 +176,7 @@ class UIService:
             return None
 
     @staticmethod
-    def copy_entry(spreadsheet_id: str, copy_service: CopyService, target_row: int, sheet_name: str) -> bool:
+    def copy_entry(spreadsheet_id: str, copy_service: CopyService, target_row: int, sheet_name: str, sheets_client) -> bool:
         """Shared copy functionality for sheet entries."""
         try:
             logger.info("=" * 60)
