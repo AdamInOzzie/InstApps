@@ -139,10 +139,21 @@ class UIService:
                     df = sheets_client.read_spreadsheet(spreadsheet_id, range_name)
                     next_row = len(df) + 2 if not df.empty else 2
                     
-                    # Use the same copy service instance and method as the copy button
-                    from services.copy_service import CopyService
-                    UIService.display_copy_test_button(spreadsheet_id, CopyService(sheets_client))
-                    return form_data
+                    # Use the same copy functionality that works in the Copy button
+                    copy_service = CopyService(sheets_client)
+                    success = copy_service.copy_entry(
+                        spreadsheet_id=spreadsheet_id,
+                        sheet_name="Volunteers",  # Same as Copy button
+                        source_range="A2:D2",     # Same as Copy button
+                        target_row=next_row
+                    )
+                    
+                    if success:
+                        st.success(f"✅ Successfully copied to row {next_row}!")
+                        return form_data
+                    else:
+                        st.error(f"Failed to copy to row {next_row}")
+                        return None
                 except Exception as e:
                     logger.error(f"Error submitting form: {str(e)}")
                     st.error(f"Error submitting form: {str(e)}")
