@@ -151,26 +151,31 @@ class UIService:
                     
                     # First copy the template row to maintain structure
                     copy_service = CopyService(sheets_client)
-                    if UIService.copy_volunteer_entry(spreadsheet_id, copy_service, next_row):
-                        logger.info(f"Successfully copied template to row {next_row}, now updating form fields")
+                    if not UIService.copy_volunteer_entry(spreadsheet_id, copy_service, next_row):
+                        logger.error("Failed to copy template row")
+                        st.error("Failed to copy template row")
+                        return None
+
+                    logger.info(f"Successfully copied template to row {next_row}")
                         
-                        # Now update just the form fields in the copied row
-                        if form_data:
-                            try:
-                                # Update each form field
-                                for field_name, value in form_data.items():
-                                    update_range = f"Volunteers!{field_name}{next_row}"
-                                    sheets_client.write_to_spreadsheet(
-                                        spreadsheet_id,
-                                        update_range,
-                                        [[value]]
-                                    )
-                                logger.info("Successfully updated form fields in copied row")
-                                return form_data
-                            except Exception as e:
-                                logger.error(f"Error updating form fields: {str(e)}")
-                                st.error(f"Error updating form fields: {str(e)}")
-                                return None
+                    # Now update just the form fields in the copied row
+                    if form_data:
+                        try:
+                            # Update each form field
+                            for field_name, value in form_data.items():
+                                update_range = f"Volunteers!{field_name}{next_row}"
+                                sheets_client.write_to_spreadsheet(
+                                    spreadsheet_id,
+                                    update_range,
+                                    [[value]]
+                                )
+                            logger.info("Successfully updated form fields in copied row")
+                            st.success(f"✅ Entry added at row {next_row}")
+                            return form_data
+                        except Exception as e:
+                            logger.error(f"Error updating form fields: {str(e)}")
+                            st.error(f"Error updating form fields: {str(e)}")
+                            return None
                     return None
                     
                 except Exception as e:
