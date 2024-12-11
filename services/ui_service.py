@@ -146,11 +146,10 @@ class UIService:
                     
                     # Use the exact same copy pattern that works in the Copy button
                     copy_service = CopyService(sheets_client)
-                    source_range = "A2:Z2"  # Same range as used in working Copy button
                     success = copy_service.copy_entry(
                         spreadsheet_id=spreadsheet_id,
                         sheet_name=sheet_name,
-                        source_range=source_range,
+                        source_range=f"{sheet_name}!A2:Z2",  # Include sheet name in range exactly like Copy button
                         target_row=next_row
                     )
                     
