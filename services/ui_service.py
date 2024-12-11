@@ -152,7 +152,7 @@ class UIService:
                             next_row = len(mask[mask]) + 2  # Add 2 to account for header row
                     
                     # Use copy functionality with calculated row
-                    copy_service = CopyService(self.sheets_client)
+                    copy_service = CopyService(sheets_client)
                     success = copy_service.copy_entry(
                         spreadsheet_id=spreadsheet_id,
                         sheet_name=sheet_name,
