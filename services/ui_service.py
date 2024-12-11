@@ -149,11 +149,28 @@ class UIService:
                     
                     logger.info(f"Calculated next available row: {next_row}")
                     
-                    # Use the shared copy functionality with calculated row
+                    # First copy the template row to maintain structure
                     copy_service = CopyService(sheets_client)
                     if UIService.copy_volunteer_entry(spreadsheet_id, copy_service, next_row):
-                        # Only if copy succeeds, return the form data
-                        return form_data
+                        logger.info(f"Successfully copied template to row {next_row}, now updating form fields")
+                        
+                        # Now update just the form fields in the copied row
+                        if form_data:
+                            try:
+                                # Update each form field
+                                for field_name, value in form_data.items():
+                                    update_range = f"Volunteers!{field_name}{next_row}"
+                                    sheets_client.write_to_spreadsheet(
+                                        spreadsheet_id,
+                                        update_range,
+                                        [[value]]
+                                    )
+                                logger.info("Successfully updated form fields in copied row")
+                                return form_data
+                            except Exception as e:
+                                logger.error(f"Error updating form fields: {str(e)}")
+                                st.error(f"Error updating form fields: {str(e)}")
+                                return None
                     return None
                     
                 except Exception as e:
