@@ -170,6 +170,7 @@ class UIService:
                     if success:
                         # Add cell updates after successful copy
                         cell_updates = [4, 1, "test1", 4, 2, "test2", 4, 3, "test3"]
+                        from services.spreadsheet_service import SpreadsheetService
                         update_success = SpreadsheetService.UpdateEntryCells(
                             spreadsheet_id=spreadsheet_id,
                             sheet_name=sheet_name,
