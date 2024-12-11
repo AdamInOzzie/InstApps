@@ -181,7 +181,17 @@ class UIService:
             logger.info(f"Spreadsheet ID: {spreadsheet_id}")
             logger.info(f"Target Row: {target_row}")
             
-            source_range = "A2:D2"
+            # Get sheet data to determine the number of columns
+            metadata = sheets_client.get_spreadsheet_metadata(spreadsheet_id)
+            sheet_info = next((sheet for sheet in metadata.get('sheets', []) 
+                             if sheet['properties']['title'] == sheet_name), None)
+            if not sheet_info:
+                raise ValueError(f"Sheet {sheet_name} not found")
+            
+            num_cols = sheet_info['properties']['gridProperties']['columnCount']
+            # Convert column count to letter (e.g., 4 -> D)
+            end_col = chr(64 + min(num_cols, 26))  # Limit to 26 columns for now
+            source_range = f"A2:{end_col}2"
             
             logger.info(f"Sheet Name: {sheet_name}")
             logger.info(f"Source Range: {source_range}")
