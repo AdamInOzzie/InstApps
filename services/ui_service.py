@@ -106,12 +106,6 @@ class UIService:
             df = sheets_client.read_spreadsheet(spreadsheet_id, range_name)
             
             logger.info(f"Sheet {sheet_name} data loaded - Shape: {df.shape if df is not None else 'None'}")
-            logger.info(f"Columns found: {df.columns.tolist() if df is not None else []}")
-            if df is not None and not df.empty:
-                logger.info(f"First row values: {df.iloc[0].tolist() if not df.empty else 'No data'}")
-                logger.info(f"Second row values: {df.iloc[1].tolist() if len(df) > 1 else 'No second row'}")
-                logger.info(f"Second row types: {[type(x).__name__ for x in df.iloc[1]] if len(df) > 1 else 'No second row'}")
-                logger.info(f"DataFrame info: {df.info()}")
             
             # Get form fields and formula fields from sheet structure
             logger.info(f"Generating form fields for sheet {sheet_name}")
@@ -126,77 +120,89 @@ class UIService:
                 logger.error(f"No form fields or formula fields generated for sheet {sheet_name}")
                 return None
                 
-            # Store formula fields in session state for use during form submission
+            # Store formula fields in session state
             if 'formula_fields' not in st.session_state:
                 st.session_state.formula_fields = {}
             st.session_state.formula_fields[sheet_name] = formula_fields
             
-            logger.info(f"Generated {len(form_fields)} form fields")
-            
             # Render the form with sheet name
             form_data = form_builder_service.render_form(form_fields, sheet_name)
             
-            # Add submit button
+            # Add submit button with proper error handling
             if st.button("Submit Entry", type="primary"):
-                try:
-                    # Get next available row
-                    entry_range = f"{sheet_name}!A:A"
-                    entry_df = sheets_client.read_spreadsheet(spreadsheet_id, entry_range)
-                    next_row = int(2 if entry_df.empty else entry_df[entry_df.columns[0]].notna().sum() + 2)  # Convert to regular Python int
-                    
-                    # Use the exact same copy pattern that works in the Copy button
-                    copy_service = CopyService(sheets_client)
-                    
-                    # Display parameters on screen
-                    st.info("Copy Operation Parameters:")
-                    st.write({
-                        "Spreadsheet ID": spreadsheet_id,
-                        "Sheet Name": sheet_name,
-                        "Source Range": f"{sheet_name}!A2:Z2",
-                        "Target Row": next_row
-                    })
-                    
-                    source_range = f"{sheet_name}!A2:Z2"  # Include sheet name in range
-                    st.write("About to execute copy_entry with these parameters")
-                    
-                    success = copy_service.copy_entry(
-                        spreadsheet_id=spreadsheet_id,
-                        sheet_name=sheet_name,
-                        source_range=source_range,
-                        target_row=next_row
-                    )
-                    
-                    if success:
-                        # Add cell updates after successful copy
-                        cell_updates = [4, 1, "test1", 4, 2, "test2", 4, 3, "test3"]
-                        # Import SpreadsheetService locally
-                        from services.spreadsheet_service import SpreadsheetService
-                        update_success = SpreadsheetService.UpdateEntryCells(
-                            spreadsheet_id=spreadsheet_id,
-                            sheet_name=sheet_name,
-                            cell_updates=cell_updates
-                        )
-                        
-                        if update_success:
-                            st.success(f"✅ Successfully copied to row {next_row} and updated cells in {sheet_name}!")
-                        else:
-                            st.warning(f"✅ Copied to row {next_row} but cell updates failed in {sheet_name}")
-                        return form_data
-                    else:
-                        st.error("Failed to copy entry")
-                        return None
-                        
-                except Exception as e:
-                    logger.error(f"Error in form submission: {str(e)}")
-                    st.error(f"Error: {str(e)}")
-                    return None
+                return UIService._handle_form_submission(
+                    spreadsheet_id=spreadsheet_id,
+                    sheet_name=sheet_name,
+                    sheets_client=sheets_client,
+                    form_data=form_data
+                )
             
-            # If no submission occurred, return the form data
             return form_data
             
         except Exception as e:
             logger.error(f"Error handling append entry: {str(e)}")
             st.error(f"Error generating form: {str(e)}")
+            return None
+            
+    @staticmethod
+    def _handle_form_submission(
+        spreadsheet_id: str,
+        sheet_name: str,
+        sheets_client,
+        form_data: Dict[str, Any]
+    ) -> Optional[Dict[str, Any]]:
+        """Handle the form submission process with proper error handling."""
+        try:
+            from services.spreadsheet_service import SpreadsheetService
+            
+            # Get next available row
+            entry_range = f"{sheet_name}!A:A"
+            entry_df = sheets_client.read_spreadsheet(spreadsheet_id, entry_range)
+            next_row = int(2 if entry_df.empty else entry_df[entry_df.columns[0]].notna().sum() + 2)
+            
+            # Create copy service
+            copy_service = CopyService(sheets_client)
+            
+            # Execute copy operation
+            source_range = f"{sheet_name}!A2:Z2"
+            success = copy_service.copy_entry(
+                spreadsheet_id=spreadsheet_id,
+                sheet_name=sheet_name,
+                source_range=source_range,
+                target_row=next_row
+            )
+            
+            if not success:
+                st.error("Failed to copy entry template")
+                return None
+                
+            # Update cells with form data
+            try:
+                cell_updates = []
+                for idx, (field_name, value) in enumerate(form_data.items(), start=1):
+                    cell_updates.extend([next_row, idx, str(value)])
+                    
+                update_success = SpreadsheetService.UpdateEntryCells(
+                    spreadsheet_id=spreadsheet_id,
+                    sheet_name=sheet_name,
+                    cell_updates=cell_updates
+                )
+                
+                if update_success:
+                    st.success(f"✅ Successfully added new entry to row {next_row} in {sheet_name}!")
+                    return form_data
+                else:
+                    st.warning(f"✅ Created entry but failed to update values in row {next_row}")
+                    return None
+                    
+            except Exception as cell_error:
+                logger.error(f"Error updating cells: {str(cell_error)}")
+                st.error(f"Error updating form values: {str(cell_error)}")
+                return None
+                
+        except Exception as e:
+            logger.error(f"Error in form submission: {str(e)}")
+            st.error(f"Error submitting form: {str(e)}")
             return None
 
     @staticmethod
