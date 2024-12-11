@@ -143,28 +143,16 @@ class UIService:
                     entry_range = f"{sheet_name}!A:A"  # Only check column A
                     entry_df = sheets_client.read_spreadsheet(spreadsheet_id, entry_range)
                     
-                    # Calculate next available row - start from row 2 (after header)
-                    next_row = 2
-                    if not entry_df.empty:
-                        # Find first empty row
-                        non_empty_rows = entry_df[entry_df.columns[0]].notna().sum()
-                        next_row = non_empty_rows + 2  # Add 2 to account for header row
-                    
-                    # Use copy functionality with calculated row
+                    # Use copy functionality with next available row
                     copy_service = CopyService(sheets_client)
+                    next_row = 2 if entry_df.empty else entry_df[entry_df.columns[0]].notna().sum() + 2
                     success = copy_service.copy_entry(
                         spreadsheet_id=spreadsheet_id,
                         sheet_name=sheet_name,
                         source_range=f"{sheet_name}!A2:Z2",
                         target_row=next_row
                     )
-                    
-                    if success:
-                        st.success(f"✅ Successfully copied to row {next_row}!")
-                        return form_data
-                    else:
-                        st.error("Failed to add entry")
-                        return None
+                    return form_data if success else None
                         
                 except Exception as e:
                     logger.error(f"Error in form submission: {str(e)}")
