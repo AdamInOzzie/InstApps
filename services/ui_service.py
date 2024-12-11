@@ -153,7 +153,12 @@ class UIService:
                     
                     # Use copy functionality with calculated row
                     copy_service = CopyService(sheets_client)
-                    success = UIService.copy_entry(spreadsheet_id, copy_service, next_row, sheet_name, sheets_client)
+                    success = copy_service.copy_entry(
+                        spreadsheet_id=spreadsheet_id,
+                        sheet_name=sheet_name,
+                        source_range=f"{sheet_name}!A2:Z2",
+                        target_row=int(next_row)
+                    )
                     
                     if success:
                         st.success(f"Entry added successfully at row {next_row}")
@@ -176,14 +181,13 @@ class UIService:
             return None
 
     @staticmethod
-    def copy_entry(spreadsheet_id: str, copy_service: CopyService, target_row: int, sheet_name: str, sheets_client) -> bool:
-        """Shared copy functionality for sheet entries."""
+    def copy_volunteer_entry(spreadsheet_id: str, copy_service: CopyService, target_row: int) -> bool:
+        """Copy volunteer entry to a specific row."""
         try:
-            # Copy the row template from row 2 as template
-            source_range = f"{sheet_name}!A2:Z2"
+            source_range = "Volunteers!A2:Z2"
             success = copy_service.copy_entry(
                 spreadsheet_id=spreadsheet_id,
-                sheet_name=sheet_name,
+                sheet_name="Volunteers",
                 source_range=source_range,
                 target_row=int(target_row)
             )
