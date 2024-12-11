@@ -1,5 +1,6 @@
 """Service for handling spreadsheet operations."""
 import logging
+import traceback
 from typing import List, Dict, Any, Optional
 import pandas as pd
 from utils import GoogleSheetsClient
@@ -146,44 +147,46 @@ class SpreadsheetService:
     def update_input_cell(self, spreadsheet_id: str, value: str, row: int) -> bool:
         """Update cell in B column of INPUTS sheet for specified row."""
         try:
-            import streamlit as st
-            
             # Construct the range in A1 notation for column B
             update_range = f"INPUTS!B{row}"
             
-            # Format the value appropriately based on type
-            if isinstance(value, (int, float)):
-                if value <= 1 and value >= 0:  # Likely a percentage
-                    formatted_value = f"{value:.4f}"  # Keep precision for small decimals
-                else:
-                    formatted_value = f"{value:.2f}"  # Normal number formatting
+            # Log the update attempt details
+            logger.info(f"Starting cell update operation:")
+            logger.info(f"  Spreadsheet ID: {spreadsheet_id}")
+            logger.info(f"  Range: {update_range}")
+            logger.info(f"  Value to set: {value}")
+            
+            # Ensure value is properly formatted for API
+            formatted_value = str(value).strip()
+            
+            # Create the update request body
+            body = {
+                'values': [[formatted_value]]
+            }
+            
+            logger.info("Making API request to update cell")
+            result = self.sheets_client.sheets_service.spreadsheets().values().update(
+                spreadsheetId=spreadsheet_id,
+                range=update_range,
+                valueInputOption='USER_ENTERED',
+                body=body
+            ).execute()
+            
+            # Log the API response
+            logger.info(f"API Response: {result}")
+            
+            # Check if update was successful
+            updated_cells = result.get('updatedCells', 0)
+            if updated_cells > 0:
+                logger.info(f"Successfully updated cell {update_range}")
+                return True
             else:
-                formatted_value = str(value).strip()
-            
-            logger.info(f"Updating cell {update_range} with value: {formatted_value}")
-            
-            try:
-                result = self.sheets_client.sheets_service.spreadsheets().values().update(
-                    spreadsheetId=spreadsheet_id,
-                    range=update_range,
-                    valueInputOption='USER_ENTERED',
-                    body={'values': [[formatted_value]]}
-                ).execute()
-                
-                updated_cells = result.get('updatedCells', 0)
-                if updated_cells > 0:
-                    logger.info(f"Successfully updated cell {update_range}")
-                    return True
-                else:
-                    logger.error(f"No cells were updated in range {update_range}")
-                    return False
-                    
-            except Exception as update_error:
-                logger.error(f"Error updating cell {update_range}: {str(update_error)}")
+                logger.error(f"Update failed - no cells updated in range {update_range}")
                 return False
                 
         except Exception as e:
-            logger.error(f"Error updating cell: {str(e)}")
+            logger.error(f"Error in update_input_cell: {str(e)}")
+            logger.error(f"Full error: {traceback.format_exc()}")
             return False
 
 

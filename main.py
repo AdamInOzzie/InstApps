@@ -319,7 +319,7 @@ def main():
                 st.rerun()
         
         # Display admin sidebar if admin parameter is present
-        if is_admin:
+        if st.session_state.query_params['is_admin']:
             UIService.display_admin_sidebar(st.session_state.sheets_client.connection_status)
     
     # Initialize session state variables
@@ -399,7 +399,7 @@ def main():
                 if selected_sheet:
                     # Store the selected sheet in session state
                     st.session_state.selected_sheet = selected_sheet
-                    if is_admin:
+                    if st.session_state.query_params['is_admin']:
                         st.info(f"Spreadsheet ID: {selected_sheet['id']}")
                     
                     # Check for USERS sheet and handle login
@@ -439,7 +439,7 @@ def main():
                             
                     except Exception as e:
                         logger.error(f"Error checking USERS sheet: {str(e)}")
-                        if is_admin:
+                        if st.session_state.query_params['is_admin']:
                             st.error(f"Error checking USERS sheet: {str(e)}")
                         # On error, allow access
                         st.session_state.is_logged_in = True
