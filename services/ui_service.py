@@ -140,17 +140,20 @@ class UIService:
                     df = sheets_client.read_spreadsheet(spreadsheet_id, range_name)
                     next_row = len(df) + 2 if not df.empty else 2
                     
-                    # Use the shared copy functionality
+                    # First, attempt the copy operation
                     copy_service = CopyService(sheets_client)
-                    success = UIService.copy_volunteer_entry(spreadsheet_id, copy_service, next_row)
-                    return form_data if success else None
+                    if UIService.copy_volunteer_entry(spreadsheet_id, copy_service, next_row):
+                        # Only if copy succeeds, return the form data
+                        return form_data
+                    return None
                     
                 except Exception as e:
-                    logger.error(f"Error submitting form: {str(e)}")
-                    st.error(f"Error submitting form: {str(e)}")
+                    logger.error(f"Error in form submission: {str(e)}")
+                    st.error(f"Error: {str(e)}")
                     return None
             
-            return form_data if form_data else None
+            # If no submission occurred, return the form data
+            return form_data
             
         except Exception as e:
             logger.error(f"Error handling append entry: {str(e)}")
