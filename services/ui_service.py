@@ -135,19 +135,8 @@ class UIService:
             # Add submit button
             if st.button("Submit Entry", type="primary"):
                 try:
-                    # Find the first empty row in the Volunteers sheet
-                    volunteer_range = "Volunteers!A:A"  # Only check column A
-                    volunteer_df = sheets_client.read_spreadsheet(spreadsheet_id, volunteer_range)
-                    
-                    # Calculate next available row
-                    next_row = 2  # Start from row 2 (after header)
-                    if not volunteer_df.empty:
-                        # Find last non-empty row and add 1
-                        mask = volunteer_df.iloc[:, 0].notna()
-                        if mask.any():
-                            next_row = mask.values.nonzero()[0][-1] + 3  # +2 for header and +1 for next row
-                    
-                    logger.info(f"Calculated next available row: {next_row}")
+                    # Find next empty row in Volunteers sheet
+                    next_row = UIService.find_next_empty_row(sheets_client, spreadsheet_id)
                     
                     # Use the shared copy functionality with calculated row
                     copy_service = CopyService(sheets_client)
@@ -168,6 +157,29 @@ class UIService:
             logger.error(f"Error handling append entry: {str(e)}")
             st.error(f"Error generating form: {str(e)}")
             return None
+
+    @staticmethod
+    def find_next_empty_row(sheets_client, spreadsheet_id: str) -> int:
+        """Find the first empty row in the Volunteers sheet."""
+        try:
+            # Only check column A to find empty rows
+            volunteer_range = "Volunteers!A:A"
+            volunteer_df = sheets_client.read_spreadsheet(spreadsheet_id, volunteer_range)
+            
+            # Start from row 2 (after header)
+            next_row = 2
+            if not volunteer_df.empty:
+                # Find last non-empty row and add 1
+                mask = volunteer_df.iloc[:, 0].notna()
+                if mask.any():
+                    next_row = mask.values.nonzero()[0][-1] + 3  # +2 for header and +1 for next row
+            
+            logger.info(f"Found next empty row: {next_row}")
+            return next_row
+            
+        except Exception as e:
+            logger.error(f"Error finding next empty row: {str(e)}")
+            raise
 
     @staticmethod
     def copy_volunteer_entry(spreadsheet_id: str, copy_service: CopyService, target_row: int) -> bool:
