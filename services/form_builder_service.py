@@ -102,26 +102,35 @@ class FormBuilderService:
             
             # Process each column header as a field
             for col in sheet_data.columns:
+                if pd.isna(col):
+                    logger.warning("Skipping empty column header")
+                    continue
+                    
+                col_name = str(col).strip()
+                if not col_name:
+                    logger.warning("Skipping empty column name after strip")
+                    continue
+                    
                 try:
-                    logger.info(f"Processing header field: {col}")
+                    logger.info(f"Processing header field: {col_name}")
                     
                     # Check row 2 for formulas if available
+                    row2_value = None
                     if len(sheet_data) > 1:
-                        row2_value = sheet_data.iloc[1][col] if len(sheet_data) > 1 else None
-                        logger.info(f"Checking row 2 value for column {col}: {row2_value}")
-                        
-                        # Convert to string for formula checking
-                        if row2_value is not None:
-                            str_value = str(row2_value)
-                            logger.debug(f"Raw value for column {col}: {row2_value}")
-                            logger.debug(f"String value for column {col}: {str_value}")
-                            is_formula = self.is_formula(str_value)
-                            logger.info(f"Column {col} formula check result: {is_formula}")
+                        try:
+                            row2_value = sheet_data.iloc[1][col]
+                            logger.info(f"Row 2 value for column {col_name}: {row2_value}")
                             
-                            if is_formula:
-                                logger.info(f"Found formula field {col}: {str_value}")
-                                formula_fields[col] = str_value
-                                continue  # Skip adding this field to form fields
+                            # Check for formula
+                            if not pd.isna(row2_value):
+                                str_value = str(row2_value)
+                                if self.is_formula(str_value):
+                                    logger.info(f"Found formula field {col_name}: {str_value}")
+                                    formula_fields[col_name] = str_value
+                                    continue
+                        except Exception as e:
+                            logger.error(f"Error accessing row 2 value for {col_name}: {str(e)}")
+                            continue
                     
                     # For non-formula fields, create form field
                     field_info = {
