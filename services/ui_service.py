@@ -149,20 +149,19 @@ class UIService:
                         # Find first empty row
                         mask = entry_df[entry_df.columns[0]].notna()
                         if mask.any():
-                            next_row = len(mask[mask]) + 2  # Add 2 to account for header row
+                            next_row = mask.values.argmin() + 2  # Add 2 to account for header row and 0-based index
                     
                     # Use copy functionality with calculated row
-                    # Initialize copy service with the sheets_client parameter
                     copy_service = CopyService(sheets_client)
                     success = copy_service.copy_entry(
                         spreadsheet_id=spreadsheet_id,
                         sheet_name=sheet_name,
                         source_range=f"{sheet_name}!A2:Z2",
-                        target_row=int(next_row)
+                        target_row=next_row
                     )
                     
                     if success:
-                        st.success(f"✅ Successfully copied to row {next_row}!")
+                        st.success(f"Entry added successfully at row {next_row}")
                         return form_data
                     else:
                         st.error("Failed to add entry")
