@@ -37,54 +37,77 @@ class CopyService:
             bool: True if successful, False otherwise
         """
         try:
-            logger.info(f"Copying {source_range} to row {target_row} in sheet {sheet_name}")
+            logger.info("=" * 60)
+            logger.info("COPY ENTRY OPERATION")
+            logger.info("=" * 60)
+            logger.info(f"Spreadsheet ID: {spreadsheet_id}")
+            logger.info(f"Sheet Name: {sheet_name}")
+            logger.info(f"Source Range: {source_range}")
+            logger.info(f"Target Row: {target_row}")
             
             # Get sheet ID
             sheet_id = self._get_sheet_id(spreadsheet_id, sheet_name)
             if sheet_id is None:
+                logger.error("Failed to get sheet ID")
                 return False
+            logger.info(f"Sheet ID: {sheet_id}")
                 
-            # Parse source range (e.g., "A2:D2")
-            start_col, start_row, end_col, end_row = self._parse_a1_range(source_range)
+            # Parse source range (e.g., "A2:Z2")
+            try:
+                start_col, start_row, end_col, end_row = self._parse_a1_range(source_range)
+                logger.info(f"Parsed range - Start: Col={start_col},Row={start_row} End: Col={end_col},Row={end_row}")
+            except Exception as e:
+                logger.error(f"Failed to parse range: {str(e)}")
+                return False
+            
+            # Calculate column indices
+            start_col_idx = self._column_letter_to_index(start_col)
+            end_col_idx = self._column_letter_to_index(end_col)
+            logger.info(f"Column indices - Start: {start_col_idx}, End: {end_col_idx}")
             
             # Create source and destination ranges
-            source_range = {
+            source_range_dict = {
                 "sheetId": sheet_id,
                 "startRowIndex": start_row - 1,  # Convert to 0-based index
                 "endRowIndex": end_row,  # Exclusive end
-                "startColumnIndex": self._column_letter_to_index(start_col),
-                "endColumnIndex": self._column_letter_to_index(end_col) + 1  # Exclusive end
+                "startColumnIndex": start_col_idx,
+                "endColumnIndex": end_col_idx + 1  # Exclusive end
             }
             
-            destination_range = {
+            destination_range_dict = {
                 "sheetId": sheet_id,
                 "startRowIndex": target_row - 1,  # Convert to 0-based index
                 "endRowIndex": target_row,  # Exclusive end index
-                "startColumnIndex": self._column_letter_to_index(start_col),
-                "endColumnIndex": self._column_letter_to_index(end_col) + 1  # Exclusive end
+                "startColumnIndex": start_col_idx,
+                "endColumnIndex": end_col_idx + 1  # Exclusive end
             }
+            
+            logger.info(f"Source range: {source_range_dict}")
+            logger.info(f"Destination range: {destination_range_dict}")
             
             # Create copy paste request
             requests = [{
                 "copyPaste": {
-                    "source": source_range,
-                    "destination": destination_range,
+                    "source": source_range_dict,
+                    "destination": destination_range_dict,
                     "pasteType": "PASTE_NORMAL",
                     "pasteOrientation": "NORMAL"
                 }
             }]
             
             # Execute the request using the service
-            self.sheets_client.sheets_service.spreadsheets().batchUpdate(
+            logger.info("Executing copy paste request")
+            response = self.sheets_client.sheets_service.spreadsheets().batchUpdate(
                 spreadsheetId=spreadsheet_id,
                 body={'requests': requests}
             ).execute()
             
-            logger.info("Copy operation completed successfully")
+            logger.info(f"Copy operation completed successfully. Response: {response}")
             return True
             
         except Exception as e:
-            logger.error(f"Error copying cells: {str(e)}")
+            logger.error(f"Error in copy_entry: {str(e)}")
+            logger.exception("Full traceback:")
             return False
             
     def _column_letter_to_index(self, column: str) -> int:
