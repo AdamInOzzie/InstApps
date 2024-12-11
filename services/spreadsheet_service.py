@@ -155,3 +155,80 @@ class SpreadsheetService:
         except Exception as e:
             logger.error(f"Failed to update cell {update_range}: {str(e)}")
             raise
+
+
+    @staticmethod
+    def UpdateEntryCells(spreadsheet_id: str, sheet_name: str, cell_updates: list) -> bool:
+        """
+        Update multiple cells in a sheet with provided values.
+        
+        Args:
+            spreadsheet_id: The ID of the spreadsheet
+            sheet_name: Name of the sheet to update
+            cell_updates: List of updates in format [row1, col1, value1, row2, col2, value2, ...]
+                         where row/col are 1-based indices
+        
+        Returns:
+            bool: True if successful, False otherwise
+        """
+        try:
+            if not cell_updates or len(cell_updates) % 3 != 0:
+                logger.error("Invalid cell_updates format")
+                return False
+                
+            # Group updates into batches of 3 (row, col, value)
+            updates = []
+            for i in range(0, len(cell_updates), 3):
+                try:
+                    row, col, value = cell_updates[i:i+3]
+                    
+                    # Validate row and column numbers
+                    if not isinstance(row, int) or not isinstance(col, int):
+                        logger.error(f"Invalid row ({row}) or column ({col}) number")
+                        continue
+                    if row < 1 or col < 1:
+                        logger.error(f"Row ({row}) and column ({col}) must be positive")
+                        continue
+                        
+                    # Convert column number to letter(s)
+                    col_letter = ""
+                    col_num = col - 1  # Convert to 0-based for calculation
+                    while col_num >= 0:
+                        col_letter = chr(65 + (col_num % 26)) + col_letter
+                        col_num = col_num // 26 - 1
+                        
+                    cell_range = f"{sheet_name}!{col_letter}{row}"
+                    updates.append({
+                        'range': cell_range,
+                        'values': [[value]]
+                    })
+                    logger.debug(f"Adding update for cell {cell_range} with value: {value}")
+                    
+                except Exception as e:
+                    logger.error(f"Error processing update at index {i}: {str(e)}")
+                    continue
+            
+            if not updates:
+                logger.error("No valid updates to process")
+                return False
+                
+            # Create batch update request
+            body = {
+                'valueInputOption': 'USER_ENTERED',
+                'data': updates
+            }
+            
+            # Execute the batch update using the client singleton
+            client = GoogleSheetsClient()
+            result = client.sheets_service.spreadsheets().values().batchUpdate(
+                spreadsheetId=spreadsheet_id,
+                body=body
+            ).execute()
+            
+            updated_cells = len(updates)
+            logger.info(f"Successfully updated {updated_cells} cell{'s' if updated_cells != 1 else ''}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error updating cells: {str(e)}")
+            return False
