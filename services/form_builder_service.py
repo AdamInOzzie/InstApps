@@ -128,17 +128,6 @@ class FormBuilderService:
                 return [], {}
                 
             if sheet_data.empty:
-                if not sheet_data.columns.empty:
-                    # Sheet has headers but no data
-                    logger.info("Sheet has headers but no data rows")
-                    form_fields = []
-                    for col in sheet_data.columns:
-                        form_fields.append({
-                            'name': col,
-                            'type': 'text',
-                            'required': True
-                        })
-                    return form_fields, {}
                 logger.warning("Sheet is completely empty")
                 return [], {}
 
@@ -149,6 +138,11 @@ class FormBuilderService:
             # Process each column header as a field
             for col in sheet_data.columns:
                 try:
+                    # Skip if column header is empty or NaN
+                    if pd.isna(col) or str(col).strip() == '':
+                        logger.info(f"Skipping empty column header")
+                        continue
+                        
                     logger.info(f"Processing header field: {col}")
                     
                     # Check row 2 for formulas if available
@@ -156,18 +150,22 @@ class FormBuilderService:
                         row2_value = sheet_data.iloc[1][col] if len(sheet_data) > 1 else None
                         logger.info(f"Checking row 2 value for column {col}: {row2_value}")
                         
-                        # Convert to string for formula checking
-                        if row2_value is not None:
-                            str_value = str(row2_value)
-                            logger.debug(f"Raw value for column {col}: {row2_value}")
-                            logger.debug(f"String value for column {col}: {str_value}")
-                            is_formula = self.is_formula(str_value)
-                            logger.info(f"Column {col} formula check result: {is_formula}")
+                        # Skip if row2 is empty or NaN
+                        if pd.isna(row2_value):
+                            logger.info(f"Skipping column {col} due to empty row 2")
+                            continue
                             
-                            if is_formula:
-                                logger.info(f"Found formula field {col}: {str_value}")
-                                formula_fields[col] = str_value
-                                continue  # Skip adding this field to form fields
+                        # Convert to string for formula checking
+                        str_value = str(row2_value)
+                        logger.debug(f"Raw value for column {col}: {row2_value}")
+                        logger.debug(f"String value for column {col}: {str_value}")
+                        is_formula = self.is_formula(str_value)
+                        logger.info(f"Column {col} formula check result: {is_formula}")
+                        
+                        if is_formula:
+                            logger.info(f"Found formula field {col}: {str_value}")
+                            formula_fields[col] = str_value
+                            continue  # Skip adding this field to form fields
                     
                     # For non-formula fields, create form field
                     field_info = {
