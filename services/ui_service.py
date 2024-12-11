@@ -181,22 +181,21 @@ class UIService:
             return None
 
     @staticmethod
-    def copy_sheet_entry(spreadsheet_id: str, sheet_name: str, copy_service: CopyService, target_row: int) -> bool:
-        """Copy entry from a specific sheet to a target row."""
+    def copy_volunteer_entry(spreadsheet_id: str, copy_service: CopyService, target_row: int) -> bool:
+        """Copy volunteer entry to a specific row."""
         try:
             logger.info("=" * 60)
             logger.info("COPY OPERATION")
             logger.info("=" * 60)
             logger.info(f"Spreadsheet ID: {spreadsheet_id}")
-            logger.info(f"Sheet Name: {sheet_name}")
             logger.info(f"Target Row: {target_row}")
             
-            source_range = f"{sheet_name}!A2:Z2"
+            source_range = "Volunteers!A2:Z2"
             logger.info(f"Source Range: {source_range}")
 
             success = copy_service.copy_entry(
                 spreadsheet_id=spreadsheet_id,
-                sheet_name=sheet_name,
+                sheet_name="Volunteers",
                 source_range=source_range,
                 target_row=target_row
             )
@@ -244,7 +243,7 @@ class UIService:
             )
             
             if st.button("Copy to Selected Row", type="primary", key="test_copy_button"):
-                UIService.copy_sheet_entry(spreadsheet_id, sheet_name, copy_service, target_row)
+                UIService.copy_volunteer_entry(spreadsheet_id, copy_service, target_row)
             
             st.markdown("<br>", unsafe_allow_html=True)
             
