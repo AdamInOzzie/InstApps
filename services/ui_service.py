@@ -184,6 +184,12 @@ class UIService:
     def copy_volunteer_entry(spreadsheet_id: str, copy_service: CopyService, target_row: int) -> bool:
         """Copy volunteer entry to a specific row."""
         try:
+            logger.info("=" * 60)
+            logger.info("COPY OPERATION")
+            logger.info("=" * 60)
+            logger.info(f"Spreadsheet ID: {spreadsheet_id}")
+            logger.info(f"Target Row: {target_row}")
+            
             source_range = "Volunteers!A2:Z2"
             success = copy_service.copy_entry(
                 spreadsheet_id=spreadsheet_id,
@@ -193,13 +199,19 @@ class UIService:
             )
             
             if success:
-                st.success(f"✅ Successfully added entry to row {target_row}")
+                success_msg = f"✅ Successfully copied to row {target_row} in Volunteers!"
+                logger.info(success_msg)
+                st.success(success_msg)
             else:
-                st.error("Failed to add entry")
+                error_msg = "Failed to copy entry"
+                logger.error(error_msg)
+                st.error(error_msg)
             return success
             
         except Exception as e:
-            st.error(f"Error during copy: {str(e)}")
+            error_msg = f"Error during copy: {str(e)}"
+            logger.error(error_msg)
+            st.error(error_msg)
             return False
 
     @staticmethod
