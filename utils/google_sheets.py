@@ -169,35 +169,47 @@ class GoogleSheetsClient:
             raise Exception(error_msg)
 
     def write_to_spreadsheet(self, spreadsheet_id: str, range_name: str, values: List[List[Any]]) -> bool:
-        """Write data to a spreadsheet range."""
+        """Write data to a spreadsheet range using direct API call."""
         if not self.connection_status['connected']:
             raise ConnectionError("Google Sheets client is not properly connected")
 
         try:
-            # Ensure proper structure for the update
-            update_body = {
-                'values': values
-            }
-            
             # Log request details
             logger.info("=" * 80)
             logger.info("GOOGLE SHEETS API UPDATE REQUEST")
             logger.info("=" * 80)
             logger.info(f"Spreadsheet ID: {spreadsheet_id}")
             logger.info(f"Range: {range_name}")
-            logger.info(f"Value Input Option: USER_ENTERED")
-            logger.info(f"Update Body: {update_body}")
+            logger.info(f"Values to write: {values}")
             logger.info("=" * 80)
-            
-            # Execute the update with USER_ENTERED to handle formatting
+
+            # First verify if the range exists
+            try:
+                self.sheets_service.spreadsheets().values().get(
+                    spreadsheetId=spreadsheet_id,
+                    range=range_name
+                ).execute()
+            except HttpError as e:
+                if e.resp.status == 404:
+                    logger.error(f"Range {range_name} not found")
+                    return False
+                raise
+
+            # Prepare the update request
+            update_body = {
+                'values': values,
+                'majorDimension': 'ROWS'
+            }
+
+            # Execute the update
             result = self.sheets_service.spreadsheets().values().update(
                 spreadsheetId=spreadsheet_id,
                 range=range_name,
-                valueInputOption='USER_ENTERED',  # This ensures proper formatting
+                valueInputOption='USER_ENTERED',
                 body=update_body
             ).execute()
-            
-            # Log response details
+
+            # Log response
             updated_range = result.get('updatedRange', '')
             updated_cells = result.get('updatedCells', 0)
             logger.info("GOOGLE SHEETS API UPDATE RESPONSE")
@@ -205,16 +217,20 @@ class GoogleSheetsClient:
             logger.info(f"Updated Range: {updated_range}")
             logger.info(f"Updated Cells: {updated_cells}")
             logger.info("=" * 80)
-            return True
-            
+
+            return updated_cells > 0
+
         except HttpError as e:
             error_msg = f"Failed to write to spreadsheet: {str(e)}"
             if e.resp.status == 403:
-                error_msg = "Permission denied. Please check write permissions for this spreadsheet"
-            elif e.resp.status == 404:
-                error_msg = "Spreadsheet not found. Please check the spreadsheet ID"
+                error_msg = "Permission denied. Please check write permissions"
+            elif e.resp.status == 400:
+                error_msg = f"Invalid request: {str(e)}"
             logger.error(error_msg)
-            return False  # Return False instead of raising to handle errors gracefully
+            return False
+        except Exception as e:
+            logger.error(f"Unexpected error writing to spreadsheet: {str(e)}")
+            return False
 
     def get_spreadsheet_metadata(self, spreadsheet_id: str) -> Dict[str, Any]:
         """Get metadata about a spreadsheet."""

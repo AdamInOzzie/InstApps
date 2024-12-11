@@ -162,6 +162,18 @@ class SpreadsheetService:
             logger.info(f"Update Structure: {[[formatted_value]]}")
             logger.info("=" * 80)
             
+            # First verify the range exists
+            try:
+                # Get current value to verify range is valid
+                current = self.sheets_client.sheets_service.spreadsheets().values().get(
+                    spreadsheetId=spreadsheet_id,
+                    range=update_range
+                ).execute()
+                logger.info(f"Current value in {update_range}: {current.get('values', [['empty']])[0][0]}")
+            except Exception as e:
+                logger.error(f"Error verifying range {update_range}: {str(e)}")
+                return False
+
             # Perform the update with properly structured data
             result = self.sheets_client.write_to_spreadsheet(
                 spreadsheet_id=spreadsheet_id,
