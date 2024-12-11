@@ -244,34 +244,25 @@ class FormBuilderService:
     def append_form_data(self, spreadsheet_id: str, sheet_name: str, form_data: Dict[str, Any], sheets_client) -> bool:
         """Append form data as a new row in the sheet by copying row 2 as template."""
         try:
+            from services.ui_service import UIService
             logger.info(f"Starting form data append process for sheet: {sheet_name}")
             
-            # Get sheet data to determine next row
-            range_name = f"{sheet_name}!A1:Z"
-            df = sheets_client.read_spreadsheet(spreadsheet_id, range_name)
+            # Use the existing working copy functionality from UIService
+            volunteer_range = "Volunteers!A:A"  # Only check column A
+            volunteer_df = sheets_client.read_spreadsheet(spreadsheet_id, volunteer_range)
             
-            if df is None or df.empty:
-                logger.error("Sheet is empty or could not be read")
-                return False
+            # Calculate next available row
+            next_row = 2  # Start from row 2 (after header)
+            if not volunteer_df.empty:
+                # Find last non-empty row and add 1
+                mask = volunteer_df.iloc[:, 0].notna()
+                if mask.any():
+                    next_row = mask.values.nonzero()[0][-1] + 3  # +2 for header and +1 for next row
             
-            next_row = len(df) + 2  # Add to next empty row (1-based index)
-            logger.info(f"Will copy template to row {next_row}")
-            
-            # Create copy service and copy the template row
+            logger.info(f"Calculated next available row: {next_row}")
+            from services.copy_service import CopyService
             copy_service = CopyService(sheets_client)
-            success = copy_service.copy_entry(
-                spreadsheet_id=spreadsheet_id,
-                sheet_name=sheet_name,
-                source_range="A2:D2",
-                target_row=next_row
-            )
-            
-            if success:
-                logger.info(f"Successfully copied template row to row {next_row}")
-                return True
-            else:
-                logger.error("Failed to copy template row")
-                return False
+            return UIService.copy_volunteer_entry(spreadsheet_id, copy_service, next_row)
                 
         except Exception as e:
             logger.error(f"Error in append_form_data: {str(e)}")
