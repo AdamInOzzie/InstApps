@@ -4,6 +4,7 @@ from typing import List, Dict, Tuple, Any, Optional
 import pandas as pd
 import streamlit as st
 from services.copy_service import CopyService
+from utils.google_sheets import GoogleSheetsClient
 
 logger = logging.getLogger(__name__)
 
