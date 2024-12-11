@@ -162,6 +162,16 @@ class FormBuilderService:
             logger.error(f"Error generating form fields: {str(e)}")
             return [], {}
 
+    @staticmethod
+    def get_column_letter(column_index: int) -> str:
+        """Convert column number to letter (1=A, 2=B, etc)."""
+        result = ""
+        while column_index > 0:
+            column_index -= 1
+            result = chr(65 + (column_index % 26)) + result
+            column_index //= 26
+        return result
+
     def render_form(self, fields: List[Dict[str, Any]], sheet_name: str = "") -> Dict[str, Any]:
         """Render a dynamic form based on field definitions."""
         form_data = {}
@@ -181,43 +191,60 @@ class FormBuilderService:
             </div>
         """, unsafe_allow_html=True)
         
-        for field in fields:
+        for idx, field in enumerate(fields, start=1):
             try:
                 field_name = field['name']
                 field_type = field['type']
                 
+                # Column reference
+                column_letter = self.get_column_letter(idx)
+                field_label = f"{field_name}\n<span style='color: #666; font-size: 0.8em;'>Column {column_letter}</span>"
+                
                 if field_type == 'number':
                     step_size = 0.01 if float(field.get('min_value', 0)) < 10 else 1.0
                     form_data[field_name] = st.number_input(
-                        field_name,
+                        field_label,
                         min_value=field.get('min_value', None),
                         max_value=field.get('max_value', None),
                         step=step_size,
-                        value=0.0
+                        value=0.0,
+                        help=f"Updates column {column_letter}"
                     )
                 elif field_type == 'date':
-                    form_data[field_name] = st.date_input(field_name)
+                    form_data[field_name] = st.date_input(
+                        field_label,
+                        help=f"Updates column {column_letter}"
+                    )
                 elif field_type == 'checkbox':
-                    form_data[field_name] = st.checkbox(field_name)
+                    form_data[field_name] = st.checkbox(
+                        field_label,
+                        help=f"Updates column {column_letter}"
+                    )
                 elif field_type == 'percentage':
                     value = st.number_input(
-                        f"{field_name} (%)",
+                        f"{field_label} (%)",
                         step=0.1,
                         min_value=0.0,
                         max_value=100.0,
-                        value=0.0
+                        value=0.0,
+                        help=f"Updates column {column_letter}"
                     )
                     form_data[field_name] = f"{value}%"
                 elif field_type == 'currency':
                     value = st.number_input(
-                        field_name,
+                        field_label,
                         step=0.01,
                         min_value=0.0,
-                        value=0.0
+                        value=0.0,
+                        help=f"Updates column {column_letter}"
                     )
                     form_data[field_name] = f"${value:.2f}"
                 else:
-                    form_data[field_name] = st.text_input(field_name, value="")
+                    form_data[field_name] = st.text_input(
+                        field_label,
+                        value="",
+                        help=f"Updates column {column_letter}"
+                    )
                     
             except Exception as e:
                 logger.error(f"Error rendering field {field_name}: {str(e)}")
