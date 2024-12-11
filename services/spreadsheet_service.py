@@ -146,8 +146,22 @@ class SpreadsheetService:
     def update_input_cell(self, spreadsheet_id: str, value: str, row: int) -> bool:
         """Update cell in B column of INPUTS sheet for specified row."""
         try:
+            import streamlit as st
+            
             # Construct the range in A1 notation
             update_range = f"INPUTS!B{row}"
+            
+            # Store API call details for debug display
+            st.session_state.last_api_call = {
+                "operation": "update_cell",
+                "parameters": {
+                    "spreadsheet_id": spreadsheet_id,
+                    "range": update_range,
+                    "value": value,
+                    "row": row
+                },
+                "timestamp": pd.Timestamp.now().isoformat()
+            }
             
             # Format the value appropriately
             formatted_value = str(value).strip()

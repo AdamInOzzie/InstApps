@@ -51,6 +51,14 @@ class UIService:
         with st.sidebar:
             st.subheader("Admin Dashboard")
             
+            # Add API Debug section when admin mode is active
+            if UIService.is_admin():
+                st.markdown("### 🔍 API Debug")
+                if 'last_api_call' in st.session_state:
+                    st.json(st.session_state.last_api_call)
+                else:
+                    st.info("No API calls logged yet")
+            
             st.markdown("### System Status")
             
             st.markdown("**API Connection**")
