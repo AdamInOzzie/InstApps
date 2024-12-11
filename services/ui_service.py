@@ -135,23 +135,9 @@ class UIService:
             # Add submit button
             if st.button("Submit Entry", type="primary"):
                 try:
-                    # Get the next available row by finding the first empty row
-                    range_name = f"{sheet_name}!A1:A1000"
-                    df = sheets_client.read_spreadsheet(spreadsheet_id, range_name)
-                    
-                    # Find the first empty row
-                    next_row = 2  # Start from row 2 (after header)
-                    if not df.empty:
-                        # Find last non-empty row and add 1
-                        mask = df[df.columns[0]].notna()
-                        if mask.any():
-                            next_row = mask.values.nonzero()[0][-1] + 3  # +2 for header and +1 for next row
-                        
-                    logger.info(f"Calculated next row as: {next_row}")
-                    
                     # First, attempt the copy operation
                     copy_service = CopyService(sheets_client)
-                    if UIService.copy_volunteer_entry(spreadsheet_id, copy_service, next_row):
+                    if UIService.copy_volunteer_entry(spreadsheet_id, copy_service, 6):  # Use fixed row 6 like test button
                         # Only if copy succeeds, return the form data
                         return form_data
                     return None
