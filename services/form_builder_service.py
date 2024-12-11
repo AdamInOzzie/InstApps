@@ -202,18 +202,15 @@ class FormBuilderService:
                         min_value=field.get('min_value', None),
                         max_value=field.get('max_value', None),
                         step=step_size,
-                        value=0.0,
-                        help=f"Updates column {column_number}"
+                        value=0.0
                     )
                 elif field_type == 'date':
                     form_data[field_name] = st.date_input(
-                        field_label,
-                        help=f"Updates column {column_number}"
+                        field_label
                     )
                 elif field_type == 'checkbox':
                     form_data[field_name] = st.checkbox(
-                        field_label,
-                        help=f"Updates column {column_number}"
+                        field_label
                     )
                 elif field_type == 'percentage':
                     value = st.number_input(
@@ -221,8 +218,7 @@ class FormBuilderService:
                         step=0.1,
                         min_value=0.0,
                         max_value=100.0,
-                        value=0.0,
-                        help=f"Updates column {column_number}"
+                        value=0.0
                     )
                     form_data[field_name] = f"{value}%"
                 elif field_type == 'currency':
@@ -230,15 +226,13 @@ class FormBuilderService:
                         field_label,
                         step=0.01,
                         min_value=0.0,
-                        value=0.0,
-                        help=f"Updates column {column_number}"
+                        value=0.0
                     )
                     form_data[field_name] = f"${value:.2f}"
                 else:
                     form_data[field_name] = st.text_input(
                         field_label,
-                        value="",
-                        help=f"Updates column {column_number}"
+                        value=""
                     )
                     
             except Exception as e:
