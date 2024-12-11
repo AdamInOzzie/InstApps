@@ -144,13 +144,11 @@ class UIService:
                     entry_df = sheets_client.read_spreadsheet(spreadsheet_id, entry_range)
                     next_row = 2 if entry_df.empty else entry_df[entry_df.columns[0]].notna().sum() + 2
                     
-                    # Create copy service instance
+                    # Use the proven working copy method
                     copy_service = CopyService(sheets_client)
-                    
-                    success = copy_service.copy_entry(
+                    success = UIService.copy_volunteer_entry(
                         spreadsheet_id=spreadsheet_id,
-                        sheet_name=sheet_name,
-                        source_range=f"{sheet_name}!A2:Z2",
+                        copy_service=copy_service,
                         target_row=next_row
                     )
                     
@@ -162,6 +160,7 @@ class UIService:
                         return None
                         
                 except Exception as e:
+                    logger.error(f"Error in form submission: {str(e)}")
                     st.error(f"Error: {str(e)}")
                     return None
             
