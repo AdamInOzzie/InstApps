@@ -105,28 +105,35 @@ st.set_option('client.toolbarMode', 'minimal')
 if "start_time" not in st.session_state:
     st.session_state.start_time = time.time()
 
-# Inject CSS for sidebar control
-is_admin = "admin" in st.query_params
-is_healthcheck = "healthcheck" in st.query_params
-show_sidebar = is_admin or is_healthcheck
+# Store query parameters in session state for consistent access
+if 'query_params' not in st.session_state:
+    st.session_state.query_params = {
+        'is_admin': "admin" in st.query_params,
+        'is_healthcheck': "healthcheck" in st.query_params
+    }
 
-st.markdown(
-    f"""
-    <style>
-        section[data-testid="stSidebar"] {{
-            display: {'' if show_sidebar else 'none'} !important;
-            width: {'' if show_sidebar else '0px'} !important;
-            height: {'' if show_sidebar else '0px'} !important;
-            margin: {'' if show_sidebar else '0px'} !important;
-            padding: {'' if show_sidebar else '0px'} !important;
-            opacity: {'' if show_sidebar else '0'} !important;
-            visibility: {'' if show_sidebar else 'hidden'} !important;
-            z-index: {'' if show_sidebar else '-1'} !important;
-        }}
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+# Control sidebar visibility
+show_sidebar = st.session_state.query_params['is_admin'] or st.session_state.query_params['is_healthcheck']
+
+# Apply sidebar visibility CSS
+if not show_sidebar:
+    st.markdown(
+        """
+        <style>
+            section[data-testid="stSidebar"] {
+                display: none !important;
+                width: 0px !important;
+                height: 0px !important;
+                margin: 0px !important;
+                padding: 0px !important;
+                opacity: 0 !important;
+                visibility: hidden !important;
+                z-index: -1 !important;
+            }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
 
 def check_user_access(sheet_id: str, username: str) -> bool:
     """Check if username exists in USERS sheet."""
@@ -280,9 +287,6 @@ def main():
     
     logger.debug("Starting main application")
     
-    # Check for admin access
-    is_admin = "admin" in st.query_params
-    
     # Initialize services
     if 'sheets_client' not in st.session_state:
         try:
@@ -302,12 +306,11 @@ def main():
     # Display title and health status
     st.title("📊 Instapp")
     
-    # Only show sidebar if admin or healthcheck parameter is present
-    is_healthcheck = "healthcheck" in st.query_params
+    # Log query parameter status
     logger.info(f"Query parameters: {dict(st.query_params)}")
-    logger.info(f"Admin status: {is_admin}, Healthcheck status: {is_healthcheck}")
+    logger.info(f"Admin status: {st.session_state.query_params['is_admin']}, Healthcheck status: {st.session_state.query_params['is_healthcheck']}")
     
-    if is_admin or is_healthcheck:
+    if st.session_state.query_params['is_admin'] or st.session_state.query_params['is_healthcheck']:
         # Show sidebar for admin or healthcheck
         with st.sidebar:
             st.subheader("📡 System Status")
