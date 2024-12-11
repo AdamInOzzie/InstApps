@@ -148,58 +148,37 @@ class SpreadsheetService:
         try:
             import streamlit as st
             
-            # Construct the range in A1 notation
+            # Construct the range in A1 notation for column B
             update_range = f"INPUTS!B{row}"
             
-            # Store API call details for debug display
-            st.session_state.last_api_call = {
-                "operation": "update_cell",
-                "parameters": {
-                    "spreadsheet_id": spreadsheet_id,
-                    "range": update_range,
-                    "value": value,
-                    "row": row
-                },
-                "timestamp": pd.Timestamp.now().isoformat()
-            }
+            # Log the update attempt
+            logger.info(f"Updating cell {update_range} with value: {value}")
             
-            # Format the value appropriately based on type
-            if isinstance(value, (int, float)):
-                if value <= 1 and value >= 0:  # Likely a percentage
-                    formatted_value = f"{value:.4f}"  # Keep precision for small decimals
-                else:
-                    formatted_value = f"{value:.2f}"  # Normal number formatting
-            else:
-                formatted_value = str(value).strip()
-            
-            # Log detailed update attempt
-            logger.info("=" * 80)
-            logger.info("CELL UPDATE REQUEST")
-            logger.info("=" * 80)
-            logger.info(f"Target Range: {update_range}")
-            logger.info(f"Original Value: {value} (type: {type(value)})")
-            logger.info(f"Formatted Value: {formatted_value}")
-            logger.info(f"Update Structure: {[[formatted_value]]}")
-            logger.info("=" * 80)
-            
-            # First verify the range exists
             try:
-                # Get current value to verify range is valid
-                current = self.sheets_client.sheets_service.spreadsheets().values().get(
+                # Direct API call to update the cell value
+                request = {
+                    'range': update_range,
+                    'values': [[value]],  # Wrap in nested list as required by Sheets API
+                    'majorDimension': 'ROWS'
+                }
+                
+                result = self.sheets_client.sheets_service.spreadsheets().values().update(
                     spreadsheetId=spreadsheet_id,
-                    range=update_range
+                    range=update_range,
+                    valueInputOption='USER_ENTERED',  # This preserves formatting
+                    body=request
                 ).execute()
-                logger.info(f"Current value in {update_range}: {current.get('values', [['empty']])[0][0]}")
-            except Exception as e:
-                logger.error(f"Error verifying range {update_range}: {str(e)}")
-                return False
-
-            # Perform the update with properly structured data
-            result = self.sheets_client.write_to_spreadsheet(
-                spreadsheet_id=spreadsheet_id,
-                range_name=update_range,
-                values=[[formatted_value]]  # Wrap in nested list as required by Sheets API
-            )
+                
+                logger.info(f"Update response: {result}")
+                
+                # Verify the update was successful
+                updated_cells = result.get('updatedCells', 0)
+                if updated_cells > 0:
+                    logger.info(f"Successfully updated cell {update_range}")
+                    return True
+                else:
+                    logger.error(f"No cells were updated in range {update_range}")
+                    return False
             
             if result:
                 logger.info(f"Successfully updated cell {update_range} with value {formatted_value}")
