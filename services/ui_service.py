@@ -135,15 +135,15 @@ class UIService:
             # Add submit button
             if st.button("Submit Entry", type="primary"):
                 try:
-                    # Find the first empty row in the Volunteers sheet
-                    volunteer_range = "Volunteers!A:A"  # Only check column A
-                    volunteer_df = sheets_client.read_spreadsheet(spreadsheet_id, volunteer_range)
+                    # Find the first empty row in the current sheet
+                    entry_range = f"{sheet_name}!A:A"  # Only check column A
+                    entry_df = sheets_client.read_spreadsheet(spreadsheet_id, entry_range)
                     
                     # Calculate next available row
                     next_row = 2  # Start from row 2 (after header)
-                    if not volunteer_df.empty:
+                    if not entry_df.empty:
                         # Find last non-empty row and add 1
-                        mask = volunteer_df.iloc[:, 0].notna()
+                        mask = entry_df.iloc[:, 0].notna()
                         if mask.any():
                             next_row = mask.values.nonzero()[0][-1] + 3  # +2 for header and +1 for next row
                     
@@ -151,7 +151,7 @@ class UIService:
                     
                     # Use the shared copy functionality with calculated row
                     copy_service = CopyService(sheets_client)
-                    if UIService.copy_volunteer_entry(spreadsheet_id, copy_service, next_row):
+                    if UIService.copy_entry(spreadsheet_id, copy_service, next_row, sheet_name):
                         # Only if copy succeeds, return the form data
                         return form_data
                     return None
@@ -170,8 +170,8 @@ class UIService:
             return None
 
     @staticmethod
-    def copy_volunteer_entry(spreadsheet_id: str, copy_service: CopyService, target_row: int) -> bool:
-        """Shared copy functionality for volunteer entries."""
+    def copy_entry(spreadsheet_id: str, copy_service: CopyService, target_row: int, sheet_name: str) -> bool:
+        """Shared copy functionality for sheet entries."""
         try:
             logger.info("=" * 60)
             logger.info("COPY OPERATION")
@@ -180,7 +180,6 @@ class UIService:
             logger.info(f"Target Row: {target_row}")
             
             source_range = "A2:D2"
-            sheet_name = "Volunteers"
             
             logger.info(f"Sheet Name: {sheet_name}")
             logger.info(f"Source Range: {source_range}")
