@@ -163,28 +163,35 @@ class UIService:
                     
                     if success:
                         try:
-                            # Convert form data into cell updates format
+                            # Only update cells for non-formula fields
                             cell_updates = []
+                            formula_fields = st.session_state.formula_fields.get(sheet_name, {})
+                            
                             for idx, (field_name, field_value) in enumerate(form_data.items(), start=1):
-                                cell_updates.extend([next_row, idx, str(field_value)])
+                                if field_name not in formula_fields:
+                                    cell_updates.extend([next_row, idx, str(field_value)])
 
-                            # Import and use SpreadsheetService
-                            from services.spreadsheet_service import SpreadsheetService
-                            update_success = SpreadsheetService.UpdateEntryCells(
-                                spreadsheet_id=spreadsheet_id,
-                                sheet_name=sheet_name,
-                                cell_updates=cell_updates
-                            )
+                            if cell_updates:  # Only attempt update if there are non-formula fields
+                                from services.spreadsheet_service import SpreadsheetService
+                                update_success = SpreadsheetService.UpdateEntryCells(
+                                    spreadsheet_id=spreadsheet_id,
+                                    sheet_name=sheet_name,
+                                    cell_updates=cell_updates
+                                )
 
-                            if update_success:
-                                st.success(f"✅ Entry successfully added and updated at row {next_row}")
+                                if update_success:
+                                    st.success(f"✅ Entry successfully added at row {next_row}")
+                                else:
+                                    logger.warning(f"Cell updates failed for row {next_row}")
+                                    st.warning("⚠️ Entry added but some updates failed")
                             else:
-                                st.warning(f"⚠️ Entry copied but updates failed at row {next_row}")
+                                st.success(f"✅ Entry successfully added at row {next_row}")
+                            
                             return form_data
 
                         except Exception as e:
-                            logger.error(f"Error updating cells after copy: {str(e)}")
-                            st.warning(f"⚠️ Entry copied but updates failed at row {next_row}: {str(e)}")
+                            logger.error(f"Error updating cells: {str(e)}")
+                            st.warning(f"⚠️ Entry added but updates failed: {str(e)}")
                             return form_data
                     else:
                         st.error("Failed to add entry")
