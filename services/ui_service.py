@@ -144,12 +144,13 @@ class UIService:
                     entry_df = sheets_client.read_spreadsheet(spreadsheet_id, entry_range)
                     next_row = 2 if entry_df.empty else entry_df[entry_df.columns[0]].notna().sum() + 2
                     
-                    # Use the same exact pattern as the working Copy button
+                    # Use the exact same copy pattern that works in the Copy button
                     copy_service = CopyService(sheets_client)
+                    source_range = "A2:Z2"  # Same range as used in working Copy button
                     success = copy_service.copy_entry(
                         spreadsheet_id=spreadsheet_id,
                         sheet_name=sheet_name,
-                        source_range=f"{sheet_name}!A2:Z2",
+                        source_range=source_range,
                         target_row=next_row
                     )
                     
