@@ -3,6 +3,7 @@ import logging
 import streamlit as st
 import pandas as pd
 from services.copy_service import CopyService
+from services.spreadsheet_service import SpreadsheetService
 from typing import Dict, Any, Optional
 
 logger = logging.getLogger(__name__)
