@@ -144,13 +144,6 @@ class UIService:
                     entry_df = sheets_client.read_spreadsheet(spreadsheet_id, entry_range)
                     next_row = 2 if entry_df.empty else entry_df[entry_df.columns[0]].notna().sum() + 2
                     
-                    logger.info("=" * 60)
-                    logger.info("SUBMIT ENTRY OPERATION")
-                    logger.info("=" * 60)
-                    logger.info(f"Spreadsheet ID: {spreadsheet_id}")
-                    logger.info(f"Sheet Name: {sheet_name}")
-                    logger.info(f"Target Row: {next_row}")
-                    
                     success = CopyService(sheets_client).copy_entry(
                         spreadsheet_id=spreadsheet_id,
                         sheet_name=sheet_name,
@@ -159,21 +152,15 @@ class UIService:
                     )
                     
                     if success:
-                        success_msg = f"✅ Successfully copied to row {next_row} in {sheet_name}!"
-                        logger.info(success_msg)
-                        st.success(success_msg)
+                        st.success(f"✅ Successfully copied to row {next_row} in {sheet_name}!")
+                        return form_data
                     else:
-                        error_msg = "Failed to copy entry"
-                        logger.error(error_msg)
-                        st.error(error_msg)
-                    
+                        st.error("Failed to copy entry")
+                        return None
+                        
                 except Exception as e:
-                    error_msg = f"Error during submit: {str(e)}"
-                    logger.error(error_msg)
-                    st.error(error_msg)
+                    st.error(f"Error: {str(e)}")
                     return None
-                
-                return form_data
             
             # If no submission occurred, return the form data
             return form_data
