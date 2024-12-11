@@ -107,6 +107,12 @@ class UIService:
     def handle_append_entry(spreadsheet_id: str, sheet_name: str, sheets_client, form_builder_service) -> Optional[Dict[str, Any]]:
         """Handle the dynamic form generation and submission for appending entries."""
         try:
+            logger.info("=" * 80)
+            logger.info("FORM SUBMISSION PROCESS START")
+            logger.info("=" * 80)
+            logger.info(f"Spreadsheet ID: {spreadsheet_id}")
+            logger.info(f"Sheet Name: {sheet_name}")
+            
             # Read the sheet data to get structure
             range_name = f"{sheet_name}!A1:Z1000"
             logger.info(f"Reading sheet data from {range_name}")
@@ -135,14 +141,22 @@ class UIService:
             # Render the form with sheet name
             form_data = form_builder_service.render_form(form_fields, sheet_name)
             
+            # Log form data for debugging
+            logger.info("Form Data Generated:")
+            for field_name, value in form_data.items():
+                logger.info(f"Field: {field_name} = {value} (type: {type(value)})")
+            
             # Add submit button with proper error handling
             if st.button("Submit Entry", type="primary"):
-                return UIService._handle_form_submission(
+                logger.info("Submit button clicked - Processing form submission")
+                result = UIService._handle_form_submission(
                     spreadsheet_id=spreadsheet_id,
                     sheet_name=sheet_name,
                     sheets_client=sheets_client,
                     form_data=form_data
                 )
+                logger.info(f"Form submission result: {result}")
+                return result
             
             return form_data
             
@@ -159,6 +173,11 @@ class UIService:
         form_data: Dict[str, Any]
     ) -> Optional[Dict[str, Any]]:
         """Handle the form submission process with proper error handling."""
+        logger.info("=" * 80)
+        logger.info("FORM SUBMISSION HANDLER")
+        logger.info("=" * 80)
+        logger.info(f"Processing submission for sheet: {sheet_name}")
+        logger.info(f"Form data received: {form_data}")
         try:
             from services.spreadsheet_service import SpreadsheetService
             
