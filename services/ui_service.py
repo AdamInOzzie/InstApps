@@ -147,19 +147,22 @@ class UIService:
                     # Use the exact same copy pattern that works in the Copy button
                     copy_service = CopyService(sheets_client)
                     
-                    # Log all parameters before copy operation
-                    logger.info("=" * 60)
-                    logger.info("SUBMIT ENTRY COPY PARAMETERS")
-                    logger.info("=" * 60)
-                    logger.info(f"Spreadsheet ID: {spreadsheet_id}")
-                    logger.info(f"Sheet Name: {sheet_name}")
-                    logger.info(f"Source Range: {sheet_name}!A2:Z2")
-                    logger.info(f"Target Row: {next_row}")
+                    # Display parameters on screen
+                    st.info("Copy Operation Parameters:")
+                    st.write({
+                        "Spreadsheet ID": spreadsheet_id,
+                        "Sheet Name": sheet_name,
+                        "Source Range": f"{sheet_name}!A2:Z2",
+                        "Target Row": next_row
+                    })
+                    
+                    source_range = f"{sheet_name}!A2:Z2"  # Include sheet name in range
+                    st.write("About to execute copy_entry with these parameters")
                     
                     success = copy_service.copy_entry(
                         spreadsheet_id=spreadsheet_id,
                         sheet_name=sheet_name,
-                        source_range=f"{sheet_name}!A2:Z2",  # Include sheet name in range exactly like Copy button
+                        source_range=source_range,
                         target_row=next_row
                     )
                     
