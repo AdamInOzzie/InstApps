@@ -105,49 +105,30 @@ class UIService:
             logger.info(f"Reading sheet data from {range_name}")
             df = sheets_client.read_spreadsheet(spreadsheet_id, range_name)
             
-            logger.info(f"Sheet {sheet_name} data loaded - Shape: {df.shape if df is not None else 'None'}")
-            logger.info(f"Columns found: {df.columns.tolist() if df is not None else []}")
-            if df is not None and not df.empty:
-                logger.info(f"First row values: {df.iloc[0].tolist() if not df.empty else 'No data'}")
-                logger.info(f"Second row values: {df.iloc[1].tolist() if len(df) > 1 else 'No second row'}")
-                logger.info(f"Second row types: {[type(x).__name__ for x in df.iloc[1]] if len(df) > 1 else 'No second row'}")
-                logger.info(f"DataFrame info: {df.info()}")
-            
+            if df is None or df.empty:
+                st.warning(f"Could not read sheet data from '{sheet_name}'")
+                return None
+
             # Get form fields and formula fields from sheet structure
             logger.info(f"Generating form fields for sheet {sheet_name}")
             form_fields, formula_fields = form_builder_service.get_form_fields(df)
             
-            if not form_fields and not formula_fields:
+            if not form_fields:
                 st.warning(f"Could not generate form fields from sheet '{sheet_name}'")
-                logger.error(f"No form fields or formula fields generated for sheet {sheet_name}")
                 return None
                 
-            # Store formula fields in session state for use during form submission
-            if 'formula_fields' not in st.session_state:
-                st.session_state.formula_fields = {}
-            st.session_state.formula_fields[sheet_name] = formula_fields
-            
             logger.info(f"Generated {len(form_fields)} form fields")
             
             # Render the form with sheet name
             form_data = form_builder_service.render_form(form_fields, sheet_name)
+            logger.info(f"Form data after rendering: {form_data}")
             
             # Add submit button
             if st.button("Submit Entry", type="primary"):
                 try:
-                    # Find the first empty row in the Volunteers sheet
-                    volunteer_range = "Volunteers!A:A"  # Only check column A
-                    volunteer_df = sheets_client.read_spreadsheet(spreadsheet_id, volunteer_range)
-                    
                     # Calculate next available row
-                    next_row = 2  # Start from row 2 (after header)
-                    if not volunteer_df.empty:
-                        # Find last non-empty row and add 1
-                        mask = volunteer_df.iloc[:, 0].notna()
-                        if mask.any():
-                            next_row = mask.values.nonzero()[0][-1] + 3  # +2 for header and +1 for next row
-                    
-                    logger.info(f"Calculated next available row: {next_row}")
+                    next_row = 4  # Fixed row for testing
+                    logger.info(f"Using row {next_row} for new entry")
                     
                     # First copy the template row to maintain structure
                     copy_service = CopyService(sheets_client)
@@ -157,56 +138,43 @@ class UIService:
                         return None
 
                     logger.info(f"Successfully copied template to row {next_row}")
+                    
+                    # Update form fields in the copied row
+                    logger.info(f"Updating form fields with data: {form_data}")
+                    
+                    # Get the sheet headers to map fields to columns
+                    header_range = "Volunteers!A1:Z1"
+                    header_data = sheets_client.read_spreadsheet(spreadsheet_id, header_range)
+                    
+                    if header_data is not None and not header_data.empty:
+                        headers = header_data.iloc[0].tolist()
+                        logger.info(f"Sheet headers: {headers}")
                         
-                    # Now update just the form fields in the copied row
-                    if form_data:
-                        try:
-                            # Get the sheet structure to map field names to columns
-                            metadata = sheets_client.get_spreadsheet_metadata(spreadsheet_id)
-                            sheets = metadata.get('sheets', [])
-                            for sheet in sheets:
-                                if sheet['properties']['title'] == 'Volunteers':
-                                    # Read header row to map field names to columns
-                                    header_range = "Volunteers!A1:Z1"
-                                    header_data = sheets_client.read_spreadsheet(
-                                        spreadsheet_id,
-                                        header_range
-                                    )
-                                    if not header_data.empty:
-                                        headers = header_data.iloc[0].tolist()
-                                        logger.info(f"Form data to update: {form_data}")
-                                        logger.info(f"Sheet headers: {headers}")
-                                        # Update each form field using column index
-                                        for field_name, value in form_data.items():
-                                            try:
-                                                # Find column index for field name
-                                                logger.info(f"Looking for field '{field_name}' in headers")
-                                                col_idx = headers.index(field_name)
-                                                # Convert to letter (0=A, 1=B, etc.)
-                                                col_letter = chr(65 + col_idx)  # A=65 in ASCII
-                                                update_range = f"Volunteers!{col_letter}{next_row}"
-                                                logger.info(f"Updating {field_name} at {update_range} with value: '{value}'")
-                                                result = sheets_client.write_to_spreadsheet(
-                                                    spreadsheet_id,
-                                                    update_range,
-                                                    [[value]]
-                                                )
-                                                logger.info(f"Update result for {field_name}: {result}")
-                                            except ValueError as ve:
-                                                logger.error(f"Field {field_name} not found in headers {headers}: {str(ve)}")
-                                                continue
-                                            except Exception as e:
-                                                logger.error(f"Error updating field {field_name}: {str(e)}")
-                                                continue
-                                            
-                            logger.info("Successfully updated form fields in copied row")
-                            st.success(f"✅ Entry added at row {next_row}")
-                            return form_data
-                        except Exception as e:
-                            logger.error(f"Error updating form fields: {str(e)}")
-                            st.error(f"Error updating form fields: {str(e)}")
-                            return None
-                    return None
+                        # Update each form field using column index
+                        for field_name, value in form_data.items():
+                            try:
+                                # Find column index for field name
+                                col_idx = headers.index(field_name)
+                                # Convert to letter (0=A, 1=B, etc.)
+                                col_letter = chr(65 + col_idx)
+                                update_range = f"Volunteers!{col_letter}{next_row}"
+                                
+                                logger.info(f"Writing {field_name}='{value}' to {update_range}")
+                                result = sheets_client.write_to_spreadsheet(
+                                    spreadsheet_id,
+                                    update_range,
+                                    [[value]]
+                                )
+                                logger.info(f"Write result for {field_name}: {result}")
+                            except ValueError:
+                                logger.error(f"Field {field_name} not found in headers: {headers}")
+                            except Exception as e:
+                                logger.error(f"Error writing {field_name}: {str(e)}")
+                                st.error(f"Failed to update {field_name}")
+
+                    logger.info("Successfully updated form fields in copied row")
+                    st.success(f"✅ Entry added at row {next_row}")
+                    return form_data
                     
                 except Exception as e:
                     logger.error(f"Error in form submission: {str(e)}")
