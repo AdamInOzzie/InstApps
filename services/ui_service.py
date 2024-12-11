@@ -147,9 +147,8 @@ class UIService:
                     next_row = 2
                     if not entry_df.empty:
                         # Find first empty row
-                        mask = entry_df[entry_df.columns[0]].notna()
-                        if mask.any():
-                            next_row = mask.values.argmin() + 2  # Add 2 to account for header row and 0-based index
+                        non_empty_rows = entry_df[entry_df.columns[0]].notna().sum()
+                        next_row = non_empty_rows + 2  # Add 2 to account for header row
                     
                     # Use copy functionality with calculated row
                     copy_service = CopyService(sheets_client)
