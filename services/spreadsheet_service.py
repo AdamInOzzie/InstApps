@@ -146,21 +146,31 @@ class SpreadsheetService:
     def update_input_cell(self, spreadsheet_id: str, value: str, row: int) -> bool:
         """Update cell in B column of INPUTS sheet for specified row."""
         try:
+            # Construct the range in A1 notation
             update_range = f"INPUTS!B{row}"
-            logger.info(f"Updating cell {update_range} with value {value}")
+            
+            # Format the value appropriately
+            formatted_value = str(value).strip()
+            
+            # Log the update attempt
+            logger.info(f"Attempting to update {update_range} with value: {formatted_value}")
+            
+            # Perform the update with properly structured data
             result = self.sheets_client.write_to_spreadsheet(
-                spreadsheet_id,
-                update_range,
-                [[value]]
+                spreadsheet_id=spreadsheet_id,
+                range_name=update_range,
+                values=[[formatted_value]]  # Wrap in nested list as required by Sheets API
             )
+            
             if result:
-                logger.info(f"Successfully updated cell {update_range}")
+                logger.info(f"Successfully updated cell {update_range} with value {formatted_value}")
                 return True
             else:
-                logger.error(f"Failed to update cell {update_range}")
+                logger.error(f"Failed to update cell {update_range} with value {formatted_value}")
                 return False
+                
         except Exception as e:
-            logger.error(f"Failed to update cell {update_range}: {str(e)}")
+            logger.error(f"Error updating cell {update_range}: {str(e)}")
             return False
 
 

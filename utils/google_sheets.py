@@ -174,15 +174,25 @@ class GoogleSheetsClient:
             raise ConnectionError("Google Sheets client is not properly connected")
 
         try:
-            body = {'values': values}
-            self.sheets_service.spreadsheets().values().update(
+            # Ensure proper structure for the update
+            update_body = {
+                'values': values
+            }
+            
+            # Execute the update with USER_ENTERED to handle formatting
+            result = self.sheets_service.spreadsheets().values().update(
                 spreadsheetId=spreadsheet_id,
                 range=range_name,
-                valueInputOption='USER_ENTERED',
-                body=body
+                valueInputOption='USER_ENTERED',  # This ensures proper formatting
+                body=update_body
             ).execute()
-            logger.info(f"Successfully wrote {len(values)} rows to spreadsheet")
+            
+            # Log the update details
+            updated_range = result.get('updatedRange', '')
+            updated_cells = result.get('updatedCells', 0)
+            logger.info(f"Successfully updated range {updated_range} ({updated_cells} cells)")
             return True
+            
         except HttpError as e:
             error_msg = f"Failed to write to spreadsheet: {str(e)}"
             if e.resp.status == 403:
@@ -190,7 +200,7 @@ class GoogleSheetsClient:
             elif e.resp.status == 404:
                 error_msg = "Spreadsheet not found. Please check the spreadsheet ID"
             logger.error(error_msg)
-            raise Exception(error_msg)
+            return False  # Return False instead of raising to handle errors gracefully
 
     def get_spreadsheet_metadata(self, spreadsheet_id: str) -> Dict[str, Any]:
         """Get metadata about a spreadsheet."""
