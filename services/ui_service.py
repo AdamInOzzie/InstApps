@@ -233,6 +233,23 @@ class UIService:
                     <h3 style="margin: 0; color: #1E88E5; font-size: 1rem;">🔄 Copy Function</h3>
                 </div>
             """, unsafe_allow_html=True)
+
+            # Get available sheets for selection
+            try:
+                metadata = copy_service.sheets_client.get_spreadsheet_metadata(spreadsheet_id)
+                sheet_names = [sheet['properties']['title'] for sheet in metadata.get('sheets', [])]
+                
+                # Create sheet selector
+                selected_sheet = st.selectbox(
+                    "Select Sheet",
+                    options=sheet_names,
+                    index=sheet_names.index("Volunteers") if "Volunteers" in sheet_names else 0,
+                    help="Select the sheet to copy from"
+                )
+            except Exception as e:
+                logger.error(f"Error loading sheet names: {str(e)}")
+                st.error("Failed to load sheet names")
+                return
             
             target_row = st.number_input(
                 "Target Row",
