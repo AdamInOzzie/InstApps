@@ -126,24 +126,38 @@ class UIService:
             # Add submit button
             if st.button("Submit Entry", type="primary"):
                 try:
-                    # Calculate next available row
-                    next_row = 4  # Fixed row for testing
-                    logger.info(f"Using row {next_row} for new entry")
+                    # Find the first empty row in the sheet
+                    range_check = f"{sheet_name}!A:A"  # Check column A
+                    df_check = sheets_client.read_spreadsheet(spreadsheet_id, range_check)
                     
-                    # First copy the template row to maintain structure
+                    # Calculate next available row
+                    next_row = 2  # Start at row 2 (after header)
+                    if df_check is not None and not df_check.empty:
+                        # Find the last non-empty row
+                        mask = df_check.iloc[:, 0].notna()
+                        if mask.any():
+                            next_row = mask.values.nonzero()[0][-1] + 2
+                    
+                    logger.info(f"Next available row: {next_row}")
+                    
+                    # Copy template row (row 2) to maintain structure
                     copy_service = CopyService(sheets_client)
-                    if not UIService.copy_volunteer_entry(spreadsheet_id, copy_service, next_row):
+                    copy_result = copy_service.copy_entry(
+                        spreadsheet_id=spreadsheet_id,
+                        sheet_name=sheet_name,
+                        source_range="A2:Z2",  # Copy entire row 2 as template
+                        target_row=next_row
+                    )
+                    
+                    if not copy_result:
                         logger.error("Failed to copy template row")
                         st.error("Failed to copy template row")
                         return None
 
                     logger.info(f"Successfully copied template to row {next_row}")
                     
-                    # Update form fields in the copied row
-                    logger.info(f"Updating form fields with data: {form_data}")
-                    
                     # Get the sheet headers to map fields to columns
-                    header_range = "Volunteers!A1:Z1"
+                    header_range = f"{sheet_name}!A1:Z1"
                     header_data = sheets_client.read_spreadsheet(spreadsheet_id, header_range)
                     
                     if header_data is not None and not header_data.empty:
@@ -157,7 +171,7 @@ class UIService:
                                 col_idx = headers.index(field_name)
                                 # Convert to letter (0=A, 1=B, etc.)
                                 col_letter = chr(65 + col_idx)
-                                update_range = f"Volunteers!{col_letter}{next_row}"
+                                update_range = f"{sheet_name}!{col_letter}{next_row}"
                                 
                                 logger.info(f"Writing {field_name}='{value}' to {update_range}")
                                 result = sheets_client.write_to_spreadsheet(
