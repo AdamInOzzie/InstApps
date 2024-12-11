@@ -139,23 +139,25 @@ class UIService:
                     entry_range = f"{sheet_name}!A:A"  # Only check column A
                     entry_df = sheets_client.read_spreadsheet(spreadsheet_id, entry_range)
                     
-                    # Calculate next available row
-                    next_row = 2  # Start from row 2 (after header)
+                    # Calculate next available row - start from row 2 (after header)
+                    next_row = 2
                     if not entry_df.empty:
-                        # Find last non-empty row and add 1
-                        mask = entry_df.iloc[:, 0].notna()
+                        # Find first empty row
+                        mask = entry_df[entry_df.columns[0]].notna()
                         if mask.any():
-                            next_row = mask.values.nonzero()[0][-1] + 3  # +2 for header and +1 for next row
+                            next_row = len(mask[mask]) + 2  # Add 2 to account for header row
                     
-                    logger.info(f"Calculated next available row: {next_row}")
-                    
-                    # Use the shared copy functionality with calculated row
+                    # Use copy functionality with calculated row
                     copy_service = CopyService(sheets_client)
-                    if UIService.copy_entry(spreadsheet_id, copy_service, next_row, sheet_name):
-                        # Only if copy succeeds, return the form data
-                        return form_data
-                    return None
+                    success = UIService.copy_entry(spreadsheet_id, copy_service, next_row, sheet_name)
                     
+                    if success:
+                        st.success(f"Entry added successfully at row {next_row}")
+                        return form_data
+                    else:
+                        st.error("Failed to add entry")
+                        return None
+                        
                 except Exception as e:
                     logger.error(f"Error in form submission: {str(e)}")
                     st.error(f"Error: {str(e)}")
