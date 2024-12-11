@@ -161,7 +161,7 @@ class UIService:
                     )
                     
                     if success:
-                        st.success(f"Entry added successfully at row {next_row}")
+                        st.success(f"✅ Successfully copied to row {next_row}!")
                         return form_data
                     else:
                         st.error("Failed to add entry")
