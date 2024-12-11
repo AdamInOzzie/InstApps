@@ -268,10 +268,22 @@ class UIService:
             
             if st.button("Copy to Selected Row", type="primary", key="test_copy_button"):
                 try:
+                    # Display parameters on screen
+                    st.info("Copy Operation Parameters:")
+                    st.write({
+                        "Spreadsheet ID": spreadsheet_id,
+                        "Sheet Name": selected_sheet,
+                        "Source Range": f"{selected_sheet}!A2:Z2",
+                        "Target Row": target_row
+                    })
+                    
+                    source_range = f"{selected_sheet}!A2:Z2"
+                    st.write("About to execute copy_entry with these parameters")
+                    
                     success = copy_service.copy_entry(
                         spreadsheet_id=spreadsheet_id,
                         sheet_name=selected_sheet,
-                        source_range=f"{selected_sheet}!A2:Z2",
+                        source_range=source_range,
                         target_row=target_row
                     )
                     
