@@ -163,15 +163,21 @@ class SpreadsheetService:
                 "timestamp": pd.Timestamp.now().isoformat()
             }
             
-            # Format the value appropriately
-            formatted_value = str(value).strip()
+            # Format the value appropriately based on type
+            if isinstance(value, (int, float)):
+                if value <= 1 and value >= 0:  # Likely a percentage
+                    formatted_value = f"{value:.4f}"  # Keep precision for small decimals
+                else:
+                    formatted_value = f"{value:.2f}"  # Normal number formatting
+            else:
+                formatted_value = str(value).strip()
             
             # Log detailed update attempt
             logger.info("=" * 80)
             logger.info("CELL UPDATE REQUEST")
             logger.info("=" * 80)
             logger.info(f"Target Range: {update_range}")
-            logger.info(f"Original Value: {value}")
+            logger.info(f"Original Value: {value} (type: {type(value)})")
             logger.info(f"Formatted Value: {formatted_value}")
             logger.info(f"Update Structure: {[[formatted_value]]}")
             logger.info("=" * 80)
@@ -203,7 +209,7 @@ class SpreadsheetService:
                 return False
                 
         except Exception as e:
-            logger.error(f"Error updating cell {update_range}: {str(e)}")
+            logger.error(f"Error updating cell: {str(e)}")
             return False
 
 
