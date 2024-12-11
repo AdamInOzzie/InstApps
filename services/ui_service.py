@@ -134,40 +134,15 @@ class UIService:
             # Add submit button
             if st.button("Submit Entry", type="primary"):
                 try:
-                    logger.info("=" * 60)
-                    logger.info("SUBMIT ENTRY DEBUG")
-                    logger.info("=" * 60)
-                    logger.info(f"Spreadsheet ID: {spreadsheet_id}")
-                    
                     # Get the next available row
                     range_name = f"{sheet_name}!A1:Z1000"
                     df = sheets_client.read_spreadsheet(spreadsheet_id, range_name)
                     next_row = len(df) + 2 if not df.empty else 2
-                    logger.info(f"Target Row: {next_row}")
                     
-                    source_range = "A2:D2"
-                    logger.info(f"Sheet Name: {sheet_name}")
-                    logger.info(f"Source Range: {source_range}")
-                    
-                    # Use exact same code as working copy button
-                    copy_service = CopyService(sheets_client)
-                    success = copy_service.copy_entry(
-                        spreadsheet_id=spreadsheet_id,
-                        sheet_name=sheet_name,
-                        source_range=source_range,
-                        target_row=int(next_row)
-                    )
-                    
-                    if success:
-                        success_msg = f"✅ Successfully copied to row {next_row}!"
-                        logger.info(success_msg)
-                        st.success(success_msg)
-                        return form_data
-                    else:
-                        error_msg = f"Failed to copy to row {next_row}"
-                        logger.error(error_msg)
-                        st.error(error_msg)
-                        return None
+                    # Use the same copy service instance and method as the copy button
+                    from services.copy_service import CopyService
+                    UIService.display_copy_test_button(spreadsheet_id, CopyService(sheets_client))
+                    return form_data
                 except Exception as e:
                     logger.error(f"Error submitting form: {str(e)}")
                     st.error(f"Error submitting form: {str(e)}")
