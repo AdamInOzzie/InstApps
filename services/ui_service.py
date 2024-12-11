@@ -80,15 +80,10 @@ class UIService:
                 
             st.divider()
             
-            # Admin mode toggle
-            is_admin = st.checkbox("🔑 Admin Mode", 
-                                 value=st.session_state.get('is_admin', False),
-                                 help="Enable admin features")
-            st.session_state.is_admin = is_admin
-            
-            if is_admin:
-                st.success("Admin mode enabled")
-                st.text("Copy and Test forms available")
+            # Display admin status
+            if UIService.is_admin():
+                st.success("🔑 Admin Mode Active")
+                st.text("Advanced features enabled")
             
             st.divider()
 
@@ -256,10 +251,9 @@ class UIService:
 
     @staticmethod
     def is_admin() -> bool:
-        """Check if current user has admin privileges."""
-        if 'is_admin' not in st.session_state:
-            st.session_state.is_admin = False
-        return st.session_state.is_admin
+        """Check if current user has admin privileges based on URL parameter."""
+        query_params = st.experimental_get_query_params()
+        return 'admin' in query_params
 
     @staticmethod
     def display_copy_test_button(spreadsheet_id: str, copy_service: CopyService) -> None:
