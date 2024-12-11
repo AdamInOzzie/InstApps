@@ -140,46 +140,15 @@ class UIService:
                     df = sheets_client.read_spreadsheet(spreadsheet_id, range_name)
                     next_row = len(df) + 2 if not df.empty else 2
                     
-                    # Create copy service instance exactly as in display_copy_test_button
+                    # Use the shared copy functionality
                     copy_service = CopyService(sheets_client)
-                    try:
-                        logger.info("=" * 60)
-                        logger.info("SUBMIT ENTRY COPY DEBUG")
-                        logger.info("=" * 60)
-                        logger.info(f"Spreadsheet ID: {spreadsheet_id}")
-                        logger.info(f"Target Row: {next_row}")
-                        
-                        source_range = "A2:D2"
-                        sheet_name = "Volunteers"
-                        
-                        logger.info(f"Sheet Name: {sheet_name}")
-                        logger.info(f"Source Range: {source_range}")
-                        
-                        success = copy_service.copy_entry(
-                            spreadsheet_id=spreadsheet_id,
-                            sheet_name=sheet_name,
-                            source_range=source_range,
-                            target_row=int(next_row)
-                        )
-                        
-                        if success:
-                            success_msg = f"✅ Successfully copied to row {next_row}!"
-                            logger.info(success_msg)
-                            st.success(success_msg)
-                            return form_data
-                        else:
-                            error_msg = f"Failed to copy to row {next_row}"
-                            logger.error(error_msg)
-                            st.error(error_msg)
-                            return None
-                    except Exception as e:
-                        error_msg = f"Error during copy: {str(e)}"
-                        logger.error(error_msg)
-                        st.error(error_msg)
-                        return None
+                    success = UIService.copy_volunteer_entry(spreadsheet_id, copy_service, next_row)
+                    return form_data if success else None
+                    
                 except Exception as e:
                     logger.error(f"Error submitting form: {str(e)}")
                     st.error(f"Error submitting form: {str(e)}")
+                    return None
             
             return form_data if form_data else None
             
@@ -189,10 +158,49 @@ class UIService:
             return None
 
     @staticmethod
-    def display_copy_test_button(spreadsheet_id: str, copy_service) -> None:
+    def copy_volunteer_entry(spreadsheet_id: str, copy_service: CopyService, target_row: int) -> bool:
+        """Shared copy functionality for volunteer entries."""
+        try:
+            logger.info("=" * 60)
+            logger.info("COPY OPERATION")
+            logger.info("=" * 60)
+            logger.info(f"Spreadsheet ID: {spreadsheet_id}")
+            logger.info(f"Target Row: {target_row}")
+            
+            source_range = "A2:D2"
+            sheet_name = "Volunteers"
+            
+            logger.info(f"Sheet Name: {sheet_name}")
+            logger.info(f"Source Range: {source_range}")
+            
+            success = copy_service.copy_entry(
+                spreadsheet_id=spreadsheet_id,
+                sheet_name=sheet_name,
+                source_range=source_range,
+                target_row=int(target_row)
+            )
+            
+            if success:
+                success_msg = f"✅ Successfully copied to row {target_row}!"
+                logger.info(success_msg)
+                st.success(success_msg)
+            else:
+                error_msg = f"Failed to copy to row {target_row}"
+                logger.error(error_msg)
+                st.error(error_msg)
+                
+            return success
+            
+        except Exception as e:
+            error_msg = f"Error during copy: {str(e)}"
+            logger.error(error_msg)
+            st.error(error_msg)
+            return False
+
+    @staticmethod
+    def display_copy_test_button(spreadsheet_id: str, copy_service: CopyService) -> None:
         """Display test button for copy functionality."""
         try:
-            logger.info("Rendering TESTCopy button section")
             st.markdown("""
                 <div style="
                     background-color: #f0f8ff;
@@ -205,10 +213,8 @@ class UIService:
                 </div>
             """, unsafe_allow_html=True)
             
-            # Add some visual separation
             st.markdown("---")
             
-            # Add target row input
             target_row = st.number_input(
                 "Target Row",
                 min_value=1,
@@ -218,38 +224,8 @@ class UIService:
             )
             
             if st.button("Copy to Selected Row", type="primary", key="test_copy_button"):
-                try:
-                    logger.info("=" * 60)
-                    logger.info("COPY BUTTON DEBUG")
-                    logger.info("=" * 60)
-                    logger.info(f"Spreadsheet ID: {spreadsheet_id}")
-                    logger.info(f"Target Row: {target_row}")
-                    
-                    source_range = "A2:D2"
-                    sheet_name = "Volunteers"
-                    
-                    logger.info(f"Sheet Name: {sheet_name}")
-                    logger.info(f"Source Range: {source_range}")
-                    
-                    success = copy_service.copy_entry(
-                        spreadsheet_id=spreadsheet_id,
-                        sheet_name=sheet_name,
-                        source_range=source_range,
-                        target_row=int(target_row)
-                    )
-                    
-                    if success:
-                        success_msg = f"✅ Successfully copied to row {target_row}!"
-                        logger.info(success_msg)
-                        st.success(success_msg)
-                    else:
-                        error_msg = f"Failed to copy to row {target_row}"
-                        logger.error(error_msg)
-                        st.error(error_msg)
-                except Exception as e:
-                    error_msg = f"Error during copy: {str(e)}"
-                    logger.error(error_msg)
-                    st.error(error_msg)
+                UIService.copy_volunteer_entry(spreadsheet_id, copy_service, target_row)
+                
         except Exception as e:
             logger.error(f"Error displaying copy test button: {str(e)}")
             st.error("Failed to display copy test button")
