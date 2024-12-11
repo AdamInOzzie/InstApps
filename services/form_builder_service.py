@@ -186,26 +186,33 @@ class FormBuilderService:
                 field_name = field['name']
                 field_type = field['type']
                 
+                logger.info(f"Rendering field: {field_name} of type {field_type}")
+                
                 if field_type == 'number':
                     step_size = 0.01 if float(field.get('min_value', 0)) < 10 else 1.0
-                    form_data[field_name] = st.number_input(
+                    value = st.number_input(
                         field_name,
                         min_value=field.get('min_value', None),
                         max_value=field.get('max_value', None),
                         step=step_size,
-                        value=0.0
+                        value=0.0,
+                        key=f"form_field_{field_name}"
                     )
+                    form_data[field_name] = value
                 elif field_type == 'date':
-                    form_data[field_name] = st.date_input(field_name)
+                    value = st.date_input(field_name, key=f"form_field_{field_name}")
+                    form_data[field_name] = value.strftime('%Y-%m-%d')  # Format date as string
                 elif field_type == 'checkbox':
-                    form_data[field_name] = st.checkbox(field_name)
+                    value = st.checkbox(field_name, key=f"form_field_{field_name}")
+                    form_data[field_name] = value
                 elif field_type == 'percentage':
                     value = st.number_input(
                         f"{field_name} (%)",
                         step=0.1,
                         min_value=0.0,
                         max_value=100.0,
-                        value=0.0
+                        value=0.0,
+                        key=f"form_field_{field_name}"
                     )
                     form_data[field_name] = f"{value}%"
                 elif field_type == 'currency':
@@ -213,16 +220,21 @@ class FormBuilderService:
                         field_name,
                         step=0.01,
                         min_value=0.0,
-                        value=0.0
+                        value=0.0,
+                        key=f"form_field_{field_name}"
                     )
                     form_data[field_name] = f"${value:.2f}"
                 else:
-                    form_data[field_name] = st.text_input(field_name, value="")
+                    value = st.text_input(field_name, value="", key=f"form_field_{field_name}")
+                    form_data[field_name] = value
+                
+                logger.info(f"Field {field_name} value set to: {form_data[field_name]}")
                     
             except Exception as e:
                 logger.error(f"Error rendering field {field_name}: {str(e)}")
                 st.error(f"Error rendering field {field_name}")
                 
+        logger.info(f"Complete form data: {form_data}")
         return form_data
 
     def append_form_data(self, spreadsheet_id: str, sheet_name: str, form_data: Dict[str, Any], sheets_client) -> bool:
