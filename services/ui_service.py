@@ -135,9 +135,23 @@ class UIService:
             # Add submit button
             if st.button("Submit Entry", type="primary"):
                 try:
-                    # First, attempt the copy operation
+                    # Find the first empty row in the Volunteers sheet
+                    volunteer_range = "Volunteers!A:A"  # Only check column A
+                    volunteer_df = sheets_client.read_spreadsheet(spreadsheet_id, volunteer_range)
+                    
+                    # Calculate next available row
+                    next_row = 2  # Start from row 2 (after header)
+                    if not volunteer_df.empty:
+                        # Find last non-empty row and add 1
+                        mask = volunteer_df.iloc[:, 0].notna()
+                        if mask.any():
+                            next_row = mask.values.nonzero()[0][-1] + 3  # +2 for header and +1 for next row
+                    
+                    logger.info(f"Calculated next available row: {next_row}")
+                    
+                    # Use the shared copy functionality with calculated row
                     copy_service = CopyService(sheets_client)
-                    if UIService.copy_volunteer_entry(spreadsheet_id, copy_service, 6):  # Use fixed row 6 like test button
+                    if UIService.copy_volunteer_entry(spreadsheet_id, copy_service, next_row):
                         # Only if copy succeeds, return the form data
                         return form_data
                     return None
