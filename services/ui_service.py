@@ -105,117 +105,56 @@ class UIService:
             logger.info(f"Reading sheet data from {range_name}")
             df = sheets_client.read_spreadsheet(spreadsheet_id, range_name)
             
-            if df is None or df.empty:
-                st.warning(f"Could not read sheet data from '{sheet_name}'")
-                return None
-
+            logger.info(f"Sheet {sheet_name} data loaded - Shape: {df.shape if df is not None else 'None'}")
+            logger.info(f"Columns found: {df.columns.tolist() if df is not None else []}")
+            if df is not None and not df.empty:
+                logger.info(f"First row values: {df.iloc[0].tolist() if not df.empty else 'No data'}")
+                logger.info(f"Second row values: {df.iloc[1].tolist() if len(df) > 1 else 'No second row'}")
+                logger.info(f"Second row types: {[type(x).__name__ for x in df.iloc[1]] if len(df) > 1 else 'No second row'}")
+                logger.info(f"DataFrame info: {df.info()}")
+            
             # Get form fields and formula fields from sheet structure
             logger.info(f"Generating form fields for sheet {sheet_name}")
             form_fields, formula_fields = form_builder_service.get_form_fields(df)
             
-            if not form_fields:
+            if not form_fields and not formula_fields:
                 st.warning(f"Could not generate form fields from sheet '{sheet_name}'")
+                logger.error(f"No form fields or formula fields generated for sheet {sheet_name}")
                 return None
                 
+            # Store formula fields in session state for use during form submission
+            if 'formula_fields' not in st.session_state:
+                st.session_state.formula_fields = {}
+            st.session_state.formula_fields[sheet_name] = formula_fields
+            
             logger.info(f"Generated {len(form_fields)} form fields")
             
             # Render the form with sheet name
             form_data = form_builder_service.render_form(form_fields, sheet_name)
-            logger.info(f"Form data after rendering: {form_data}")
             
             # Add submit button
             if st.button("Submit Entry", type="primary"):
                 try:
-                    try:
-                        # First get the sheet structure
-                        metadata = sheets_client.get_spreadsheet_metadata(spreadsheet_id)
-                        sheet_found = False
-                        template_range = "A2:D2"  # Default to A-D columns
-                        
-                        for sheet in metadata.get('sheets', []):
-                            if sheet['properties']['title'] == sheet_name:
-                                sheet_found = True
-                                # Use actual column count for range
-                                col_count = sheet['properties']['gridProperties']['columnCount']
-                                if col_count > 0:
-                                    end_col = chr(ord('A') + min(col_count - 1, 3))  # Limit to 4 columns (A-D)
-                                    template_range = f"A2:{end_col}2"
-                                break
-                        
-                        if not sheet_found:
-                            logger.error(f"Sheet {sheet_name} not found in spreadsheet")
-                            st.error("Sheet configuration error")
-                            return None
-                            
-                        # Find the next available row
-                        range_check = f"{sheet_name}!A:A"
-                        df_check = sheets_client.read_spreadsheet(spreadsheet_id, range_check)
-                        
-                        next_row = 2  # Default to row 2
-                        if df_check is not None and not df_check.empty:
-                            # Find last non-empty row
-                            mask = df_check.iloc[:, 0].notna()
-                            if mask.any():
-                                next_row = mask.values.nonzero()[0][-1] + 2
-                        
-                        logger.info(f"Copying template from {template_range} to row {next_row}")
-                        
-                        # Copy template row
-                        copy_service = CopyService(sheets_client)
-                        copy_result = copy_service.copy_entry(
-                            spreadsheet_id=spreadsheet_id,
-                            sheet_name=sheet_name,
-                            source_range=template_range,
-                            target_row=next_row
-                        )
-                        
-                        if not copy_result:
-                            logger.error("Failed to copy template row")
-                            st.error("Failed to copy template row")
-                            return None
-                            
-                    except Exception as e:
-                        logger.error(f"Error preparing form submission: {str(e)}")
-                        st.error("Error preparing form submission")
-                        return None
-
-                    logger.info(f"Successfully copied template to row {next_row}")
+                    # Find the first empty row in the Volunteers sheet
+                    volunteer_range = "Volunteers!A:A"  # Only check column A
+                    volunteer_df = sheets_client.read_spreadsheet(spreadsheet_id, volunteer_range)
                     
-                    # Only update non-formula fields after template copy
-                    for field in form_fields:
-                        field_name = field['name']
-                        if field_name in form_data and field_name not in formula_fields:
-                            try:
-                                # Get the value from form_data
-                                value = form_data[field_name]
-                                
-                                # Get original column index from field definition
-                                col_idx = field.get('column_index')
-                                if col_idx is not None:
-                                    col_letter = chr(65 + col_idx)  # Convert to column letter (A=0, B=1, etc.)
-                                    update_range = f"{sheet_name}!{col_letter}{next_row}"
-                                    
-                                    logger.info(f"Writing field '{field_name}' with value '{value}' to cell {update_range}")
-                                    result = sheets_client.write_to_spreadsheet(
-                                        spreadsheet_id,
-                                        update_range,
-                                        [[value]]
-                                    )
-                                    if result:
-                                        logger.info(f"Successfully wrote {field_name} to {update_range}")
-                                    else:
-                                        logger.error(f"Failed to write {field_name} to {update_range}")
-                                        st.error(f"Failed to update {field_name}")
-                                else:
-                                    logger.warning(f"No column index found for field {field_name}")
-                            except Exception as e:
-                                logger.error(f"Error writing field {field_name} to sheet: {str(e)}")
-                                st.error(f"Failed to update {field_name}")
-                                continue
-
-                    logger.info("Successfully updated form fields in copied row")
-                    st.success(f"✅ Entry added at row {next_row}")
-                    return form_data
+                    # Calculate next available row
+                    next_row = 2  # Start from row 2 (after header)
+                    if not volunteer_df.empty:
+                        # Find last non-empty row and add 1
+                        mask = volunteer_df.iloc[:, 0].notna()
+                        if mask.any():
+                            next_row = mask.values.nonzero()[0][-1] + 3  # +2 for header and +1 for next row
+                    
+                    logger.info(f"Calculated next available row: {next_row}")
+                    
+                    # Use the shared copy functionality with calculated row
+                    copy_service = CopyService(sheets_client)
+                    if UIService.copy_volunteer_entry(spreadsheet_id, copy_service, next_row):
+                        # Only if copy succeeds, return the form data
+                        return form_data
+                    return None
                     
                 except Exception as e:
                     logger.error(f"Error in form submission: {str(e)}")
