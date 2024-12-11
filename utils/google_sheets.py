@@ -201,6 +201,15 @@ class GoogleSheetsClient:
                 'majorDimension': 'ROWS'
             }
 
+            # Log API method being used
+            logger.info("Calling Google Sheets API Method: spreadsheets.values.update")
+            logger.info("API Request Parameters:")
+            logger.info(f"  - Method: values.update")
+            logger.info(f"  - Spreadsheet ID: {spreadsheet_id}")
+            logger.info(f"  - Range: {range_name}")
+            logger.info(f"  - Value Input Option: USER_ENTERED")
+            logger.info(f"  - Body: {update_body}")
+            
             # Execute the update
             result = self.sheets_service.spreadsheets().values().update(
                 spreadsheetId=spreadsheet_id,
@@ -208,6 +217,10 @@ class GoogleSheetsClient:
                 valueInputOption='USER_ENTERED',
                 body=update_body
             ).execute()
+            
+            # Log the raw API response
+            logger.info("Raw API Response:")
+            logger.info(str(result))
 
             # Log response
             updated_range = result.get('updatedRange', '')

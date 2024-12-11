@@ -270,10 +270,24 @@ class SpreadsheetService:
             
             # Execute the batch update using the client singleton
             client = GoogleSheetsClient()
+            # Log API method being used
+            logger.info("Calling Google Sheets API Method: spreadsheets.values.batchUpdate")
+            logger.info("API Request Parameters:")
+            logger.info(f"  - Method: values.batchUpdate")
+            logger.info(f"  - Spreadsheet ID: {spreadsheet_id}")
+            logger.info(f"  - Body Structure:")
+            logger.info(f"    - Value Input Option: {body['valueInputOption']}")
+            logger.info(f"    - Updates Count: {len(body['data'])}")
+            logger.info(f"    - Full Body: {body}")
+            
             result = client.sheets_service.spreadsheets().values().batchUpdate(
                 spreadsheetId=spreadsheet_id,
                 body=body
             ).execute()
+            
+            # Log the raw API response
+            logger.info("Raw API Response:")
+            logger.info(str(result))
             
             updated_cells = len(updates)
             logger.info(f"Successfully updated {updated_cells} cell{'s' if updated_cells != 1 else ''}")
