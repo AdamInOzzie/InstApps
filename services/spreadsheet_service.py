@@ -152,8 +152,15 @@ class SpreadsheetService:
             # Format the value appropriately
             formatted_value = str(value).strip()
             
-            # Log the update attempt
-            logger.info(f"Attempting to update {update_range} with value: {formatted_value}")
+            # Log detailed update attempt
+            logger.info("=" * 80)
+            logger.info("CELL UPDATE REQUEST")
+            logger.info("=" * 80)
+            logger.info(f"Target Range: {update_range}")
+            logger.info(f"Original Value: {value}")
+            logger.info(f"Formatted Value: {formatted_value}")
+            logger.info(f"Update Structure: {[[formatted_value]]}")
+            logger.info("=" * 80)
             
             # Perform the update with properly structured data
             result = self.sheets_client.write_to_spreadsheet(

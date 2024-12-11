@@ -179,6 +179,16 @@ class GoogleSheetsClient:
                 'values': values
             }
             
+            # Log request details
+            logger.info("=" * 80)
+            logger.info("GOOGLE SHEETS API UPDATE REQUEST")
+            logger.info("=" * 80)
+            logger.info(f"Spreadsheet ID: {spreadsheet_id}")
+            logger.info(f"Range: {range_name}")
+            logger.info(f"Value Input Option: USER_ENTERED")
+            logger.info(f"Update Body: {update_body}")
+            logger.info("=" * 80)
+            
             # Execute the update with USER_ENTERED to handle formatting
             result = self.sheets_service.spreadsheets().values().update(
                 spreadsheetId=spreadsheet_id,
@@ -187,10 +197,14 @@ class GoogleSheetsClient:
                 body=update_body
             ).execute()
             
-            # Log the update details
+            # Log response details
             updated_range = result.get('updatedRange', '')
             updated_cells = result.get('updatedCells', 0)
-            logger.info(f"Successfully updated range {updated_range} ({updated_cells} cells)")
+            logger.info("GOOGLE SHEETS API UPDATE RESPONSE")
+            logger.info("=" * 80)
+            logger.info(f"Updated Range: {updated_range}")
+            logger.info(f"Updated Cells: {updated_cells}")
+            logger.info("=" * 80)
             return True
             
         except HttpError as e:
