@@ -134,24 +134,23 @@ class UIService:
             # Add submit button
             if st.button("Submit Entry", type="primary"):
                 try:
-                    logger.info(f"Submit Entry clicked for sheet: {sheet_name}")
+                    logger.info("=" * 60)
+                    logger.info("SUBMIT ENTRY DEBUG")
+                    logger.info("=" * 60)
                     logger.info(f"Spreadsheet ID: {spreadsheet_id}")
                     
                     # Get the next available row
                     range_name = f"{sheet_name}!A1:Z1000"
-                    logger.info(f"Reading range: {range_name}")
                     df = sheets_client.read_spreadsheet(spreadsheet_id, range_name)
                     next_row = len(df) + 2 if not df.empty else 2
-                    logger.info(f"Calculated next row: {next_row}")
+                    logger.info(f"Target Row: {next_row}")
                     
-                    # Use copy service directly
-                    logger.info("Initializing CopyService")
-                    from services.copy_service import CopyService
-                    copy_service = CopyService(sheets_client)
-                    
-                    # Use exact same parameters as working copy button
                     source_range = "A2:D2"
-                    logger.info(f"Copying from {source_range} to row {next_row}")
+                    logger.info(f"Sheet Name: {sheet_name}")
+                    logger.info(f"Source Range: {source_range}")
+                    
+                    # Use exact same code as working copy button
+                    copy_service = CopyService(sheets_client)
                     success = copy_service.copy_entry(
                         spreadsheet_id=spreadsheet_id,
                         sheet_name=sheet_name,
@@ -160,11 +159,12 @@ class UIService:
                     )
                     
                     if success:
-                        st.success("✅ Entry added successfully!")
-                        logger.info(f"Successfully copied template row to {next_row}")
+                        success_msg = f"✅ Successfully copied to row {next_row}!"
+                        logger.info(success_msg)
+                        st.success(success_msg)
                         return form_data
                     else:
-                        error_msg = "Failed to copy template row"
+                        error_msg = f"Failed to copy to row {next_row}"
                         logger.error(error_msg)
                         st.error(error_msg)
                         return None
