@@ -174,22 +174,29 @@ class UIService:
                                     )
                                     if not header_data.empty:
                                         headers = header_data.iloc[0].tolist()
+                                        logger.info(f"Form data to update: {form_data}")
+                                        logger.info(f"Sheet headers: {headers}")
                                         # Update each form field using column index
                                         for field_name, value in form_data.items():
                                             try:
                                                 # Find column index for field name
+                                                logger.info(f"Looking for field '{field_name}' in headers")
                                                 col_idx = headers.index(field_name)
                                                 # Convert to letter (0=A, 1=B, etc.)
                                                 col_letter = chr(65 + col_idx)  # A=65 in ASCII
                                                 update_range = f"Volunteers!{col_letter}{next_row}"
-                                                logger.info(f"Updating {field_name} at {update_range} with value {value}")
-                                                sheets_client.write_to_spreadsheet(
+                                                logger.info(f"Updating {field_name} at {update_range} with value: '{value}'")
+                                                result = sheets_client.write_to_spreadsheet(
                                                     spreadsheet_id,
                                                     update_range,
                                                     [[value]]
                                                 )
+                                                logger.info(f"Update result for {field_name}: {result}")
                                             except ValueError as ve:
-                                                logger.warning(f"Field {field_name} not found in headers: {str(ve)}")
+                                                logger.error(f"Field {field_name} not found in headers {headers}: {str(ve)}")
+                                                continue
+                                            except Exception as e:
+                                                logger.error(f"Error updating field {field_name}: {str(e)}")
                                                 continue
                                             
                             logger.info("Successfully updated form fields in copied row")
