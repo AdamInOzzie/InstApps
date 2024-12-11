@@ -530,29 +530,45 @@ def main():
                                     
                                 def create_callback(row):
                                     def callback():
-                                        value = st.session_state[f"input_{row}"]
-                                        logger.info(f"Updating input cell row {row} with value {value}")
-                                        
-                                        # Format value appropriately for percentages
-                                        if isinstance(value, (int, float)) and value <= 1:
-                                            formatted_value = f"{value:.4f}"  # Keep precision for small numbers
-                                        else:
-                                            formatted_value = str(value)
+                                        try:
+                                            value = st.session_state[f"input_{row}"]
+                                            logger.info(f"Raw input value: {value} (type: {type(value)})")
                                             
-                                        logger.info(f"Formatted value for update: {formatted_value}")
-                                        
-                                        success = st.session_state.spreadsheet_service.update_input_cell(
-                                            selected_sheet['id'],
-                                            formatted_value,
-                                            row
-                                        )
-                                        
-                                        if not success:
-                                            st.error(f"Failed to update cell B{row}")
-                                            logger.error(f"Failed to update cell B{row} with value {formatted_value}")
-                                        else:
-                                            logger.info(f"Successfully updated cell B{row} with value {formatted_value}")
-                                            st.rerun()  # Refresh to show updated values
+                                            # Get current value to determine if it's a percentage
+                                            current_value = st.session_state.form_service.get_input_field_data(
+                                                selected_sheet['id']
+                                            )
+                                            current_field_value = None
+                                            for field_name, field_value in current_value:
+                                                if isinstance(field_value, str) and '%' in field_value:
+                                                    current_field_value = field_value
+                                                    break
+                                            
+                                            # Format value based on current field type
+                                            if current_field_value and '%' in current_field_value:
+                                                formatted_value = f"{float(value):.4f}"
+                                            else:
+                                                formatted_value = str(value)
+                                            
+                                            logger.info(f"Updating cell B{row} with formatted value: {formatted_value}")
+                                            
+                                            success = st.session_state.spreadsheet_service.update_input_cell(
+                                                selected_sheet['id'],
+                                                formatted_value,
+                                                row
+                                            )
+                                            
+                                            if not success:
+                                                st.error(f"Failed to update cell B{row}")
+                                                logger.error(f"Failed to update cell B{row} with value {formatted_value}")
+                                            else:
+                                                logger.info(f"Successfully updated cell B{row} with value {formatted_value}")
+                                                time.sleep(0.5)  # Brief pause to allow update to complete
+                                                st.rerun()  # Refresh to show updated values
+                                                
+                                        except Exception as e:
+                                            logger.error(f"Error in update callback: {str(e)}")
+                                            st.error(f"Error updating value: {str(e)}")
                                     return callback
 
                                 # Determine format based on value and type
