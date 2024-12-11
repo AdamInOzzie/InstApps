@@ -79,6 +79,18 @@ class UIService:
                 st.text("Check logs for more information")
                 
             st.divider()
+            
+            # Admin mode toggle
+            is_admin = st.checkbox("🔑 Admin Mode", 
+                                 value=st.session_state.get('is_admin', False),
+                                 help="Enable admin features")
+            st.session_state.is_admin = is_admin
+            
+            if is_admin:
+                st.success("Admin mode enabled")
+                st.text("Copy and Test forms available")
+            
+            st.divider()
 
     @staticmethod
     def display_data_quality_report(df: pd.DataFrame):
@@ -243,9 +255,20 @@ class UIService:
             return False
 
     @staticmethod
+    def is_admin() -> bool:
+        """Check if current user has admin privileges."""
+        if 'is_admin' not in st.session_state:
+            st.session_state.is_admin = False
+        return st.session_state.is_admin
+
+    @staticmethod
     def display_copy_test_button(spreadsheet_id: str, copy_service: CopyService) -> None:
         """Display test buttons and forms for various functionalities."""
         try:
+            # Only show copy and test forms for admin users
+            if not UIService.is_admin():
+                return
+
             # 1. Copy to Selected Row Form
             st.markdown("""
                 <div style="
