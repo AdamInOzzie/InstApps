@@ -179,12 +179,9 @@ class SpreadsheetService:
                 else:
                     logger.error(f"No cells were updated in range {update_range}")
                     return False
-            
-            if result:
-                logger.info(f"Successfully updated cell {update_range} with value {formatted_value}")
-                return True
-            else:
-                logger.error(f"Failed to update cell {update_range} with value {formatted_value}")
+                    
+            except Exception as update_error:
+                logger.error(f"Error updating cell {update_range}: {str(update_error)}")
                 return False
                 
         except Exception as e:
