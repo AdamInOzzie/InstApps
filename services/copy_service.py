@@ -1,7 +1,5 @@
 """Service for handling copy operations in Google Sheets."""
 import logging
-import ssl
-import time
 from typing import Optional, Dict, Any
 from googleapiclient.errors import HttpError
 
@@ -27,7 +25,7 @@ class CopyService:
 
     def copy_entry(self, spreadsheet_id: str, sheet_name: str, source_range: str, target_row: int) -> bool:
         """
-        Copy a range to a target row using Google Sheets API with retry logic.
+        Copy a range to a target row using Google Sheets API.
         
         Args:
             spreadsheet_id: The ID of the spreadsheet
@@ -38,18 +36,14 @@ class CopyService:
         Returns:
             bool: True if successful, False otherwise
         """
-        max_retries = 3
-        base_delay = 1
-        
-        for attempt in range(max_retries):
-            try:
-                logger.info("=" * 60)
-                logger.info(f"COPY ENTRY OPERATION (Attempt {attempt + 1}/{max_retries})")
-                logger.info("=" * 60)
-                logger.info(f"Spreadsheet ID: {spreadsheet_id}")
-                logger.info(f"Sheet Name: {sheet_name}")
-                logger.info(f"Source Range: {source_range}")
-                logger.info(f"Target Row: {target_row}")
+        try:
+            logger.info("=" * 60)
+            logger.info("COPY ENTRY OPERATION")
+            logger.info("=" * 60)
+            logger.info(f"Spreadsheet ID: {spreadsheet_id}")
+            logger.info(f"Sheet Name: {sheet_name}")
+            logger.info(f"Source Range: {source_range}")
+            logger.info(f"Target Row: {target_row}")
             
             # Get sheet ID
             sheet_id = self._get_sheet_id(spreadsheet_id, sheet_name)
@@ -102,36 +96,19 @@ class CopyService:
             }]
             
             # Execute the request using the service
-                logger.info("Executing copy paste request")
-                response = self.sheets_client.sheets_service.spreadsheets().batchUpdate(
-                    spreadsheetId=spreadsheet_id,
-                    body={'requests': requests}
-                ).execute()
-                
-                logger.info(f"Copy operation completed successfully. Response: {response}")
-                return True
-                
-            except ssl.SSLError as ssl_err:
-                logger.error(f"SSL Error on attempt {attempt + 1}: {str(ssl_err)}")
-                if attempt < max_retries - 1:
-                    delay = base_delay * (2 ** attempt)
-                    logger.info(f"Retrying in {delay} seconds...")
-                    time.sleep(delay)
-                    continue
-                logger.error("Max retries reached for SSL error")
-                return False
-                
-            except Exception as e:
-                logger.error(f"Error in copy_entry (attempt {attempt + 1}): {str(e)}")
-                logger.exception("Full traceback:")
-                if attempt < max_retries - 1:
-                    delay = base_delay * (2 ** attempt)
-                    logger.info(f"Retrying in {delay} seconds...")
-                    time.sleep(delay)
-                    continue
-                return False
-                
-        return False  # If all retries failed
+            logger.info("Executing copy paste request")
+            response = self.sheets_client.sheets_service.spreadsheets().batchUpdate(
+                spreadsheetId=spreadsheet_id,
+                body={'requests': requests}
+            ).execute()
+            
+            logger.info(f"Copy operation completed successfully. Response: {response}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error in copy_entry: {str(e)}")
+            logger.exception("Full traceback:")
+            return False
             
     def _column_letter_to_index(self, column: str) -> int:
         """Convert column letter to index (A=0, B=1, etc.)."""
