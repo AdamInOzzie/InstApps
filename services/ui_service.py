@@ -3,7 +3,6 @@ import logging
 import streamlit as st
 import pandas as pd
 from services.copy_service import CopyService
-from services.spreadsheet_service import SpreadsheetService
 from typing import Dict, Any, Optional
 
 logger = logging.getLogger(__name__)
@@ -170,6 +169,7 @@ class UIService:
                     if success:
                         # Add cell updates after successful copy
                         cell_updates = [4, 1, "test1", 4, 2, "test2", 4, 3, "test3"]
+                        # Import SpreadsheetService locally
                         from services.spreadsheet_service import SpreadsheetService
                         update_success = SpreadsheetService.UpdateEntryCells(
                             spreadsheet_id=spreadsheet_id,
