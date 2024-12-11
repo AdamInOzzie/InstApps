@@ -57,6 +57,13 @@ class FormBuilderService:
             return 'date'
         else:
             str_value = str(value).strip()
+            # Check for date-like strings (e.g., "2024-12-11")
+            if str_value and len(str_value.split('-')) == 3:
+                try:
+                    pd.to_datetime(str_value)
+                    return 'date'
+                except:
+                    pass
             if str_value.endswith('%'):
                 return 'percentage'
             elif str_value.startswith('$'):
