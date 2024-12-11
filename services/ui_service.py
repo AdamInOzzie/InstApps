@@ -179,27 +179,8 @@ class UIService:
     def copy_entry(spreadsheet_id: str, copy_service: CopyService, target_row: int, sheet_name: str, sheets_client) -> bool:
         """Shared copy functionality for sheet entries."""
         try:
-            logger.info("=" * 60)
-            logger.info("COPY OPERATION")
-            logger.info("=" * 60)
-            logger.info(f"Spreadsheet ID: {spreadsheet_id}")
-            logger.info(f"Target Row: {target_row}")
-            
-            # Get sheet data to determine the number of columns
-            metadata = sheets_client.get_spreadsheet_metadata(spreadsheet_id)
-            sheet_info = next((sheet for sheet in metadata.get('sheets', []) 
-                             if sheet['properties']['title'] == sheet_name), None)
-            if not sheet_info:
-                raise ValueError(f"Sheet {sheet_name} not found")
-            
-            num_cols = sheet_info['properties']['gridProperties']['columnCount']
-            # Convert column count to letter (e.g., 4 -> D)
-            end_col = chr(64 + min(num_cols, 26))  # Limit to 26 columns for now
-            source_range = f"A2:{end_col}2"
-            
-            logger.info(f"Sheet Name: {sheet_name}")
-            logger.info(f"Source Range: {source_range}")
-            
+            # Copy the row template from row 2 as template
+            source_range = f"{sheet_name}!A2:Z2"
             success = copy_service.copy_entry(
                 spreadsheet_id=spreadsheet_id,
                 sheet_name=sheet_name,
@@ -208,20 +189,13 @@ class UIService:
             )
             
             if success:
-                success_msg = f"✅ Successfully copied to row {target_row}!"
-                logger.info(success_msg)
-                st.success(success_msg)
+                st.success(f"✅ Successfully added entry to row {target_row}")
             else:
-                error_msg = f"Failed to copy to row {target_row}"
-                logger.error(error_msg)
-                st.error(error_msg)
-                
+                st.error("Failed to add entry")
             return success
             
         except Exception as e:
-            error_msg = f"Error during copy: {str(e)}"
-            logger.error(error_msg)
-            st.error(error_msg)
+            st.error(f"Error during copy: {str(e)}")
             return False
 
     @staticmethod
