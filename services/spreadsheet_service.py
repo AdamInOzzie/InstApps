@@ -148,14 +148,20 @@ class SpreadsheetService:
         try:
             update_range = f"INPUTS!B{row}"
             logger.info(f"Updating cell {update_range} with value {value}")
-            return self.sheets_client.write_to_spreadsheet(
+            result = self.sheets_client.write_to_spreadsheet(
                 spreadsheet_id,
                 update_range,
                 [[value]]
             )
+            if result:
+                logger.info(f"Successfully updated cell {update_range}")
+                return True
+            else:
+                logger.error(f"Failed to update cell {update_range}")
+                return False
         except Exception as e:
             logger.error(f"Failed to update cell {update_range}: {str(e)}")
-            raise
+            return False
 
 
     @staticmethod

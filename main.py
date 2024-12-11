@@ -529,15 +529,27 @@ def main():
                                     def callback():
                                         value = st.session_state[f"input_{row}"]
                                         logger.info(f"Updating input cell row {row} with value {value}")
+                                        
+                                        # Format value appropriately for percentages
+                                        if isinstance(value, (int, float)) and value <= 1:
+                                            formatted_value = f"{value:.4f}"  # Keep precision for small numbers
+                                        else:
+                                            formatted_value = str(value)
+                                            
+                                        logger.info(f"Formatted value for update: {formatted_value}")
+                                        
                                         success = st.session_state.spreadsheet_service.update_input_cell(
                                             selected_sheet['id'],
-                                            str(value),
+                                            formatted_value,
                                             row
                                         )
+                                        
                                         if not success:
                                             st.error(f"Failed to update cell B{row}")
+                                            logger.error(f"Failed to update cell B{row} with value {formatted_value}")
                                         else:
-                                            logger.info(f"Successfully updated cell B{row} with value {value}")
+                                            logger.info(f"Successfully updated cell B{row} with value {formatted_value}")
+                                            st.rerun()  # Refresh to show updated values
                                     return callback
 
                                 # Determine format based on value and type
