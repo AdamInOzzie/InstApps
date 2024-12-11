@@ -211,8 +211,9 @@ class UIService:
 
     @staticmethod
     def display_copy_test_button(spreadsheet_id: str, copy_service: CopyService) -> None:
-        """Display test button for copy functionality."""
+        """Display test buttons and forms for various functionalities."""
         try:
+            # 1. Copy to Selected Row Form
             st.markdown("""
                 <div style="
                     background-color: #f0f8ff;
@@ -221,11 +222,9 @@ class UIService:
                     border-left: 5px solid #1E88E5;
                     margin-bottom: 0.6rem;
                 ">
-                    <h3 style="margin: 0; color: #1E88E5; font-size: 1rem;">🔄 Test Copy Function</h3>
+                    <h3 style="margin: 0; color: #1E88E5; font-size: 1rem;">🔄 Copy Function</h3>
                 </div>
             """, unsafe_allow_html=True)
-            
-            st.markdown("---")
             
             target_row = st.number_input(
                 "Target Row",
@@ -237,28 +236,28 @@ class UIService:
             
             if st.button("Copy to Selected Row", type="primary", key="test_copy_button"):
                 UIService.copy_volunteer_entry(spreadsheet_id, copy_service, target_row)
-                
-            # Add Cell Updates Test Form
+            
+            st.markdown("<br>", unsafe_allow_html=True)
+            
+            # 2. Cell Updates Form
             st.markdown("""
                 <div style="
                     background-color: #f0f8ff;
                     padding: 0.5rem 0.8rem;
                     border-radius: 8px;
                     border-left: 5px solid #1E88E5;
-                    margin: 2rem 0 0.6rem 0;
+                    margin: 1rem 0 0.6rem 0;
                 ">
-                    <h3 style="margin: 0; color: #1E88E5; font-size: 1rem;">📝 Test Cell Updates</h3>
+                    <h3 style="margin: 0; color: #1E88E5; font-size: 1rem;">📝 Cell Updates</h3>
                 </div>
             """, unsafe_allow_html=True)
             
-            st.markdown("---")
-            
             # Sheet name input
             sheet_name = st.text_input("Sheet Name", value="Volunteers", 
-                                     help="Enter the name of the sheet to update")
+                                     help="Enter the name of the sheet to update",
+                                     key="cell_updates_sheet_name")
             
             # Container for cell updates
-            st.markdown("### Cell Updates")
             st.markdown("Enter row, column, and value for each cell to update")
             
             # Create 3 rows of inputs by default
@@ -306,6 +305,8 @@ class UIService:
                 finally:
                     # Reset state after operation
                     st.session_state.cell_updates_active = False
+            
+            st.markdown("<br>", unsafe_allow_html=True)
                 
         except Exception as e:
             logger.error(f"Error displaying test buttons: {str(e)}")
