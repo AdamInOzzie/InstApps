@@ -2,6 +2,7 @@
 import logging
 import streamlit as st
 import pandas as pd
+from services.copy_service import CopyService
 from typing import Dict, Any, Optional
 
 logger = logging.getLogger(__name__)
@@ -139,20 +140,42 @@ class UIService:
                     df = sheets_client.read_spreadsheet(spreadsheet_id, range_name)
                     next_row = len(df) + 2 if not df.empty else 2
                     
-                    # Use the same copy functionality that works in the Copy button
+                    # Create copy service instance exactly as in display_copy_test_button
                     copy_service = CopyService(sheets_client)
-                    success = copy_service.copy_entry(
-                        spreadsheet_id=spreadsheet_id,
-                        sheet_name="Volunteers",  # Same as Copy button
-                        source_range="A2:D2",     # Same as Copy button
-                        target_row=next_row
-                    )
-                    
-                    if success:
-                        st.success(f"✅ Successfully copied to row {next_row}!")
-                        return form_data
-                    else:
-                        st.error(f"Failed to copy to row {next_row}")
+                    try:
+                        logger.info("=" * 60)
+                        logger.info("SUBMIT ENTRY COPY DEBUG")
+                        logger.info("=" * 60)
+                        logger.info(f"Spreadsheet ID: {spreadsheet_id}")
+                        logger.info(f"Target Row: {next_row}")
+                        
+                        source_range = "A2:D2"
+                        sheet_name = "Volunteers"
+                        
+                        logger.info(f"Sheet Name: {sheet_name}")
+                        logger.info(f"Source Range: {source_range}")
+                        
+                        success = copy_service.copy_entry(
+                            spreadsheet_id=spreadsheet_id,
+                            sheet_name=sheet_name,
+                            source_range=source_range,
+                            target_row=int(next_row)
+                        )
+                        
+                        if success:
+                            success_msg = f"✅ Successfully copied to row {next_row}!"
+                            logger.info(success_msg)
+                            st.success(success_msg)
+                            return form_data
+                        else:
+                            error_msg = f"Failed to copy to row {next_row}"
+                            logger.error(error_msg)
+                            st.error(error_msg)
+                            return None
+                    except Exception as e:
+                        error_msg = f"Error during copy: {str(e)}"
+                        logger.error(error_msg)
+                        st.error(error_msg)
                         return None
                 except Exception as e:
                     logger.error(f"Error submitting form: {str(e)}")
