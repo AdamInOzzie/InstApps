@@ -167,7 +167,18 @@ class UIService:
                     )
                     
                     if success:
-                        st.success(f"✅ Successfully copied to row {next_row} in {sheet_name}!")
+                        # Add cell updates after successful copy
+                        cell_updates = [4, 1, "test1", 4, 2, "test2", 4, 3, "test3"]
+                        update_success = SpreadsheetService.UpdateEntryCells(
+                            spreadsheet_id=spreadsheet_id,
+                            sheet_name=sheet_name,
+                            cell_updates=cell_updates
+                        )
+                        
+                        if update_success:
+                            st.success(f"✅ Successfully copied to row {next_row} and updated cells in {sheet_name}!")
+                        else:
+                            st.warning(f"✅ Copied to row {next_row} but cell updates failed in {sheet_name}")
                         return form_data
                     else:
                         st.error("Failed to copy entry")
