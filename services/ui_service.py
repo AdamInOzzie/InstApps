@@ -144,7 +144,10 @@ class UIService:
                     entry_df = sheets_client.read_spreadsheet(spreadsheet_id, entry_range)
                     next_row = 2 if entry_df.empty else entry_df[entry_df.columns[0]].notna().sum() + 2
                     
-                    success = CopyService(sheets_client).copy_entry(
+                    # Create copy service instance
+                    copy_service = CopyService(sheets_client)
+                    
+                    success = copy_service.copy_entry(
                         spreadsheet_id=spreadsheet_id,
                         sheet_name=sheet_name,
                         source_range=f"{sheet_name}!A2:Z2",
