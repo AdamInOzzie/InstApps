@@ -348,6 +348,16 @@ class UIService:
             if st.button("Test Cell Updates", type="primary", key="test_cell_updates"):
                 st.session_state.cell_updates_active = True
                 try:
+                    # Display parameters on screen
+                    st.info("Cell Updates Operation Parameters:")
+                    st.write({
+                        "Spreadsheet ID": spreadsheet_id,
+                        "Sheet Name": sheet_name,
+                        "Cell Updates": cell_updates
+                    })
+                    
+                    st.write("About to execute UpdateEntryCells with these parameters")
+                    
                     from services.spreadsheet_service import SpreadsheetService
                     success = SpreadsheetService.UpdateEntryCells(
                         spreadsheet_id=spreadsheet_id,
