@@ -191,11 +191,13 @@ class UIService:
             logger.info(f"Target Row: {target_row}")
             
             source_range = "Volunteers!A2:Z2"
+            logger.info(f"Source Range: {source_range}")
+
             success = copy_service.copy_entry(
                 spreadsheet_id=spreadsheet_id,
                 sheet_name="Volunteers",
                 source_range=source_range,
-                target_row=int(target_row)
+                target_row=target_row
             )
             
             if success:
@@ -206,6 +208,7 @@ class UIService:
                 error_msg = "Failed to copy entry"
                 logger.error(error_msg)
                 st.error(error_msg)
+                
             return success
             
         except Exception as e:
