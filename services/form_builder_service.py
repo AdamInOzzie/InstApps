@@ -136,7 +136,8 @@ class FormBuilderService:
                     field_info = {
                         'name': col,
                         'type': 'text',
-                        'required': True
+                        'required': True,
+                        'column_index': list(sheet_data.columns).index(col)  # Store original column index
                     }
                     
                     # Determine type from data

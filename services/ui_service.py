@@ -126,51 +126,69 @@ class UIService:
             # Add submit button
             if st.button("Submit Entry", type="primary"):
                 try:
-                    # Find the first empty row in the sheet
-                    range_check = f"{sheet_name}!A:A"  # Check column A
-                    df_check = sheets_client.read_spreadsheet(spreadsheet_id, range_check)
-                    
-                    # Calculate next available row
-                    next_row = 2  # Start at row 2 (after header)
-                    if df_check is not None and not df_check.empty:
-                        # Find the last non-empty row
-                        mask = df_check.iloc[:, 0].notna()
-                        if mask.any():
-                            next_row = mask.values.nonzero()[0][-1] + 2
-                    
-                    logger.info(f"Next available row: {next_row}")
-                    
-                    # Copy template row (row 2) to maintain structure
-                    copy_service = CopyService(sheets_client)
-                    copy_result = copy_service.copy_entry(
-                        spreadsheet_id=spreadsheet_id,
-                        sheet_name=sheet_name,
-                        source_range="A2:Z2",  # Copy entire row 2 as template
-                        target_row=next_row
-                    )
-                    
-                    if not copy_result:
-                        logger.error("Failed to copy template row")
-                        st.error("Failed to copy template row")
+                    try:
+                        # First get the sheet structure
+                        metadata = sheets_client.get_spreadsheet_metadata(spreadsheet_id)
+                        sheet_found = False
+                        template_range = "A2:D2"  # Default to A-D columns
+                        
+                        for sheet in metadata.get('sheets', []):
+                            if sheet['properties']['title'] == sheet_name:
+                                sheet_found = True
+                                # Use actual column count for range
+                                col_count = sheet['properties']['gridProperties']['columnCount']
+                                if col_count > 0:
+                                    end_col = chr(ord('A') + min(col_count - 1, 3))  # Limit to 4 columns (A-D)
+                                    template_range = f"A2:{end_col}2"
+                                break
+                        
+                        if not sheet_found:
+                            logger.error(f"Sheet {sheet_name} not found in spreadsheet")
+                            st.error("Sheet configuration error")
+                            return None
+                            
+                        # Find the next available row
+                        range_check = f"{sheet_name}!A:A"
+                        df_check = sheets_client.read_spreadsheet(spreadsheet_id, range_check)
+                        
+                        next_row = 2  # Default to row 2
+                        if df_check is not None and not df_check.empty:
+                            # Find last non-empty row
+                            mask = df_check.iloc[:, 0].notna()
+                            if mask.any():
+                                next_row = mask.values.nonzero()[0][-1] + 2
+                        
+                        logger.info(f"Copying template from {template_range} to row {next_row}")
+                        
+                        # Copy template row
+                        copy_service = CopyService(sheets_client)
+                        copy_result = copy_service.copy_entry(
+                            spreadsheet_id=spreadsheet_id,
+                            sheet_name=sheet_name,
+                            source_range=template_range,
+                            target_row=next_row
+                        )
+                        
+                        if not copy_result:
+                            logger.error("Failed to copy template row")
+                            st.error("Failed to copy template row")
+                            return None
+                            
+                    except Exception as e:
+                        logger.error(f"Error preparing form submission: {str(e)}")
+                        st.error("Error preparing form submission")
                         return None
 
                     logger.info(f"Successfully copied template to row {next_row}")
                     
-                    # Get the sheet headers to map fields to columns
-                    header_range = f"{sheet_name}!A1:Z1"
-                    header_data = sheets_client.read_spreadsheet(spreadsheet_id, header_range)
-                    
-                    if header_data is not None and not header_data.empty:
-                        headers = header_data.iloc[0].tolist()
-                        logger.info(f"Sheet headers: {headers}")
-                        
-                        # Update each form field using column index
-                        for field_name, value in form_data.items():
+                    # Update each form field using the stored column index
+                    for field in form_fields:
+                        field_name = field['name']
+                        if field_name in form_data:
                             try:
-                                # Find column index for field name
-                                col_idx = headers.index(field_name)
-                                # Convert to letter (0=A, 1=B, etc.)
-                                col_letter = chr(65 + col_idx)
+                                # Use the stored column index to determine the target column
+                                col_idx = field['column_index']
+                                col_letter = chr(65 + col_idx)  # Convert to column letter (A=0, B=1, etc.)
                                 update_range = f"{sheet_name}!{col_letter}{next_row}"
                                 
                                 logger.info(f"Writing {field_name}='{value}' to {update_range}")
