@@ -800,16 +800,24 @@ def main():
                     # Display selected sheet data
                     if selected_sheet_name:
                         try:
+                            # Read data from the selected sheet
                             df = st.session_state.spreadsheet_service.read_sheet_data(
                                 selected_sheet['id'],
                                 selected_sheet_name
                             )
+                            
+                            # Display the data if available
                             if df is not None and not df.empty:
+                                # Display the DataFrame
+                                st.write(f"Displaying data from sheet: {selected_sheet_name}")
                                 UIService.display_sheet_data(df, sheet_type='general')
-                                if is_admin:
+                                
+                                # Show data quality report for admins
+                                if UIService.is_admin():
                                     UIService.display_data_quality_report(df)
                             else:
                                 st.warning(f"No data available in sheet '{selected_sheet_name}'")
+                                
                         except Exception as e:
                             st.error(f"Error displaying sheet data: {str(e)}")
                             logger.error(f"Error in display_sheet_data: {str(e)}")
