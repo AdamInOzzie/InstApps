@@ -799,20 +799,20 @@ def main():
                     
                     # Display selected sheet data
                     if selected_sheet_name:
-                        df = st.session_state.spreadsheet_service.read_sheet_data(
-                            selected_sheet['id'],
-                            selected_sheet_name
-                        )
-                        UIService.display_sheet_data(df, sheet_type='general')
-                        if is_admin:
-                            UIService.display_data_quality_report(df)
-                        df = st.session_state.spreadsheet_service.read_sheet_data(
-                            selected_sheet['id'],
-                            selected_sheet_name
-                        )
-                        UIService.display_sheet_data(df, sheet_type='general')
-                        if is_admin:
-                            UIService.display_data_quality_report(df)
+                        try:
+                            df = st.session_state.spreadsheet_service.read_sheet_data(
+                                selected_sheet['id'],
+                                selected_sheet_name
+                            )
+                            if df is not None and not df.empty:
+                                UIService.display_sheet_data(df, sheet_type='general')
+                                if is_admin:
+                                    UIService.display_data_quality_report(df)
+                            else:
+                                st.warning(f"No data available in sheet '{selected_sheet_name}'")
+                        except Exception as e:
+                            st.error(f"Error displaying sheet data: {str(e)}")
+                            logger.error(f"Error in display_sheet_data: {str(e)}")
                 else:
                     st.info("No additional sheets available for viewing.")
                 
