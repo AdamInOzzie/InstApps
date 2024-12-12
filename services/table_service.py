@@ -35,13 +35,25 @@ class TableService:
     @staticmethod
     def prepare_display_dataframe(df: pd.DataFrame, is_outputs: bool = False) -> pd.DataFrame:
         """Prepare dataframe for display by handling formatting."""
-        logger.info(f"Preparing DataFrame for display - Shape: {df.shape}")
-        logger.info(f"Column names: {df.columns.tolist()}")
-        logger.info(f"DataFrame types: {df.dtypes.to_dict()}")
-        
-        # Create a copy for display
-        display_df = df.copy()
-        logger.info(f"Created display DataFrame copy - Shape: {display_df.shape}")
+        try:
+            logger.info("=" * 80)
+            logger.info("PREPARING DATAFRAME FOR DISPLAY")
+            logger.info("=" * 80)
+            logger.info(f"Input DataFrame info:")
+            logger.info(f"Shape: {df.shape}")
+            logger.info(f"Column names: {df.columns.tolist()}")
+            logger.info(f"DataFrame types: {df.dtypes.to_dict()}")
+            logger.info(f"Is DataFrame empty? {df.empty}")
+            if not df.empty:
+                logger.info(f"First row data: {df.iloc[0].to_dict()}")
+            
+            # Create a copy for display
+            display_df = df.copy()
+            logger.info(f"Created display DataFrame copy - Shape: {display_df.shape}")
+            
+            # Verify the copy was successful
+            logger.info(f"Display DataFrame info:")
+            logger.info(f"Types after copy: {display_df.dtypes.to_dict()}")
         
         # For each column, check if there's a formatted version
         for col in df.columns:

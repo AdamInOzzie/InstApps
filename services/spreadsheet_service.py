@@ -38,9 +38,17 @@ class SpreadsheetService:
         """Read data from a specific sheet while preserving original formatting."""
         try:
             range_name = f"{sheet_name}!A1:Z1000"
-            logger.debug(f"Reading data from range: {range_name}")
+            logger.info(f"Reading data from sheet {sheet_name} - Range: {range_name}")
+            
             # Use FORMATTED_VALUE to get calculated results instead of formulas
             df = self.sheets_client.read_spreadsheet(spreadsheet_id, range_name, value_render_option='FORMATTED_VALUE')
+            
+            # Log DataFrame information after initial read
+            logger.info(f"Initial DataFrame for {sheet_name}:")
+            logger.info(f"Shape: {df.shape}")
+            logger.info(f"Columns: {df.columns.tolist()}")
+            logger.info(f"Data types: {df.dtypes.to_dict()}")
+            logger.info(f"First row: {df.iloc[0].tolist() if not df.empty else 'Empty DataFrame'}")
             
             # Process each column while preserving formatting
             for col in df.columns:
