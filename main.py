@@ -530,6 +530,9 @@ def main():
                                     
                                 def create_callback(row):
                                     def callback():
+                                        logger.info("=" * 50)
+                                        logger.info(f"CALLBACK TRIGGERED for row {row}")
+                                        logger.info("=" * 50)
                                         try:
                                             # Debug log at start of callback
                                             logger.info(f"=== Input Update Callback Started for Row {row} ===")
@@ -634,6 +637,11 @@ def main():
                                 logger.info(f"Initial value: {numeric_value}")
                                 logger.info(f"Format string: {format_str}")
                                 
+                                # Create callback and log its creation
+                                callback_fn = create_callback(row_idx)
+                                logger.info(f"Created callback function for {input_key}")
+                                logger.info(f"Callback function details: {callback_fn.__name__}")
+
                                 # Create the input with explicit callback
                                 input_value = st.number_input(
                                     field_name,
@@ -643,6 +651,9 @@ def main():
                                     key=input_key,
                                     on_change=callback_fn
                                 )
+                                
+                                # Log the binding of callback to input
+                                logger.info(f"Bound callback to input field {input_key}")
                                 
                                 # Log after input creation
                                 logger.info(f"Input field created with key: {input_key}")
