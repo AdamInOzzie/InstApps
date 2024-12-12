@@ -24,18 +24,20 @@ class FormService:
             # Add debug logging
             logger.debug(f"Raw cell data:\n{cell_data}")
             
-            # Process each row, starting from row 1 (index 1 in the sheet)
-            for sheet_row_num in range(1, cell_data.index.max() + 1):
+            # Process each row in the data
+            for sheet_row_num in range(1, len(cell_data) + 1):
                 try:
-                    if sheet_row_num not in cell_data.index:
+                    # Get row data safely
+                    row = cell_data.iloc[sheet_row_num - 1] if sheet_row_num <= len(cell_data) else None
+                    if row is None:
                         continue
-                        
-                    row = cell_data.loc[sheet_row_num]
+
                     field_name = row.iloc[0]
                     current_value = row.iloc[1]
                     
-                    if pd.isna(field_name) or pd.isna(current_value):
-                        logger.warning(f"Empty values found in row {sheet_row_num}")
+                    # Only skip if both values are empty
+                    if pd.isna(field_name) and pd.isna(current_value):
+                        logger.warning(f"Empty row found at row {sheet_row_num}")
                         continue
                         
                     logger.info(f"Successfully read field_name: {field_name}, current_value: {current_value}")
