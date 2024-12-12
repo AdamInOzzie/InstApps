@@ -537,6 +537,8 @@ def main():
                                             # Get input key and value
                                             input_key = f"input_{row}"
                                             logger.info(f"Processing callback for input {input_key}")
+                                            logger.info(f"All session state keys: {list(st.session_state.keys())}")
+                                            logger.info(f"Current session state for {input_key}: {st.session_state.get(input_key)}")
                                             
                                             # Debug session state
                                             logger.info(f"Session state keys: {st.session_state.keys()}")
@@ -651,15 +653,21 @@ def main():
                                 logger.info(f"  Initial value: {numeric_value}")
                                 logger.info(f"  Step size: {step_size}")
                                 
+                                # Store callback in session state to prevent garbage collection
+                                st.session_state[f"callback_{input_key}"] = callback_fn
+                                
                                 input_value = st.number_input(
                                     field_name,
                                     value=numeric_value,
                                     format=format_str,
                                     step=step_size,
                                     key=input_key,
-                                    on_change=callback_fn,
+                                    on_change=st.session_state[f"callback_{input_key}"],
                                     help=f"Column {row_idx}"  # Add help text for debugging
                                 )
+                                
+                                # Log the current value after input creation
+                                logger.info(f"Current session state value: {st.session_state.get(input_key)}")
                                 
                                 # Log the binding of callback to input
                                 logger.info(f"Bound callback to input field {input_key}")
