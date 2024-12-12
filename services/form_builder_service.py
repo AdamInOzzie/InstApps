@@ -41,6 +41,38 @@ class FormBuilderService:
         ]
         
         is_formula = any(op in str_value.upper() for op in formula_patterns)
+    def check_entry_form_formula(self, spreadsheet_id: str, sheet_name: str, column: str) -> bool:
+        """Check if a cell value is a formula using Google Sheets API for Entry Forms."""
+        try:
+            # Get the cell data for row 2 (first data row) of the specified column
+            client = GoogleSheetsClient()
+            sheet = client.sheets_service.spreadsheets().get(
+                spreadsheetId=spreadsheet_id,
+                ranges=[f"{sheet_name}!{column}2"],
+                includeGridData=True,
+                fields="sheets(data(rowData(values(userEnteredValue,formulaValue))))"
+            ).execute()
+
+            # Extract the cell data
+            if (sheet.get('sheets') and sheet['sheets'][0].get('data') and 
+                sheet['sheets'][0]['data'][0].get('rowData') and
+                sheet['sheets'][0]['data'][0]['rowData'][0].get('values')):
+                
+                cell_data = sheet['sheets'][0]['data'][0]['rowData'][0]['values'][0]
+                logger.debug(f"Cell data for formula check: {cell_data}")
+                
+                # Check if 'formulaValue' exists in the cell
+                if 'formulaValue' in cell_data:
+                    formula = cell_data['formulaValue']
+                    logger.info(f"Found formula in {column}: {formula}")
+                    return True
+                
+            return False
+            
+        except Exception as e:
+            logger.error(f"Error checking formula for column {column}: {str(e)}")
+            return False
+
         logger.debug(f"Formula detection result for {str_value}: {is_formula}")
         return is_formula
 
@@ -156,17 +188,26 @@ class FormBuilderService:
                             logger.info(f"Skipping column {col} due to empty row 2")
                             continue
                             
-                        # Convert to string for formula checking
-                        str_value = str(row2_value)
-                        logger.debug(f"Raw value for column {col}: {row2_value}")
-                        logger.debug(f"String value for column {col}: {str_value}")
-                        is_formula = self.is_formula(str_value)
-                        logger.info(f"Column {col} formula check result: {is_formula}")
-                        
-                        if is_formula:
-                            logger.info(f"Found formula field {col}: {str_value}")
-                            formula_fields[col] = str_value
-                            continue  # Skip adding this field to form fields
+                        # Use different formula detection based on context
+                        is_formula = False
+                        if spreadsheet_id and sheet_name:  # Entry Form context
+                            # Get column letter for API call
+                            col_idx = sheet_data.columns.get_loc(col)
+                            col_letter = chr(65 + col_idx)  # Convert 0-based index to A, B, C, etc.
+                            is_formula = self.check_entry_form_formula(spreadsheet_id, sheet_name, col_letter)
+                            if is_formula:
+                                logger.info(f"Found formula field {col} at column {col_letter} in Entry Form")
+                                formula_fields[col] = "FORMULA"  # Don't store actual formula for Entry Forms
+                                continue  # Skip adding this field to form fields
+                        else:  # INPUTS form context
+                            str_value = str(row2_value)
+                            logger.debug(f"Raw value for column {col}: {row2_value}")
+                            logger.debug(f"String value for column {col}: {str_value}")
+                            is_formula = self.is_formula(str_value)
+                            if is_formula:
+                                logger.info(f"Found formula field {col}: {str_value}")
+                                formula_fields[col] = str_value
+                                continue  # Skip adding this field to form fields
                     
                     # For non-formula fields, create form field
                     field_info = {
