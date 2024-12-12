@@ -35,8 +35,13 @@ class TableService:
     @staticmethod
     def prepare_display_dataframe(df: pd.DataFrame, is_outputs: bool = False) -> pd.DataFrame:
         """Prepare dataframe for display by handling formatting."""
+        logger.info(f"Preparing DataFrame for display - Shape: {df.shape}")
+        logger.info(f"Column names: {df.columns.tolist()}")
+        logger.info(f"DataFrame types: {df.dtypes.to_dict()}")
+        
         # Create a copy for display
         display_df = df.copy()
+        logger.info(f"Created display DataFrame copy - Shape: {display_df.shape}")
         
         # For each column, check if there's a formatted version
         for col in df.columns:
@@ -45,8 +50,9 @@ class TableService:
                 if formatted_col in df.columns:
                     # Use the preserved formatting from Google Sheets
                     display_df[col] = df[formatted_col]
-                elif pd.api.types.is_numeric_dtype(display_df[col].dtype) or (
-                    pd.api.types.is_object_dtype(display_df[col].dtype) and 
+                elif pd.api.types.is_numeric_dtype(display_df[col]) or (
+                    isinstance(display_df[col], pd.Series) and 
+                    pd.api.types.is_object_dtype(display_df[col]) and 
                     display_df[col].astype(str).str.contains(r'[\d\.]+%?', na=False).any()
                 ):
                     # Use preserved formatting from Google Sheets if available
