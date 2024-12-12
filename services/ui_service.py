@@ -447,6 +447,10 @@ class UIService:
         """Display sheet data in appropriate format based on sheet type."""
         from services.table_service import TableService
         
+        logger.info(f"UIService.display_sheet_data called with sheet_type: {sheet_type}")
+        logger.info(f"DataFrame received - Shape: {df.shape}, Columns: {df.columns.tolist()}")
+        logger.info(f"DataFrame dtypes: {df.dtypes.to_dict()}")
+        
         # Validate DataFrame input
         if not isinstance(df, pd.DataFrame):
             logger.error(f"Invalid input type: {type(df)}")

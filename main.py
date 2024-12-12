@@ -801,10 +801,14 @@ def main():
                     if selected_sheet_name:
                         try:
                             # Read data from the selected sheet
+                            logger.info(f"Reading data from sheet: {selected_sheet_name}")
                             df = st.session_state.spreadsheet_service.read_sheet_data(
                                 selected_sheet['id'],
                                 selected_sheet_name
                             )
+                            if df is not None:
+                                logger.info(f"Data read successfully. Shape: {df.shape}, Columns: {df.columns.tolist()}")
+                                logger.info(f"DataFrame info: {df.info()}")
                             
                             # Display the data if available
                             if df is not None and not df.empty:
