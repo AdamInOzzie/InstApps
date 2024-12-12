@@ -148,45 +148,37 @@ class SpreadsheetService:
         """Update cell in B column of INPUTS sheet for specified row."""
         try:
             # Construct the range in A1 notation for column B
-            update_range = f"INPUTS!B{row}"
+            cell_range = f"INPUTS!B{row}"
             
             # Log the update attempt details
-            logger.info(f"Starting cell update operation:")
-            logger.info(f"  Spreadsheet ID: {spreadsheet_id}")
-            logger.info(f"  Range: {update_range}")
-            logger.info(f"  Value to set: {value}")
+            logger.info(f"Starting cell update operation for row {row}:")
+            logger.info(f"  Range: {cell_range}")
+            logger.info(f"  Value: {value}")
             
-            # Ensure value is properly formatted for API
-            formatted_value = str(value).strip()
-            
-            # Create the update request body
+            # Create the update request
             body = {
-                'values': [[formatted_value]]
+                'values': [[str(value)]]
             }
             
-            logger.info("Making API request to update cell")
+            # Execute the update
             result = self.sheets_client.sheets_service.spreadsheets().values().update(
                 spreadsheetId=spreadsheet_id,
-                range=update_range,
+                range=cell_range,
                 valueInputOption='USER_ENTERED',
                 body=body
             ).execute()
             
-            # Log the API response
-            logger.info(f"API Response: {result}")
-            
-            # Check if update was successful
+            # Verify update success
             updated_cells = result.get('updatedCells', 0)
             if updated_cells > 0:
-                logger.info(f"Successfully updated cell {update_range}")
+                logger.info(f"Successfully updated cell {cell_range}")
                 return True
-            else:
-                logger.error(f"Update failed - no cells updated in range {update_range}")
-                return False
-                
+            
+            logger.error(f"Update failed - no cells updated in {cell_range}")
+            return False
+            
         except Exception as e:
-            logger.error(f"Error in update_input_cell: {str(e)}")
-            logger.error(f"Full error: {traceback.format_exc()}")
+            logger.error(f"Error updating cell: {str(e)}")
             return False
 
 
