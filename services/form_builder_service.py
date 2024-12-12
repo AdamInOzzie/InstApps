@@ -107,9 +107,6 @@ class FormBuilderService:
             logger.error(f"Error checking formula for {cell_range}: {str(e)}")
             return False
 
-        logger.debug(f"Formula detection result for {str_value}: {is_formula}")
-        return is_formula
-
     @staticmethod
     def get_field_type(value: Any) -> str:
         """Determine the appropriate field type based on the sample value."""
@@ -212,61 +209,47 @@ class FormBuilderService:
                         
                     logger.info(f"Processing header field: {col}")
                     
-                    # Check row 2 for formulas if available
-                    if len(sheet_data) > 1:
-                        row2_value = sheet_data.iloc[1][col] if len(sheet_data) > 1 else None
-                        logger.info(f"Checking row 2 value for column {col}: {row2_value}")
-                        
-                        # Skip if row2 is empty or NaN
-                        if pd.isna(row2_value):
-                            logger.info(f"Skipping column {col} due to empty row 2")
+                    # Check for formulas in Entry Form context
+                    if spreadsheet_id and sheet_name:
+                        col_idx = sheet_data.columns.get_loc(col)
+                        col_letter = chr(65 + col_idx)
+                        is_formula = self.check_entry_form_formula(spreadsheet_id, sheet_name, col_letter)
+                        if is_formula:
+                            logger.info(f"Found formula field {col} at column {col_letter} in Entry Form")
+                            formula_fields[col] = "FORMULA"
                             continue
-                            
-                        # Use different formula detection based on context
-                        is_formula = False
-                        if spreadsheet_id and sheet_name:  # Entry Form context
-                            # Get column letter for API call
-                            col_idx = sheet_data.columns.get_loc(col)
-                            col_letter = chr(65 + col_idx)  # Convert 0-based index to A, B, C, etc.
-                            is_formula = self.check_entry_form_formula(spreadsheet_id, sheet_name, col_letter)
-                            if is_formula:
-                                logger.info(f"Found formula field {col} at column {col_letter} in Entry Form")
-                                formula_fields[col] = "FORMULA"  # Don't store actual formula for Entry Forms
-                                continue  # Skip adding this field to form fields
-                        else:  # INPUTS form context
-                            str_value = str(row2_value)
-                            logger.debug(f"Raw value for column {col}: {row2_value}")
-                            logger.debug(f"String value for column {col}: {str_value}")
-                            is_formula = self.is_formula(str_value)
-                            if is_formula:
-                                logger.info(f"Found formula field {col}: {str_value}")
-                                formula_fields[col] = str_value
-                                continue  # Skip adding this field to form fields
                     
-                    # For non-formula fields, create form field
+                    # For INPUTS form context, check row 2 values
+                    elif len(sheet_data) > 1:
+                        row2_value = sheet_data.iloc[1][col]
+                        if not pd.isna(row2_value):
+                            row2_str = str(row2_value)
+                            if self.is_formula(row2_str):
+                                logger.info(f"Found formula field {col}: {row2_str}")
+                                formula_fields[col] = row2_str
+                                continue
+                    
+                    # Create form field for non-formula fields
                     field_info = {
                         'name': col,
                         'type': 'text',
                         'required': True
                     }
                     
-                    # Determine type from sheet format if spreadsheet_id and sheet_name are provided
+                    # Determine field type
                     if spreadsheet_id and sheet_name:
                         field_info['type'] = self.get_field_type_from_sheet(
                             spreadsheet_id, 
                             sheet_name, 
                             sheet_data.columns.get_loc(col)
                         )
-                    else:
-                        # Fall back to existing behavior for INPUTS form
-                        if len(sheet_data) > 0:
-                            sample_values = sheet_data[col].dropna()
-                            if not sample_values.empty:
-                                sample_value = sample_values.iloc[0]
-                                logger.debug(f"Sample value for {col}: {sample_value}")
-                                field_info['type'] = self.get_field_type(sample_value)
+                    elif len(sheet_data) > 0:
+                        sample_values = sheet_data[col].dropna()
+                        if not sample_values.empty:
+                            sample_value = sample_values.iloc[0]
+                            field_info['type'] = self.get_field_type(sample_value)
                     
-                    # Add numeric constraints if we have sample data
+                    # Add numeric constraints if applicable
                     if field_info['type'] == 'number' and len(sheet_data) > 0:
                         try:
                             numeric_values = pd.to_numeric(sheet_data[col], errors='coerce').dropna()
