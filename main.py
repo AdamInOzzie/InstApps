@@ -578,7 +578,9 @@ def main():
                                                     formatted_value = f"{float(value):.4f}"
                                                     logger.info(f"Formatted as percentage: {formatted_value}")
                                                 elif current_field_value.startswith('$'):
-                                                    formatted_value = f"{float(value):.2f}"
+                                                    # Clean currency string by removing '$' and ',' before converting
+                                                    clean_value = str(value).replace('$', '').replace(',', '')
+                                                    formatted_value = f"{float(clean_value):.2f}"
                                                     logger.info(f"Formatted as currency: {formatted_value}")
                                                 else:
                                                     formatted_value = str(value)
