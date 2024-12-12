@@ -308,9 +308,9 @@ def main():
     
     # Log query parameter status
     logger.info(f"Query parameters: {dict(st.query_params)}")
-    logger.info(f"Admin status: {st.session_state.query_params['is_admin']}, Healthcheck status: {st.session_state.query_params['is_healthcheck']}")
+    logger.info(f"Admin status: {st.session_state.query_params['admin']}, Healthcheck status: {st.session_state.query_params['healthcheck']}")
     
-    if st.session_state.query_params['is_admin'] or st.session_state.query_params['is_healthcheck']:
+    if st.session_state.query_params['admin'] or st.session_state.query_params['healthcheck']:
         # Show sidebar for admin or healthcheck
         with st.sidebar:
             st.subheader("📡 System Status")
@@ -319,7 +319,7 @@ def main():
                 st.rerun()
         
         # Display admin sidebar if admin parameter is present
-        if st.session_state.query_params['is_admin']:
+        if st.session_state.query_params['admin']:
             UIService.display_admin_sidebar(st.session_state.sheets_client.connection_status)
     
     # Initialize session state variables
@@ -399,7 +399,7 @@ def main():
                 if selected_sheet:
                     # Store the selected sheet in session state
                     st.session_state.selected_sheet = selected_sheet
-                    if st.session_state.query_params['is_admin']:
+                    if st.session_state.query_params['admin']:
                         st.info(f"Spreadsheet ID: {selected_sheet['id']}")
                     
                     # Check for USERS sheet and handle login
@@ -439,7 +439,7 @@ def main():
                             
                     except Exception as e:
                         logger.error(f"Error checking USERS sheet: {str(e)}")
-                        if st.session_state.query_params['is_admin']:
+                        if st.session_state.query_params['admin']:
                             st.error(f"Error checking USERS sheet: {str(e)}")
                         # On error, allow access
                         st.session_state.is_logged_in = True
