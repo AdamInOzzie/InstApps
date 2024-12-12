@@ -530,13 +530,14 @@ def main():
                                     
                                 def create_callback(row):
                                     def callback():
+                                        actual_row = row  # Row number matches sheet row since we start enumerate from 2
                                         logger.info("\n" + "="*80)
-                                        logger.info(f"CALLBACK TRIGGERED for row {row}")
+                                        logger.info(f"CALLBACK TRIGGERED for row {actual_row} (sheet row {actual_row})")
                                         logger.info("="*80 + "\n")
                                         try:
                                             # Get input key and value
                                             input_key = f"input_{row}"
-                                            logger.info(f"Processing callback for input {input_key}")
+                                            logger.info(f"Processing callback for input {input_key} (sheet row {actual_row})")
                                             logger.info(f"All session state keys: {list(st.session_state.keys())}")
                                             logger.info(f"Current session state for {input_key}: {st.session_state.get(input_key)}")
                                             
