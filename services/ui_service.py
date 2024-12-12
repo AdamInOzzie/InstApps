@@ -447,6 +447,12 @@ class UIService:
         """Display sheet data in appropriate format based on sheet type."""
         from services.table_service import TableService
         
+        # Validate DataFrame input
+        if not isinstance(df, pd.DataFrame):
+            logger.error(f"Invalid input type: {type(df)}")
+            st.error("Invalid data format received")
+            return
+            
         # Add a visual indicator for results section
         st.markdown("""
             <div style="
@@ -471,4 +477,4 @@ class UIService:
             logger.error(f"Error displaying dataframe: {str(e)}")
             st.error("Error displaying data. Please check the data format.")
             # Fallback to basic display
-            st.write(df)
+            st.dataframe(df)  # Using st.dataframe instead of st.write for better DataFrame handling

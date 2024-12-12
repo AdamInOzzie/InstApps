@@ -825,7 +825,7 @@ def main():
                     st.info("No additional sheets available for viewing.")
                 
                 # Admin-only CSV upload section
-                if is_admin:
+                if UIService.is_admin():
                     st.subheader("📤 Data Upload")
                     with st.expander("Upload CSV Data"):
                         st.info("Upload a CSV file to replace the current sheet data")
