@@ -531,59 +531,88 @@ def main():
                                 def create_callback(row):
                                     def callback():
                                         try:
-                                            value = st.session_state[f"input_{row}"]
-                                            logger.info(f"Raw input value: {value} (type: {type(value)})")
+                                            # Debug log at start of callback
+                                            logger.info(f"=== Input Update Callback Started for Row {row} ===")
                                             
-                                            # Get current field data to determine proper formatting
+                                            # Verify session state
+                                            input_key = f"input_{row}"
+                                            logger.info(f"Checking session state key: {input_key}")
+                                            if input_key not in st.session_state:
+                                                logger.error(f"Session state key {input_key} not found")
+                                                return
+                                                
+                                            value = st.session_state[input_key]
+                                            logger.info(f"Raw input value retrieved: {value} (type: {type(value)})")
+                                            
+                                            # Get current field data
+                                            logger.info("Fetching current field data...")
                                             current_fields = st.session_state.form_service.get_input_field_data(
                                                 selected_sheet['id']
                                             )
+                                            logger.info(f"Retrieved {len(current_fields)} fields")
                                             
-                                            # Find the current field's properties
+                                            # Find current field properties
                                             current_field_name = None
                                             current_field_value = None
                                             for field_name, field_value in current_fields:
+                                                logger.info(f"Checking field: {field_name} = {field_value}")
                                                 if isinstance(field_value, str):
                                                     if field_value.endswith('%'):
                                                         current_field_value = field_value
                                                         current_field_name = field_name
+                                                        logger.info(f"Found percentage field: {field_name}")
                                                         break
                                                     elif field_value.startswith('$'):
                                                         current_field_value = field_value
                                                         current_field_name = field_name
+                                                        logger.info(f"Found currency field: {field_name}")
                                                         break
                                             
-                                            # Format value based on field type
+                                            # Format value based on type
+                                            logger.info("Formatting value...")
                                             if current_field_value:
                                                 if '%' in current_field_value:
                                                     formatted_value = f"{float(value):.4f}"
+                                                    logger.info(f"Formatted as percentage: {formatted_value}")
                                                 elif current_field_value.startswith('$'):
                                                     formatted_value = f"{float(value):.2f}"
+                                                    logger.info(f"Formatted as currency: {formatted_value}")
                                                 else:
                                                     formatted_value = str(value)
+                                                    logger.info(f"Formatted as string: {formatted_value}")
                                             else:
                                                 formatted_value = str(value)
+                                                logger.info(f"Default string format: {formatted_value}")
                                             
-                                            logger.info(f"Updating cell B{row} with formatted value: {formatted_value}")
-                                            logger.info(f"Field type detection - Name: {current_field_name}, Original value: {current_field_value}")
+                                            logger.info(f"Preparing to update cell B{row}")
+                                            logger.info(f"Field: {current_field_name}, Original: {current_field_value}, New: {formatted_value}")
                                             
-                                            success = st.session_state.spreadsheet_service.update_input_cell(
-                                                selected_sheet['id'],
-                                                formatted_value,
-                                                row
-                                            )
-                                            
-                                            if not success:
-                                                st.error(f"Failed to update cell B{row}")
-                                                logger.error(f"Failed to update cell B{row} with value {formatted_value}")
-                                            else:
-                                                logger.info(f"Successfully updated cell B{row} with value {formatted_value}")
-                                                time.sleep(0.5)  # Brief pause to allow update to complete
-                                                st.rerun()  # Refresh to show updated values
+                                            logger.info("Executing update operation...")
+                                            try:
+                                                success = st.session_state.spreadsheet_service.update_input_cell(
+                                                    selected_sheet['id'],
+                                                    formatted_value,
+                                                    row
+                                                )
+                                                
+                                                if success:
+                                                    logger.info(f"✅ Successfully updated cell B{row} with value {formatted_value}")
+                                                    time.sleep(0.5)  # Brief pause to allow update to complete
+                                                    st.success(f"Updated {current_field_name}")
+                                                    st.rerun()  # Refresh to show updated values
+                                                else:
+                                                    logger.error(f"❌ Failed to update cell B{row}")
+                                                    st.error(f"Failed to update {current_field_name}")
+                                                    
+                                            except Exception as update_error:
+                                                logger.error(f"Update operation failed: {str(update_error)}")
+                                                logger.error(f"Full error details: {traceback.format_exc()}")
+                                                st.error(f"Error updating {current_field_name}: {str(update_error)}")
                                                 
                                         except Exception as e:
-                                            logger.error(f"Error in update callback: {str(e)}")
-                                            st.error(f"Error updating value: {str(e)}")
+                                            logger.error(f"Callback execution failed: {str(e)}")
+                                            logger.error(f"Full error details: {traceback.format_exc()}")
+                                            st.error("An error occurred while processing the update")
                                     return callback
 
                                 # Determine format based on value and type
