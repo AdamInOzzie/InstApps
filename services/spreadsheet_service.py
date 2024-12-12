@@ -152,13 +152,22 @@ class SpreadsheetService:
             
             # Log the update attempt details
             logger.info(f"Starting cell update operation for row {row}:")
+            logger.info(f"  Spreadsheet ID: {spreadsheet_id}")
             logger.info(f"  Range: {cell_range}")
             logger.info(f"  Value: {value}")
+            
+            if not self.sheets_client or not self.sheets_client.sheets_service:
+                logger.error("Sheets client not properly initialized")
+                return False
             
             # Create the update request
             body = {
                 'values': [[str(value)]]
             }
+            
+            # Log API request details
+            logger.info("Making API request to update cell")
+            logger.info(f"Request body: {body}")
             
             # Execute the update
             result = self.sheets_client.sheets_service.spreadsheets().values().update(
@@ -167,6 +176,9 @@ class SpreadsheetService:
                 valueInputOption='USER_ENTERED',
                 body=body
             ).execute()
+            
+            # Log the API response
+            logger.info(f"API Response: {result}")
             
             # Verify update success
             updated_cells = result.get('updatedCells', 0)
@@ -179,6 +191,7 @@ class SpreadsheetService:
             
         except Exception as e:
             logger.error(f"Error updating cell: {str(e)}")
+            logger.error(f"Full error details: {str(e)}")
             return False
 
 
