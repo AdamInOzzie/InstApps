@@ -45,8 +45,8 @@ class TableService:
                 if formatted_col in df.columns:
                     # Use the preserved formatting from Google Sheets
                     display_df[col] = df[formatted_col]
-                elif pd.api.types.is_numeric_dtype(display_df[col]) or (
-                    pd.api.types.is_object_dtype(display_df[col]) and 
+                elif pd.api.types.is_numeric_dtype(display_df[col].dtype) or (
+                    pd.api.types.is_object_dtype(display_df[col].dtype) and 
                     display_df[col].astype(str).str.contains(r'[\d\.]+%?', na=False).any()
                 ):
                     # Use preserved formatting from Google Sheets if available
