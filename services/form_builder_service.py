@@ -66,7 +66,23 @@ class FormBuilderService:
                     formula = cell_data['formulaValue']
                     logger.info(f"Found formula in {column}: {formula}")
                     return True
-                
+                else:
+                    # If there's no 'formulaValue', check 'userEnteredValue'
+                    user_value = cell_data.get('userEnteredValue', {})
+                    # Handle different types of user-entered values
+                    if 'stringValue' in user_value:
+                        logger.debug(f"Cell contains string: {user_value['stringValue']}")
+                    elif 'numberValue' in user_value:
+                        logger.debug(f"Cell contains number: {user_value['numberValue']}")
+                    elif 'boolValue' in user_value:
+                        logger.debug(f"Cell contains boolean: {user_value['boolValue']}")
+                    elif 'errorValue' in user_value:
+                        logger.debug(f"Cell contains error: {user_value['errorValue']}")
+                    else:
+                        logger.debug("Cell is empty or contains unsupported type")
+                    return False
+            
+            logger.debug("No cell data found")
             return False
             
         except Exception as e:
