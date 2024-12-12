@@ -47,13 +47,12 @@ class FormBuilderService:
             cell_range = f"{sheet_name}!{column}2"
             logger.info(f"Checking formula in range: {cell_range}")
             
-            # Get the cell data for row 2 (first data row) of the specified column
+            # Get the cell data with specific formula information
             client = GoogleSheetsClient()
             result = client.sheets_service.spreadsheets().get(
                 spreadsheetId=spreadsheet_id,
                 ranges=[cell_range],
-                includeGridData=True,
-                fields='sheets.data.rowData.values.userEnteredValue,sheets.data.rowData.values.effectiveValue'
+                includeGridData=True
             ).execute()
 
             # Extract the cell data
@@ -68,40 +67,26 @@ class FormBuilderService:
                 return False
 
             rowData = data[0].get('rowData', [])
-            if not rowData:
-                logger.debug("No row data found.")
+            if not rowData or not rowData[0].get('values'):
+                logger.debug("No row data or values found.")
                 return False
 
-            values = rowData[0].get('values', [])
-            if not values:
-                logger.debug("No values found in the specified range.")
-                return False
+            cell = rowData[0]['values'][0]
+            logger.debug(f"Raw cell data: {cell}")
 
-            cell = values[0]
-            logger.debug(f"Cell data: {cell}")
-
-            # Check if cell contains a formula by examining userEnteredValue
+            # Check for formula in userEnteredValue
             if 'userEnteredValue' in cell:
                 value = cell['userEnteredValue']
-                # If the value starts with '=', it's a formula
-                if isinstance(value, dict) and 'stringValue' in value and value['stringValue'].startswith('='):
-                    logger.info(f"Found formula in {cell_range}: {value['stringValue']}")
+                if isinstance(value, dict) and 'formulaValue' in value:
+                    formula = value['formulaValue']
+                    logger.info(f"Found formula in {cell_range}: {formula}")
                     return True
-            else:
-                # If there's no 'formulaValue', check 'userEnteredValue'
-                user_value = cell.get('userEnteredValue', {})
-                # Handle different types of user-entered values
-                if 'stringValue' in user_value:
-                    logger.debug(f"Cell {cell_range} contains string: {user_value['stringValue']}")
-                elif 'numberValue' in user_value:
-                    logger.debug(f"Cell {cell_range} contains number: {user_value['numberValue']}")
-                elif 'boolValue' in user_value:
-                    logger.debug(f"Cell {cell_range} contains boolean: {user_value['boolValue']}")
-                elif 'errorValue' in user_value:
-                    logger.debug(f"Cell {cell_range} contains error: {user_value['errorValue']}")
-                else:
-                    logger.debug(f"Cell {cell_range} is empty or contains unsupported type")
-                return False
+                elif isinstance(value, dict) and 'stringValue' in value and value['stringValue'].startswith('='):
+                    logger.info(f"Found formula string in {cell_range}: {value['stringValue']}")
+                    return True
+
+            logger.debug(f"No formula found in {cell_range}")
+            return False
                 
         except Exception as e:
             logger.error(f"Error checking formula for {cell_range}: {str(e)}")
@@ -211,12 +196,22 @@ class FormBuilderService:
                     
                     # Check for formulas in Entry Form context
                     if spreadsheet_id and sheet_name:
-                        col_idx = sheet_data.columns.get_loc(col)
-                        col_letter = chr(65 + col_idx)
-                        is_formula = self.check_entry_form_formula(spreadsheet_id, sheet_name, col_letter)
-                        if is_formula:
-                            logger.info(f"Found formula field {col} at column {col_letter} in Entry Form")
-                            formula_fields[col] = "FORMULA"
+                        try:
+                            col_idx = sheet_data.columns.get_loc(col)
+                            col_letter = chr(65 + col_idx)
+                            logger.info(f"Checking for formula in column {col} (letter: {col_letter})")
+                            
+                            is_formula = self.check_entry_form_formula(spreadsheet_id, sheet_name, col_letter)
+                            if is_formula:
+                                logger.info(f"Found formula field {col} at column {col_letter} in Entry Form")
+                                formula_fields[col] = "FORMULA"
+                                logger.info(f"Skipping form field generation for formula column: {col}")
+                                continue
+                            else:
+                                logger.info(f"No formula found in column {col}, will create form field")
+                        except Exception as e:
+                            logger.error(f"Error checking formula for column {col}: {str(e)}")
+                            # If we can't determine formula status, skip this field for safety
                             continue
                     
                     # For INPUTS form context, check row 2 values
