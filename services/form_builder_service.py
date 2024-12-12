@@ -52,7 +52,8 @@ class FormBuilderService:
             result = client.sheets_service.spreadsheets().get(
                 spreadsheetId=spreadsheet_id,
                 ranges=[cell_range],
-                fields='sheets(data(rowData(values(userEnteredValue,formulaValue))))'
+                includeGridData=True,
+                fields='sheets.data.rowData.values.userEnteredValue,sheets.data.rowData.values.effectiveValue'
             ).execute()
 
             # Extract the cell data
@@ -79,11 +80,13 @@ class FormBuilderService:
             cell = values[0]
             logger.debug(f"Cell data: {cell}")
 
-            # Check if 'formulaValue' exists in the cell
-            if 'formulaValue' in cell:
-                formula = cell['formulaValue']
-                logger.info(f"Found formula in {cell_range}: {formula}")
-                return True
+            # Check if cell contains a formula by examining userEnteredValue
+            if 'userEnteredValue' in cell:
+                value = cell['userEnteredValue']
+                # If the value starts with '=', it's a formula
+                if isinstance(value, dict) and 'stringValue' in value and value['stringValue'].startswith('='):
+                    logger.info(f"Found formula in {cell_range}: {value['stringValue']}")
+                    return True
             else:
                 # If there's no 'formulaValue', check 'userEnteredValue'
                 user_value = cell.get('userEnteredValue', {})
