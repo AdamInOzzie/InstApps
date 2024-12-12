@@ -108,12 +108,12 @@ if "start_time" not in st.session_state:
 # Store query parameters in session state for consistent access
 if 'query_params' not in st.session_state:
     st.session_state.query_params = {
-        'is_admin': "admin" in st.query_params,
-        'is_healthcheck': "healthcheck" in st.query_params
+        'admin': "admin" in st.query_params,
+        'healthcheck': "healthcheck" in st.query_params
     }
 
 # Control sidebar visibility
-show_sidebar = st.session_state.query_params['is_admin'] or st.session_state.query_params['is_healthcheck']
+show_sidebar = st.session_state.query_params['admin'] or st.session_state.query_params['healthcheck']
 
 # Apply sidebar visibility CSS
 if not show_sidebar:
