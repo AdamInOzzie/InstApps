@@ -530,16 +530,16 @@ def main():
                                     
                                 def create_callback(row):
                                     def callback():
-                                        logger.info("=" * 50)
+                                        logger.info("\n" + "="*80)
                                         logger.info(f"CALLBACK TRIGGERED for row {row}")
-                                        logger.info("=" * 50)
+                                        logger.info("="*80 + "\n")
                                         try:
-                                            # Debug log at start of callback
-                                            logger.info(f"=== Input Update Callback Started for Row {row} ===")
-                                            
-                                            # Verify session state
+                                            # Get input key and value
                                             input_key = f"input_{row}"
-                                            logger.info(f"Checking session state key: {input_key}")
+                                            logger.info(f"Processing callback for input {input_key}")
+                                            
+                                            # Debug session state
+                                            logger.info(f"Session state keys: {st.session_state.keys()}")
                                             if input_key not in st.session_state:
                                                 logger.error(f"Session state key {input_key} not found")
                                                 return
@@ -645,13 +645,20 @@ def main():
                                 logger.info(f"Callback function details: {callback_fn.__name__}")
 
                                 # Create the input with explicit callback
+                                logger.info(f"\nCreating number input with callback:")
+                                logger.info(f"  Field: {field_name}")
+                                logger.info(f"  Key: {input_key}")
+                                logger.info(f"  Initial value: {numeric_value}")
+                                logger.info(f"  Step size: {step_size}")
+                                
                                 input_value = st.number_input(
                                     field_name,
                                     value=numeric_value,
                                     format=format_str,
                                     step=step_size,
                                     key=input_key,
-                                    on_change=callback_fn
+                                    on_change=callback_fn,
+                                    help=f"Column {row_idx}"  # Add help text for debugging
                                 )
                                 
                                 # Log the binding of callback to input
