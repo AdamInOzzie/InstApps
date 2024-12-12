@@ -9,43 +9,40 @@ from utils.google_sheets import GoogleSheetsClient
 logger = logging.getLogger(__name__)
 
 class FormBuilderService:
-    def is_formula(self, spreadsheet_id: str, sheet_name: str, column: str) -> bool:
-        """Check if a cell value is a formula using Google Sheets API."""
-        try:
-            # Get the cell data for row 2 (first data row) of the specified column
-            client = GoogleSheetsClient()
-            sheet = client.sheets_service.spreadsheets().get(
-                spreadsheetId=spreadsheet_id,
-                ranges=[f"{sheet_name}!{column}2"],
-                includeGridData=True,
-                fields="sheets(data(rowData(values(userEnteredValue,formulaValue))))"
-            ).execute()
-
-            # Extract the cell data
-            if (sheet.get('sheets') and sheet['sheets'][0].get('data') and 
-                sheet['sheets'][0]['data'][0].get('rowData') and
-                sheet['sheets'][0]['data'][0]['rowData'][0].get('values')):
-                
-                cell_data = sheet['sheets'][0]['data'][0]['rowData'][0]['values'][0]
-                logger.debug(f"Cell data for formula check: {cell_data}")
-                
-                # Check if 'formulaValue' exists in the cell
-                if 'formulaValue' in cell_data:
-                    formula = cell_data['formulaValue']
-                    logger.info(f"Found formula in {column}: {formula}")
-                    return True
-                else:
-                    # If there's no 'formulaValue', check 'userEnteredValue'
-                    user_value = cell_data.get('userEnteredValue', {})
-                    value_type = next(iter(user_value)) if user_value else 'empty'
-                    logger.debug(f"Cell contains user entered value of type: {value_type}")
-                    return False
-            
+    @staticmethod
+    def is_formula(value: Any) -> bool:
+        """Check if a cell value is a formula."""
+        if pd.isna(value):
+            return False
+        str_value = str(value).strip()
+        
+        # Log the value being checked
+        logger.debug(f"Checking if value is formula: {str_value}")
+        
+        # First check if it starts with =
+        if not str_value.startswith('='):
             return False
             
-        except Exception as e:
-            logger.error(f"Error checking formula for column {column}: {str(e)}")
-            return False
+        # Check for any formula patterns
+        formula_patterns = [
+            # Basic operators
+            '+', '-', '*', '/', '(', ')',
+            # Common functions
+            'SUM', 'AVERAGE', 'COUNT', 'IF', 'AND', 'OR',
+            # Lookup functions
+            'VLOOKUP', 'INDEX', 'MATCH',
+            # Text functions
+            'CONCATENATE', 'LEFT', 'RIGHT', 'MID',
+            # Date functions
+            'DATE', 'TODAY', 'NOW', 'EOMONTH', 'WEEKDAY',
+            'EDATE', 'DAY', 'MONTH', 'YEAR', 'WORKDAY',
+            # Special cases for date calculations
+            'DATEVALUE', '+7', '-7', '+14', '-14'  # Common date offset patterns
+        ]
+        
+        is_formula = any(op in str_value.upper() for op in formula_patterns)
+        logger.debug(f"Formula detection result for {str_value}: {is_formula}")
+        return is_formula
 
     @staticmethod
     def get_field_type(value: Any) -> str:
@@ -160,17 +157,15 @@ class FormBuilderService:
                             continue
                             
                         # Convert to string for formula checking
-                        # Get column letter for API call
-                        col_idx = sheet_data.columns.get_loc(col)
-                        col_letter = chr(65 + col_idx)  # Convert 0-based index to A, B, C, etc.
-                        
-                        logger.debug(f"Checking formula for column {col} (letter: {col_letter})")
-                        is_formula = self.is_formula(spreadsheet_id, sheet_name, col_letter)
+                        str_value = str(row2_value)
+                        logger.debug(f"Raw value for column {col}: {row2_value}")
+                        logger.debug(f"String value for column {col}: {str_value}")
+                        is_formula = self.is_formula(str_value)
                         logger.info(f"Column {col} formula check result: {is_formula}")
                         
                         if is_formula:
-                            logger.info(f"Found formula field {col} at column {col_letter}")
-                            formula_fields[col] = "FORMULA"  # We don't store the actual formula
+                            logger.info(f"Found formula field {col}: {str_value}")
+                            formula_fields[col] = str_value
                             continue  # Skip adding this field to form fields
                     
                     # For non-formula fields, create form field
