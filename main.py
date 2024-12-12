@@ -624,20 +624,48 @@ def main():
                                 else:
                                     format_str = "%.2f"  # 2 decimal places for larger values
                                 
+                                # Create the callback before the input
+                                input_key = f"input_{row_idx}"
+                                callback_fn = create_callback(row_idx)
+                                
+                                # Log input field creation
+                                logger.info(f"Creating number input field: {field_name}")
+                                logger.info(f"Input key: {input_key}")
+                                logger.info(f"Initial value: {numeric_value}")
+                                logger.info(f"Format string: {format_str}")
+                                
+                                # Create the input with explicit callback
                                 input_value = st.number_input(
                                     field_name,
                                     value=numeric_value,
                                     format=format_str,
                                     step=step_size,
-                                    key=f"input_{row_idx}",
-                                    on_change=create_callback(row_idx)
+                                    key=input_key,
+                                    on_change=callback_fn
                                 )
+                                
+                                # Log after input creation
+                                logger.info(f"Input field created with key: {input_key}")
+                                if input_key in st.session_state:
+                                    logger.info(f"Current session state value: {st.session_state[input_key]}")
                             else:
+                                # Create text input with same logging pattern
+                                input_key = f"input_{row_idx}"
+                                logger.info(f"Creating text input field: {field_name}")
+                                logger.info(f"Input key: {input_key}")
+                                logger.info(f"Initial value: {current_value}")
+                                
                                 input_value = st.text_input(
                                     field_name,
                                     value=str(current_value),
-                                    key=f"input_{row_idx}"
+                                    key=input_key,
+                                    on_change=create_callback(row_idx)
                                 )
+                                
+                                # Log after input creation
+                                logger.info(f"Text input field created with key: {input_key}")
+                                if input_key in st.session_state:
+                                    logger.info(f"Current session state value: {st.session_state[input_key]}")
                     else:
                         st.warning("No data found in INPUTS sheet. Please ensure the sheet has data.")
                 except Exception as e:
