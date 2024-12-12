@@ -534,23 +534,38 @@ def main():
                                             value = st.session_state[f"input_{row}"]
                                             logger.info(f"Raw input value: {value} (type: {type(value)})")
                                             
-                                            # Get current value to determine if it's a percentage
-                                            current_value = st.session_state.form_service.get_input_field_data(
+                                            # Get current field data to determine proper formatting
+                                            current_fields = st.session_state.form_service.get_input_field_data(
                                                 selected_sheet['id']
                                             )
-                                            current_field_value = None
-                                            for field_name, field_value in current_value:
-                                                if isinstance(field_value, str) and '%' in field_value:
-                                                    current_field_value = field_value
-                                                    break
                                             
-                                            # Format value based on current field type
-                                            if current_field_value and '%' in current_field_value:
-                                                formatted_value = f"{float(value):.4f}"
+                                            # Find the current field's properties
+                                            current_field_name = None
+                                            current_field_value = None
+                                            for field_name, field_value in current_fields:
+                                                if isinstance(field_value, str):
+                                                    if field_value.endswith('%'):
+                                                        current_field_value = field_value
+                                                        current_field_name = field_name
+                                                        break
+                                                    elif field_value.startswith('$'):
+                                                        current_field_value = field_value
+                                                        current_field_name = field_name
+                                                        break
+                                            
+                                            # Format value based on field type
+                                            if current_field_value:
+                                                if '%' in current_field_value:
+                                                    formatted_value = f"{float(value):.4f}"
+                                                elif current_field_value.startswith('$'):
+                                                    formatted_value = f"{float(value):.2f}"
+                                                else:
+                                                    formatted_value = str(value)
                                             else:
                                                 formatted_value = str(value)
                                             
                                             logger.info(f"Updating cell B{row} with formatted value: {formatted_value}")
+                                            logger.info(f"Field type detection - Name: {current_field_name}, Original value: {current_field_value}")
                                             
                                             success = st.session_state.spreadsheet_service.update_input_cell(
                                                 selected_sheet['id'],
