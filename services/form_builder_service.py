@@ -44,49 +44,64 @@ class FormBuilderService:
     def check_entry_form_formula(self, spreadsheet_id: str, sheet_name: str, column: str) -> bool:
         """Check if a cell value is a formula using Google Sheets API for Entry Forms."""
         try:
+            cell_range = f"{sheet_name}!{column}2"
+            logger.info(f"Checking formula in range: {cell_range}")
+            
             # Get the cell data for row 2 (first data row) of the specified column
             client = GoogleSheetsClient()
-            sheet = client.sheets_service.spreadsheets().get(
+            result = client.sheets_service.spreadsheets().get(
                 spreadsheetId=spreadsheet_id,
-                ranges=[f"{sheet_name}!{column}2"],
-                includeGridData=True,
-                fields="sheets(data(rowData(values(userEnteredValue,formulaValue))))"
+                ranges=[cell_range],
+                fields='sheets(data(rowData(values(userEnteredValue,formulaValue))))'
             ).execute()
 
             # Extract the cell data
-            if (sheet.get('sheets') and sheet['sheets'][0].get('data') and 
-                sheet['sheets'][0]['data'][0].get('rowData') and
-                sheet['sheets'][0]['data'][0]['rowData'][0].get('values')):
-                
-                cell_data = sheet['sheets'][0]['data'][0]['rowData'][0]['values'][0]
-                logger.debug(f"Cell data for formula check: {cell_data}")
-                
-                # Check if 'formulaValue' exists in the cell
-                if 'formulaValue' in cell_data:
-                    formula = cell_data['formulaValue']
-                    logger.info(f"Found formula in {column}: {formula}")
-                    return True
+            sheets = result.get('sheets', [])
+            if not sheets:
+                logger.debug("No sheets found.")
+                return False
+
+            data = sheets[0].get('data', [])
+            if not data:
+                logger.debug("No data found in the sheet.")
+                return False
+
+            rowData = data[0].get('rowData', [])
+            if not rowData:
+                logger.debug("No row data found.")
+                return False
+
+            values = rowData[0].get('values', [])
+            if not values:
+                logger.debug("No values found in the specified range.")
+                return False
+
+            cell = values[0]
+            logger.debug(f"Cell data: {cell}")
+
+            # Check if 'formulaValue' exists in the cell
+            if 'formulaValue' in cell:
+                formula = cell['formulaValue']
+                logger.info(f"Found formula in {cell_range}: {formula}")
+                return True
+            else:
+                # If there's no 'formulaValue', check 'userEnteredValue'
+                user_value = cell.get('userEnteredValue', {})
+                # Handle different types of user-entered values
+                if 'stringValue' in user_value:
+                    logger.debug(f"Cell {cell_range} contains string: {user_value['stringValue']}")
+                elif 'numberValue' in user_value:
+                    logger.debug(f"Cell {cell_range} contains number: {user_value['numberValue']}")
+                elif 'boolValue' in user_value:
+                    logger.debug(f"Cell {cell_range} contains boolean: {user_value['boolValue']}")
+                elif 'errorValue' in user_value:
+                    logger.debug(f"Cell {cell_range} contains error: {user_value['errorValue']}")
                 else:
-                    # If there's no 'formulaValue', check 'userEnteredValue'
-                    user_value = cell_data.get('userEnteredValue', {})
-                    # Handle different types of user-entered values
-                    if 'stringValue' in user_value:
-                        logger.debug(f"Cell contains string: {user_value['stringValue']}")
-                    elif 'numberValue' in user_value:
-                        logger.debug(f"Cell contains number: {user_value['numberValue']}")
-                    elif 'boolValue' in user_value:
-                        logger.debug(f"Cell contains boolean: {user_value['boolValue']}")
-                    elif 'errorValue' in user_value:
-                        logger.debug(f"Cell contains error: {user_value['errorValue']}")
-                    else:
-                        logger.debug("Cell is empty or contains unsupported type")
-                    return False
-            
-            logger.debug("No cell data found")
-            return False
-            
+                    logger.debug(f"Cell {cell_range} is empty or contains unsupported type")
+                return False
+                
         except Exception as e:
-            logger.error(f"Error checking formula for column {column}: {str(e)}")
+            logger.error(f"Error checking formula for {cell_range}: {str(e)}")
             return False
 
         logger.debug(f"Formula detection result for {str_value}: {is_formula}")
