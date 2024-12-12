@@ -55,7 +55,48 @@ class TableService:
             logger.info(f"Display DataFrame info:")
             logger.info(f"Types after copy: {display_df.dtypes.to_dict()}")
         
-        # For each column, check if there's a formatted version
+            # For each column, check if there's a formatted version
+            for col in df.columns:
+                if not col.endswith('_formatted'):
+                    formatted_col = f"{col}_formatted"
+                    if formatted_col in df.columns:
+                        # Use the preserved formatting from Google Sheets
+                        display_df[col] = df[formatted_col]
+                    elif pd.api.types.is_numeric_dtype(display_df[col]) or (
+                        isinstance(display_df[col], pd.Series) and 
+                        pd.api.types.is_object_dtype(display_df[col]) and 
+                        display_df[col].astype(str).str.contains(r'[\d\.]+%?', na=False).any()
+                    ):
+                        # Use preserved formatting from Google Sheets if available
+                        formatted_col = f"{col}_formatted"
+                        if formatted_col in df.columns:
+                            display_df[col] = df[formatted_col]
+                        else:
+                            # Handle numeric values without preserved formatting
+                            def format_value(x):
+                                if pd.isnull(x):
+                                    return ''
+                                if isinstance(x, str):
+                                    # Already formatted string
+                                    if '%' in x or '$' in x:
+                                        return x
+                                    try:
+                                        x = float(x.replace(',', ''))
+                                    except ValueError:
+                                        return x
+                                # Default numeric formatting if no preserved format
+                                if isinstance(x, (int, float)):
+                                    return f"{x:,.2f}"
+                                return str(x)
+                            display_df[col] = display_df[col].apply(format_value)
+            
+            # Filter out the _formatted columns from final display
+            display_columns = [col for col in display_df.columns if not col.endswith('_formatted')]
+            return display_df[display_columns]
+            
+        except Exception as e:
+            logger.error(f"Error preparing DataFrame for display: {str(e)}")
+            raise
         for col in df.columns:
             if not col.endswith('_formatted'):
                 formatted_col = f"{col}_formatted"
