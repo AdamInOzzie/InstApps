@@ -358,8 +358,52 @@ def main():
         
         # Display admin sidebar if admin parameter is present
         if st.session_state.query_params['admin']:
-            UIService.display_admin_sidebar(st.session_state.sheets_client.connection_status)
+            with st.sidebar:
+                st.subheader("📡 System Status")
+                st.info("Add '?healthcheck' to the URL to view system health")
+                if st.button("Check System Health"):
+                    st.rerun()
+                
+                # Payment Test Section
+                st.markdown("---")
+                st.subheader("💳 Payment Testing")
+                if st.checkbox("Show Payment Form", value=False, key='show_payment_test'):
+                    st.markdown("### Make a Test Payment")
+                    payment_amount = st.number_input(
+                        "Amount ($)", 
+                        min_value=0.5, 
+                        value=10.0, 
+                        step=0.5,
+                        key='payment_amount'
+                    )
+                    
+                    if st.button("Process Payment", key='process_payment'):
+                        try:
+                            # Create payment intent
+                            payment_data = st.session_state.payment_service.create_payment_intent(payment_amount)
+                            
+                            if 'error' in payment_data:
+                                st.error(f"Payment Error: {payment_data['error']}")
+                            else:
+                                # Store payment data in session state
+                                st.session_state.payment_intent_data = payment_data
+                                # Show payment success message
+                                st.success(
+                                    f"Payment Intent created successfully!\n\n"
+                                    f"Amount: ${payment_amount:.2f}"
+                                )
+                                
+                                # Show Stripe payment link
+                                payment_url = f"https://checkout.stripe.com/pay/{payment_data['client_secret']}"
+                                st.markdown(f"[Complete Payment on Stripe]({payment_url})")
+                                
+                        except Exception as e:
+                            st.error(f"Error processing payment: {str(e)}")
+                
+                # Display other admin tools
+                UIService.display_admin_sidebar(st.session_state.sheets_client.connection_status)
     
+
     # Initialize session state variables
     if 'spreadsheets' not in st.session_state:
         st.session_state.spreadsheets = []
@@ -634,44 +678,6 @@ def main():
             selected_sheet_name = st.session_state.get('append_sheet_selector', '')
             show_options = st.checkbox(f"Show data", value=False, key='show_options_checkbox') #Updated checkbox label
             if show_options:
-                # Payment Test Section - Always visible at the top
-                st.sidebar.markdown("---")
-                st.sidebar.subheader("💳 Payment Testing")
-                
-                if st.sidebar.checkbox("Show Payment Form", value=False, key='show_payment_test'):
-                    st.sidebar.markdown("### Make a Test Payment")
-                    payment_amount = st.sidebar.number_input(
-                        "Amount ($)", 
-                        min_value=0.5, 
-                        value=10.0, 
-                        step=0.5,
-                        key='payment_amount'
-                    )
-                    
-                    if st.sidebar.button("Process Payment", key='process_payment'):
-                        try:
-                            # Create payment intent
-                            payment_data = st.session_state.payment_service.create_payment_intent(payment_amount)
-                            
-                            if 'error' in payment_data:
-                                st.sidebar.error(f"Payment Error: {payment_data['error']}")
-                            else:
-                                # Store payment data in session state
-                                st.session_state.payment_intent_data = payment_data
-                                # Show payment success message
-                                st.sidebar.success(
-                                    f"Payment Intent created successfully!\n\n"
-                                    f"Amount: ${payment_amount:.2f}\n"
-                                    f"Client Secret: {payment_data['client_secret'][:20]}..."
-                                )
-                                
-                                # Show Stripe payment link
-                                payment_url = f"https://checkout.stripe.com/pay/{payment_data['client_secret']}"
-                                st.sidebar.markdown(f"[Complete Payment on Stripe]({payment_url})")
-                                
-                        except Exception as e:
-                            st.sidebar.error(f"Error processing payment: {str(e)}")
-                
                 # Get list of available sheets excluding special sheets
                 available_sheets = [s for s in sheet_names if s not in ['INPUTS', 'OUTPUTS', 'USERS']]
                 
