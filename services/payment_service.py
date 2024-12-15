@@ -4,8 +4,20 @@ from typing import Dict, Any
 
 class PaymentService:
     def __init__(self):
-        stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
+        """Initialize the payment service with Stripe API keys."""
+        self.secret_key = os.getenv('STRIPE_SECRET_KEY')
         self.publishable_key = os.getenv('STRIPE_PUBLISHABLE_KEY')
+        
+        if not self.secret_key or not self.publishable_key:
+            raise ValueError("Missing required Stripe API keys")
+            
+        # Configure Stripe client
+        stripe.api_key = self.secret_key
+        
+        # Log initialization status (without exposing keys)
+        logging.info("PaymentService initialized with Stripe keys")
+        logging.info(f"Secret key prefix: {self.secret_key[:7]}...")
+        logging.info(f"Publishable key prefix: {self.publishable_key[:7]}...")
 
     def create_payment_intent(self, amount: float, currency: str = 'usd') -> Dict[str, Any]:
         """
