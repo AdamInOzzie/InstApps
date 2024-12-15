@@ -334,8 +334,20 @@ def main():
             st.session_state.form_builder_service = FormBuilderService()
             st.session_state.ui_service = UIService()
             st.session_state.copy_service = CopyService(st.session_state.sheets_client)
-            st.session_state.payment_service = PaymentService() # Initialize PaymentService here
-            logger.info("Services initialized successfully")
+            try:
+                logger.info("Initializing PaymentService...")
+                st.session_state.payment_service = PaymentService()
+                logger.info("PaymentService initialized successfully")
+            except ValueError as e:
+                logger.error(f"PaymentService initialization failed: {str(e)}")
+                st.error(f"⚠️ Payment service configuration error: {str(e)}")
+                st.stop()
+            except Exception as e:
+                logger.error(f"Unexpected error initializing PaymentService: {str(e)}")
+                st.error("⚠️ Unexpected error initializing payment service. Please try again.")
+                st.stop()
+            
+            logger.info("All services initialized successfully")
         except Exception as e:
             st.error(f"Failed to initialize services: {str(e)}")
             st.info("Please check your service account credentials and try again.")

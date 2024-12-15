@@ -10,19 +10,37 @@ class PaymentService:
     def __init__(self):
         """Initialize the payment service with Stripe API keys."""
         try:
+            # Get API keys with detailed logging
             self.secret_key = os.getenv('STRIPE_SECRET_KEY')
             self.publishable_key = os.getenv('STRIPE_PUBLISHABLE_KEY')
             
-            if not self.secret_key or not self.publishable_key:
-                logger.error("Missing required Stripe API keys")
-                raise ValueError("Missing required Stripe API keys")
+            logger.info("Checking Stripe API keys...")
             
-            if not (self.secret_key.startswith('sk_') and self.publishable_key.startswith('pk_')):
-                logger.error("Invalid Stripe API key format")
-                raise ValueError("Invalid Stripe API key format. Secret key should start with 'sk_' and publishable key with 'pk_'")
+            # Log key presence (without exposing the actual keys)
+            logger.info(f"Secret key present: {bool(self.secret_key)}")
+            logger.info(f"Publishable key present: {bool(self.publishable_key)}")
+            
+            if not self.secret_key or not self.publishable_key:
+                error_msg = "Missing required Stripe API keys"
+                logger.error(error_msg)
+                logger.error("Please ensure both STRIPE_SECRET_KEY and STRIPE_PUBLISHABLE_KEY are set in environment")
+                raise ValueError(error_msg)
+            
+            # Validate key formats
+            if not self.secret_key.startswith('sk_'):
+                error_msg = "Invalid secret key format. Must start with 'sk_'"
+                logger.error(error_msg)
+                raise ValueError(error_msg)
+                
+            if not self.publishable_key.startswith('pk_'):
+                error_msg = "Invalid publishable key format. Must start with 'pk_'"
+                logger.error(error_msg)
+                raise ValueError(error_msg)
                 
             # Configure Stripe client
+            logger.info("Configuring Stripe client...")
             stripe.api_key = self.secret_key
+            logger.info("Stripe client configured successfully")
             
             # Log initialization status (without exposing keys)
             logger.info("PaymentService initialized with Stripe keys")
