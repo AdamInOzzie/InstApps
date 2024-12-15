@@ -234,6 +234,7 @@ class FormBuilderService:
                         'required': True,
                         'column_index': col_idx  # Store the actual column index
                     }
+                    logger.info(f"Field {col} will use column_index {col_idx} (column {chr(65 + col_idx)})")
                     
                     # Determine field type
                     if spreadsheet_id and sheet_name:

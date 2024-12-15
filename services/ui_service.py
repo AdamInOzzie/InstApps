@@ -156,7 +156,7 @@ class UIService:
             # Log form data for debugging
             logger.info("Form Data Generated:")
             for field_name, value in form_data.items():
-                logger.info(f"Field: {field_name} = {value} (type: {type(value)})")
+                logger.info(f"Field: {field_name} = {value} (type: {type(value)}, column_index: {field.get('column_index')})")
             
             # Add submit button with proper error handling
             if st.button("Submit Entry", type="primary"):
@@ -217,7 +217,9 @@ class UIService:
             # Update cells with form data
             try:
                 cell_updates = []
+                logger.info(f"Updating cells with form data {form_data.items}")
                 for idx, (field_name, value) in enumerate(form_data.items(), start=1):
+                    logger.info(f"Updating cell {field_name} with value: {value}")
                     cell_updates.extend([next_row, idx, str(value)])
                     
                 update_success = SpreadsheetService.UpdateEntryCells(
