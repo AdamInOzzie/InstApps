@@ -48,18 +48,17 @@ class PaymentService:
             # Convert dollars to cents for Stripe
             amount_cents = int(amount * 100)
             
-            # Get the domain for the application
+            # Get the Replit slug for the application
             replit_slug = os.getenv('REPLIT_SLUG', 'sheetsyncwebalwayson')
-            replit_owner = os.getenv('REPLIT_OWNER', 'alchemysts')
             
-            # Always use Replit domain structure
-            base_url = f"https://{replit_slug}.{replit_owner}.repl.co"
+            # Use correct Replit domain structure (without owner)
+            base_url = f"https://{replit_slug}.repl.co"
             logger.info(f"Using Replit URL for callbacks: {base_url}")
             
             # Validate URL construction
-            if not all(c.isalnum() or c in '.-' for c in f"{replit_slug}.{replit_owner}"):
-                error_msg = "Invalid Replit domain components"
-                logger.error(f"{error_msg}: slug={replit_slug}, owner={replit_owner}")
+            if not all(c.isalnum() or c in '.-' for c in replit_slug):
+                error_msg = "Invalid Replit slug"
+                logger.error(f"{error_msg}: slug={replit_slug}")
                 raise ValueError(error_msg)
             
             logger.info(f"Base URL for Stripe redirects: {base_url}")
