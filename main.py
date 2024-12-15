@@ -334,7 +334,7 @@ def main():
             st.session_state.form_builder_service = FormBuilderService()
             st.session_state.ui_service = UIService()
             st.session_state.copy_service = CopyService(st.session_state.sheets_client)
-            st.session_state.payment_service = PaymentService()
+            st.session_state.payment_service = PaymentService() # Initialize PaymentService here
             logger.info("Services initialized successfully")
         except Exception as e:
             st.error(f"Failed to initialize services: {str(e)}")
@@ -632,39 +632,46 @@ def main():
             
             # Show data view options with proper sheet selection
             selected_sheet_name = st.session_state.get('append_sheet_selector', '')
-            show_options = st.checkbox(f"Show all the {selected_sheet_name}", value=False, key='show_options_checkbox')
+            show_options = st.checkbox(f"Show data", value=False, key='show_options_checkbox') #Updated checkbox label
             if show_options:
-                # Add payment test section
-                if st.checkbox("Test Payment", value=False, key='show_payment_test'):
-                    st.subheader("💳 Payment Test")
-                    payment_amount = st.number_input("Amount ($)", min_value=0.5, value=10.0, step=0.5)
+                # Payment Test Section - Always visible at the top
+                st.sidebar.markdown("---")
+                st.sidebar.subheader("💳 Payment Testing")
+                
+                if st.sidebar.checkbox("Show Payment Form", value=False, key='show_payment_test'):
+                    st.sidebar.markdown("### Make a Test Payment")
+                    payment_amount = st.sidebar.number_input(
+                        "Amount ($)", 
+                        min_value=0.5, 
+                        value=10.0, 
+                        step=0.5,
+                        key='payment_amount'
+                    )
                     
-                    if st.button("Process Payment"):
+                    if st.sidebar.button("Process Payment", key='process_payment'):
                         try:
                             # Create payment intent
                             payment_data = st.session_state.payment_service.create_payment_intent(payment_amount)
                             
                             if 'error' in payment_data:
-                                st.error(f"Payment Error: {payment_data['error']}")
+                                st.sidebar.error(f"Payment Error: {payment_data['error']}")
                             else:
-                                # Initialize Stripe payment
-                                st.markdown(f"""
-                                    <script src="https://js.stripe.com/v3/"></script>
-                                    <script>
-                                        var stripe = Stripe('{payment_data['publishable_key']}');
-                                        stripe.confirmPayment({{
-                                            clientSecret: '{payment_data['client_secret']}',
-                                            elements: stripe.elements(),
-                                            confirmParams: {{
-                                                return_url: window.location.href,
-                                            }},
-                                        }});
-                                    </script>
-                                """, unsafe_allow_html=True)
+                                # Store payment data in session state
+                                st.session_state.payment_intent_data = payment_data
+                                # Show payment success message
+                                st.sidebar.success(
+                                    f"Payment Intent created successfully!\n\n"
+                                    f"Amount: ${payment_amount:.2f}\n"
+                                    f"Client Secret: {payment_data['client_secret'][:20]}..."
+                                )
                                 
-                                st.success("Payment initiated! Check the browser payment popup.")
+                                # Show Stripe payment link
+                                payment_url = f"https://checkout.stripe.com/pay/{payment_data['client_secret']}"
+                                st.sidebar.markdown(f"[Complete Payment on Stripe]({payment_url})")
+                                
                         except Exception as e:
-                            st.error(f"Error processing payment: {str(e)}")
+                            st.sidebar.error(f"Error processing payment: {str(e)}")
+                
                 # Get list of available sheets excluding special sheets
                 available_sheets = [s for s in sheet_names if s not in ['INPUTS', 'OUTPUTS', 'USERS']]
                 
