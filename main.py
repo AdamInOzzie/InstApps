@@ -389,13 +389,15 @@ def main():
                                 st.session_state.payment_intent_data = payment_data
                                 # Show payment success message
                                 st.success(
-                                    f"Payment Intent created successfully!\n\n"
+                                    f"Payment session created successfully!\n\n"
                                     f"Amount: ${payment_amount:.2f}"
                                 )
                                 
-                                # Show Stripe payment link
-                                payment_url = f"https://checkout.stripe.com/pay/{payment_data['client_secret']}"
-                                st.markdown(f"[Complete Payment on Stripe]({payment_url})")
+                                # Show Stripe Checkout link
+                                st.markdown(f"[Complete Payment on Stripe]({payment_data['session_url']})")
+                                
+                                # Store session ID for later verification
+                                st.session_state['last_payment_session_id'] = payment_data['session_id']
                                 
                         except Exception as e:
                             st.error(f"Error processing payment: {str(e)}")

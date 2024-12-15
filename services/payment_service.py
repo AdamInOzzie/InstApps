@@ -35,29 +35,48 @@ class PaymentService:
 
     def create_payment_intent(self, amount: float, currency: str = 'usd') -> Dict[str, Any]:
         """
-        Create a payment intent for the specified amount
+        Create a Stripe Checkout session for the specified amount
         
         Args:
             amount: Amount in dollars (will be converted to cents)
             currency: Currency code (default: 'usd')
             
         Returns:
-            Dict containing client_secret and other payment details
+            Dict containing session url and other payment details
         """
         try:
             # Convert dollars to cents for Stripe
             amount_cents = int(amount * 100)
             
-            intent = stripe.PaymentIntent.create(
-                amount=amount_cents,
-                currency=currency
+            # Create Stripe Checkout session
+            session = stripe.checkout.Session.create(
+                payment_method_types=['card'],
+                line_items=[{
+                    'price_data': {
+                        'currency': currency,
+                        'unit_amount': amount_cents,
+                        'product_data': {
+                            'name': 'Payment',
+                            'description': 'Form submission payment',
+                        },
+                    },
+                    'quantity': 1,
+                }],
+                mode='payment',
+                success_url='https://sheetsyncwebalwayson.alchemysts.repl.co/success',
+                cancel_url='https://sheetsyncwebalwayson.alchemysts.repl.co/cancel',
             )
             
             return {
-                'client_secret': intent.client_secret,
+                'session_url': session.url,
+                'session_id': session.id,
                 'publishable_key': self.publishable_key
             }
         except stripe.error.StripeError as e:
+            logger.error(f"Stripe error: {str(e)}")
+            return {'error': str(e)}
+        except Exception as e:
+            logger.error(f"Unexpected error in create_payment_intent: {str(e)}")
             return {'error': str(e)}
 
     def get_payment_status(self, payment_intent_id: str) -> Dict[str, Any]:
