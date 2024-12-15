@@ -48,6 +48,18 @@ class PaymentService:
             # Convert dollars to cents for Stripe
             amount_cents = int(amount * 100)
             
+            # Get the base URL for the application
+            base_url = os.getenv('REPLIT_APP_URL', 'http://localhost:5000')
+            if base_url.endswith('/'):
+                base_url = base_url[:-1]
+                
+            # Log the base URL for debugging
+            logger.info(f"Using base URL for Stripe redirects: {base_url}")
+            
+            # Create success and cancel URLs
+            success_url = f"{base_url}/?payment=success"
+            cancel_url = f"{base_url}/?payment=cancelled"
+            
             # Create Stripe Checkout session
             session = stripe.checkout.Session.create(
                 payment_method_types=['card'],
@@ -63,14 +75,11 @@ class PaymentService:
                     'quantity': 1,
                 }],
                 mode='payment',
-                # Use REPL_SLUG and REPL_OWNER from environment for dynamic URL generation
-                success_url=f'https://{os.getenv("REPL_SLUG")}.{os.getenv("REPL_OWNER")}.repl.co/?payment=success',
-                cancel_url=f'https://{os.getenv("REPL_SLUG")}.{os.getenv("REPL_OWNER")}.repl.co/?payment=cancelled',
+                success_url=success_url,
+                cancel_url=cancel_url,
             )
             
-            # Log the generated URLs for debugging
-            success_url = f'https://{os.getenv("REPL_SLUG")}.{os.getenv("REPL_OWNER")}.repl.co/?payment=success'
-            cancel_url = f'https://{os.getenv("REPL_SLUG")}.{os.getenv("REPL_OWNER")}.repl.co/?payment=cancelled'
+            # Log the URLs for debugging
             logger.info(f"Generated success URL: {success_url}")
             logger.info(f"Generated cancel URL: {cancel_url}")
             
@@ -78,7 +87,7 @@ class PaymentService:
                 'session_url': session.url,
                 'session_id': session.id,
                 'publishable_key': self.publishable_key,
-                'success_url': success_url,  # Include URLs in response for debugging
+                'success_url': success_url,
                 'cancel_url': cancel_url
             }
         except stripe.error.StripeError as e:
