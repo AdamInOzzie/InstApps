@@ -405,9 +405,14 @@ class FormBuilderService:
                 from services.spreadsheet_service import SpreadsheetService
                 cell_updates = []
                 
-                # Convert form data to cell updates
-                for idx, (field_name, value) in enumerate(form_data.items(), start=1):
-                    cell_updates.extend([next_row, idx, str(value)])
+                # Convert form data to cell updates using stored column indices
+                for field_name, value in form_data.items():
+                    # Find the field info to get the column index
+                    field_info = next((f for f in fields if f['name'] == field_name), None)
+                    if field_info:
+                        # Column indices are 0-based, but need to be 1-based for the update
+                        column_index = field_info['column_index'] + 1
+                        cell_updates.extend([next_row, column_index, str(value)])
                     
                 # Execute cell updates
                 update_success = SpreadsheetService.UpdateEntryCells(
