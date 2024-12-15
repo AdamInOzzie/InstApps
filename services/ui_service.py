@@ -218,9 +218,18 @@ class UIService:
             try:
                 cell_updates = []
                 logger.info(f"Updating cells with form data {form_data.items}")
-                for idx, (field_name, value) in enumerate(form_data.items(), start=1):
-                    logger.info(f"Updating cell {field_name} with value: {value}")
-                    cell_updates.extend([next_row, idx, str(value)])
+                # Get form fields to access column indices
+                df = sheets_client.read_spreadsheet(spreadsheet_id, f"{sheet_name}!A1:Z1000")
+                form_fields, _ = FormBuilderService().get_form_fields(df, spreadsheet_id, sheet_name)
+                
+                for field_name, value in form_data.items():
+                    # Find matching field info to get correct column index
+                    field_info = next((f for f in form_fields if f['name'] == field_name), None)
+                    if field_info:
+                        # Convert 0-based column_index to 1-based for API
+                        column_index = field_info['column_index'] + 1
+                        logger.info(f"Updating cell {field_name} at column {column_index} with value: {value}")
+                        cell_updates.extend([next_row, column_index, str(value)])
                     
                 update_success = SpreadsheetService.UpdateEntryCells(
                     spreadsheet_id=spreadsheet_id,
