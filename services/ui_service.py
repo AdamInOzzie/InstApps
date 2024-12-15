@@ -156,7 +156,7 @@ class UIService:
             # Log form data for debugging
             logger.info("Form Data Generated:")
             for field_name, value in form_data.items():
-                logger.info(f"Field: {field_name} = {value} (type: {type(value)}, column_index: {field.get('column_index')})")
+                logger.info(f"Field: {field_name} = {value} (type: {type(value)})")
             
             # Add submit button with proper error handling
             if st.button("Submit Entry", type="primary"):
