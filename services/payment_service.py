@@ -48,16 +48,24 @@ class PaymentService:
             # Convert dollars to cents for Stripe
             amount_cents = int(amount * 100)
             
-            # Get the base URL for the application
-            base_url = os.getenv('REPLIT_APP_URL', 'http://localhost:5000')
-            if base_url.endswith('/'):
-                base_url = base_url[:-1]
-                
-            # Log the base URL for debugging
+            # Get the domain and protocol for the application
+            is_replit = os.getenv('REPLIT_APP_URL') is not None
+            if is_replit:
+                # Use the Replit domain when deployed
+                base_url = os.getenv('REPLIT_APP_URL')
+                if base_url.endswith('/'):
+                    base_url = base_url[:-1]
+            else:
+                # Use localhost with port for local development
+                port = os.getenv('PORT', '5000')
+                base_url = f"http://localhost:{port}"
+
+            # Log the URL configuration
+            logger.info(f"Environment: {'Replit' if is_replit else 'Local'}")
             logger.info(f"Using base URL for Stripe redirects: {base_url}")
             
-            # Create success and cancel URLs
-            success_url = f"{base_url}/?payment=success"
+            # Create success and cancel URLs with query parameters
+            success_url = f"{base_url}/?payment=success&session_id={{CHECKOUT_SESSION_ID}}"
             cancel_url = f"{base_url}/?payment=cancelled"
             
             # Create Stripe Checkout session

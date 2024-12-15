@@ -343,8 +343,21 @@ def main():
     
     # Handle payment status messages
     payment_status = st.query_params.get("payment")
-    if payment_status == "success":
-        st.success("✅ Payment completed successfully! Thank you for your payment.")
+    session_id = st.query_params.get("session_id")
+    
+    if payment_status == "success" and session_id:
+        try:
+            # Verify the payment session
+            session = stripe.checkout.Session.retrieve(session_id)
+            if session.payment_status == "paid":
+                st.success("✅ Payment completed successfully! Thank you for your payment.")
+                logger.info(f"Successful payment for session: {session_id}")
+            else:
+                st.warning("Payment verification pending. Please wait a moment.")
+                logger.warning(f"Pending payment status for session: {session_id}")
+        except Exception as e:
+            logger.error(f"Error verifying payment session: {str(e)}")
+            st.error("Unable to verify payment status. Please contact support.")
     elif payment_status == "cancelled":
         st.warning("Payment was cancelled. You can try again if you wish.")
 
