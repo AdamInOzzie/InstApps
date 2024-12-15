@@ -63,8 +63,8 @@ class PaymentService:
                     'quantity': 1,
                 }],
                 mode='payment',
-                success_url='https://sheetsyncwebalwayson.alchemysts.repl.co/success',
-                cancel_url='https://sheetsyncwebalwayson.alchemysts.repl.co/cancel',
+                success_url='https://sheetsyncwebalwayson.alchemysts.repl.co/?payment=success',
+                cancel_url='https://sheetsyncwebalwayson.alchemysts.repl.co/?payment=cancelled',
             )
             
             return {

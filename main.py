@@ -341,6 +341,13 @@ def main():
             st.info("Please check your service account credentials and try again.")
             st.stop()
     
+    # Handle payment status messages
+    payment_status = st.query_params.get("payment")
+    if payment_status == "success":
+        st.success("✅ Payment completed successfully! Thank you for your payment.")
+    elif payment_status == "cancelled":
+        st.warning("Payment was cancelled. You can try again if you wish.")
+
     # Display title and health status
     st.title("📊 Instapp")
     
