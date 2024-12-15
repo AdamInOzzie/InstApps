@@ -48,25 +48,29 @@ class PaymentService:
             # Convert dollars to cents for Stripe
             amount_cents = int(amount * 100)
             
-            # Get the domain and protocol for the application
-            is_replit = os.getenv('REPLIT_APP_URL') is not None
-            if is_replit:
-                # Use the Replit domain when deployed
-                base_url = os.getenv('REPLIT_APP_URL')
-                if base_url.endswith('/'):
-                    base_url = base_url[:-1]
+            # Get the domain for the application
+            replit_url = os.getenv('REPLIT_SLUG')
+            replit_owner = os.getenv('REPLIT_OWNER')
+            
+            # Construct base URL based on environment
+            if replit_url and replit_owner:
+                # Format for Replit deployment URL
+                base_url = f"https://{replit_url}.{replit_owner}.repl.co"
+                logger.info(f"Using Replit deployment URL: {base_url}")
             else:
-                # Use localhost with port for local development
-                port = os.getenv('PORT', '5000')
-                base_url = f"http://localhost:{port}"
-
-            # Log the URL configuration
-            logger.info(f"Environment: {'Replit' if is_replit else 'Local'}")
-            logger.info(f"Using base URL for Stripe redirects: {base_url}")
+                # Local development fallback with explicit port
+                base_url = "http://0.0.0.0:5000"
+                logger.info("Using local development URL")
+            
+            logger.info(f"Base URL for Stripe redirects: {base_url}")
             
             # Create success and cancel URLs with query parameters
             success_url = f"{base_url}/?payment=success&session_id={{CHECKOUT_SESSION_ID}}"
             cancel_url = f"{base_url}/?payment=cancelled"
+            
+            # Log the generated URLs
+            logger.info(f"Success URL template: {success_url}")
+            logger.info(f"Cancel URL: {cancel_url}")
             
             # Create Stripe Checkout session
             session = stripe.checkout.Session.create(
@@ -99,11 +103,25 @@ class PaymentService:
                 'cancel_url': cancel_url
             }
         except stripe.error.StripeError as e:
-            logger.error(f"Stripe error: {str(e)}")
-            return {'error': str(e)}
+            error_msg = f"Stripe API error: {str(e)}"
+            logger.error(error_msg)
+            logger.error(f"Stripe error type: {type(e).__name__}")
+            logger.error(f"Stripe error details: {e.user_message if hasattr(e, 'user_message') else str(e)}")
+            return {
+                'error': error_msg,
+                'error_type': 'stripe_error',
+                'details': e.user_message if hasattr(e, 'user_message') else str(e)
+            }
         except Exception as e:
-            logger.error(f"Unexpected error in create_payment_intent: {str(e)}")
-            return {'error': str(e)}
+            error_msg = f"Payment processing error: {str(e)}"
+            logger.error(error_msg)
+            logger.error(f"Full error details: {str(e)}")
+            logger.error(f"Error type: {type(e).__name__}")
+            return {
+                'error': error_msg,
+                'error_type': 'system_error',
+                'details': str(e)
+            }
 
     def get_payment_status(self, payment_intent_id: str) -> Dict[str, Any]:
         """
