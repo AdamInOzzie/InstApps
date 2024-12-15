@@ -1,0 +1,28 @@
+⚠️ Application Error
+
+There are multiple button elements with the same auto-generated ID. When this element is created, it is assigned an internal ID based on the element type and provided parameters. Multiple elements with the same type and parameters will cause this error.
+
+To fix this error, please pass a unique key argument to the button element.
+
+Traceback (most recent call last):
+  File "/home/runner/SheetSyncWebAlwaysOn/main.py", line 774, in <module>
+    main()
+  File "/home/runner/SheetSyncWebAlwaysOn/main.py", line 364, in main
+    if st.button("Check System Health"):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/SheetSyncWebAlwaysOn/.pythonlibs/lib/python3.11/site-packages/streamlit/runtime/metrics_util.py", line 409, in wrapped_func
+    result = non_optional_func(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/SheetSyncWebAlwaysOn/.pythonlibs/lib/python3.11/site-packages/streamlit/elements/widgets/button.py", line 223, in button
+    return self.dg._button(
+           ^^^^^^^^^^^^^^^^
+  File "/home/runner/SheetSyncWebAlwaysOn/.pythonlibs/lib/python3.11/site-packages/streamlit/elements/widgets/button.py", line 876, in _button
+    element_id = compute_and_register_element_id(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/SheetSyncWebAlwaysOn/.pythonlibs/lib/python3.11/site-packages/streamlit/elements/lib/utils.py", line 226, in compute_and_register_element_id
+    _register_element_id(ctx, element_type, element_id)
+  File "/home/runner/SheetSyncWebAlwaysOn/.pythonlibs/lib/python3.11/site-packages/streamlit/elements/lib/utils.py", line 132, in _register_element_id
+    raise StreamlitDuplicateElementId(element_type)
+streamlit.errors.StreamlitDuplicateElementId: There are multiple `button` elements with the same auto-generated ID. When this element is created, it is assigned an internal ID based on the element type and provided parameters. Multiple elements with the same type and parameters will cause this error.
+
+To fix this error, please pass a unique `key` argument to the `button` element.
