@@ -49,18 +49,18 @@ class PaymentService:
             amount_cents = int(amount * 100)
             
             # Get the domain for the application
-            replit_url = os.getenv('REPLIT_SLUG')
-            replit_owner = os.getenv('REPLIT_OWNER')
+            replit_slug = os.getenv('REPLIT_SLUG', 'sheetsyncwebalwayson')
+            replit_owner = os.getenv('REPLIT_OWNER', 'alchemysts')
             
-            # Construct base URL based on environment
-            if replit_url and replit_owner:
-                # Format for Replit deployment URL
-                base_url = f"https://{replit_url}.{replit_owner}.repl.co"
-                logger.info(f"Using Replit deployment URL: {base_url}")
-            else:
-                # Local development fallback with explicit port
-                base_url = "http://0.0.0.0:5000"
-                logger.info("Using local development URL")
+            # Always use Replit domain structure
+            base_url = f"https://{replit_slug}.{replit_owner}.repl.co"
+            logger.info(f"Using Replit URL for callbacks: {base_url}")
+            
+            # Validate URL construction
+            if not all(c.isalnum() or c in '.-' for c in f"{replit_slug}.{replit_owner}"):
+                error_msg = "Invalid Replit domain components"
+                logger.error(f"{error_msg}: slug={replit_slug}, owner={replit_owner}")
+                raise ValueError(error_msg)
             
             logger.info(f"Base URL for Stripe redirects: {base_url}")
             
