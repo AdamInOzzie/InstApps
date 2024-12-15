@@ -367,53 +367,17 @@ def main():
                 # Payment Test Section
                 st.markdown("---")
                 st.subheader("💳 Payment Testing")
-                if st.checkbox("Show Payment Form", value=False, key='show_payment_test'):
+                if st.checkbox("Show Payment Form", value=False, key='admin_payment_test'):
                     st.markdown("### Make a Test Payment")
                     payment_amount = st.number_input(
                         "Amount ($)", 
                         min_value=0.5, 
                         value=10.0, 
                         step=0.5,
-                        key='payment_amount'
+                        key='admin_payment_amount'
                     )
                     
-                    if st.button("Process Payment", key='process_payment'):
-                        try:
-                            # Create payment intent
-                            payment_data = st.session_state.payment_service.create_payment_intent(payment_amount)
-                            
-                            if 'error' in payment_data:
-                                st.error(f"Payment Error: {payment_data['error']}")
-                            else:
-                                # Store payment data in session state
-                                st.session_state.payment_intent_data = payment_data
-                                # Show payment success message
-                                st.success(
-                                    f"Payment Intent created successfully!\n\n"
-                                    f"Amount: ${payment_amount:.2f}"
-                                )
-                                
-                                # Show Stripe payment link
-                                payment_url = f"https://checkout.stripe.com/pay/{payment_data['client_secret']}"
-                                st.markdown(f"[Complete Payment on Stripe]({payment_url})")
-                                
-                        except Exception as e:
-                            st.error(f"Error processing payment: {str(e)}")
-                
-                # Payment Test Section
-                st.markdown("---")
-                st.subheader("💳 Payment Testing")
-                if st.checkbox("Show Payment Form", value=False, key='show_payment_test'):
-                    st.markdown("### Make a Test Payment")
-                    payment_amount = st.number_input(
-                        "Amount ($)", 
-                        min_value=0.5, 
-                        value=10.0, 
-                        step=0.5,
-                        key='payment_amount'
-                    )
-                    
-                    if st.button("Process Payment", key='process_payment'):
+                    if st.button("Process Payment", key='admin_process_payment'):
                         try:
                             # Create payment intent
                             payment_data = st.session_state.payment_service.create_payment_intent(payment_amount)
