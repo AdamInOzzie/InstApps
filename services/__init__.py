@@ -6,13 +6,15 @@ from .form_service import FormService
 from .ui_service import UIService
 from .form_builder_service import FormBuilderService
 from .copy_service import CopyService
+from .payment_service import PaymentService
 
 __all__ = [
     'SpreadsheetService',
     'FormService',
     'UIService',
     'FormBuilderService',
-    'CopyService'
+    'CopyService',
+    'PaymentService'
 ]
 
 # Version and timestamp for deployment verification
