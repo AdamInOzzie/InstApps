@@ -336,11 +336,31 @@ def main():
             st.session_state.copy_service = CopyService(st.session_state.sheets_client)
             try:
                 logger.info("Initializing PaymentService...")
+                # Check environment variables before initializing
+                stripe_secret = os.getenv('STRIPE_SECRET_KEY')
+                stripe_publishable = os.getenv('STRIPE_PUBLISHABLE_KEY')
+                
+                logger.info("Checking deployment environment variables...")
+                logger.info(f"STRIPE_SECRET_KEY present in environment: {bool(stripe_secret)}")
+                logger.info(f"STRIPE_PUBLISHABLE_KEY present in environment: {bool(stripe_publishable)}")
+                
                 st.session_state.payment_service = PaymentService()
                 logger.info("PaymentService initialized successfully")
             except ValueError as e:
                 logger.error(f"PaymentService initialization failed: {str(e)}")
-                st.error(f"⚠️ Payment service configuration error: {str(e)}")
+                error_msg = str(e)
+                st.error(f"⚠️ Payment service configuration error: {error_msg}")
+                
+                # More detailed information for debugging
+                if st.session_state.query_params.get('admin'):
+                    st.info("Admin Note: Environment Variable Status")
+                    status_info = {
+                        'STRIPE_SECRET_KEY': 'Present' if os.getenv('STRIPE_SECRET_KEY') else 'Missing',
+                        'STRIPE_PUBLISHABLE_KEY': 'Present' if os.getenv('STRIPE_PUBLISHABLE_KEY') else 'Missing'
+                    }
+                    for key, status in status_info.items():
+                        st.code(f"{key}: {status}")
+                    st.info("These environment variables must be properly set in your deployment environment")
                 st.stop()
             except Exception as e:
                 logger.error(f"Unexpected error initializing PaymentService: {str(e)}")

@@ -16,14 +16,42 @@ class PaymentService:
             
             logger.info("Checking Stripe API keys...")
             
-            # Log key presence (without exposing the actual keys)
-            logger.info(f"Secret key present: {bool(self.secret_key)}")
-            logger.info(f"Publishable key present: {bool(self.publishable_key)}")
+            # Check each key individually with detailed logging
+            missing_keys = []
+            invalid_keys = []
             
-            if not self.secret_key or not self.publishable_key:
-                error_msg = "Missing required Stripe API keys"
+            # Check secret key
+            if not self.secret_key:
+                missing_keys.append('STRIPE_SECRET_KEY')
+                logger.error("STRIPE_SECRET_KEY is completely missing from environment variables")
+            elif not isinstance(self.secret_key, str):
+                invalid_keys.append('STRIPE_SECRET_KEY (invalid type)')
+                logger.error(f"STRIPE_SECRET_KEY has invalid type: {type(self.secret_key)}")
+            else:
+                logger.info("STRIPE_SECRET_KEY is present in environment")
+                
+            # Check publishable key
+            if not self.publishable_key:
+                missing_keys.append('STRIPE_PUBLISHABLE_KEY')
+                logger.error("STRIPE_PUBLISHABLE_KEY is completely missing from environment variables")
+            elif not isinstance(self.publishable_key, str):
+                invalid_keys.append('STRIPE_PUBLISHABLE_KEY (invalid type)')
+                logger.error(f"STRIPE_PUBLISHABLE_KEY has invalid type: {type(self.publishable_key)}")
+            else:
+                logger.info("STRIPE_PUBLISHABLE_KEY is present in environment")
+            
+            # Handle missing or invalid keys
+            if missing_keys or invalid_keys:
+                error_details = []
+                if missing_keys:
+                    error_details.append(f"Missing keys: {', '.join(missing_keys)}")
+                if invalid_keys:
+                    error_details.append(f"Invalid keys: {', '.join(invalid_keys)}")
+                    
+                error_msg = "Stripe API key configuration error: " + "; ".join(error_details)
                 logger.error(error_msg)
-                logger.error("Please ensure both STRIPE_SECRET_KEY and STRIPE_PUBLISHABLE_KEY are set in environment")
+                logger.error("Please ensure all required keys are properly set in the deployment environment")
+                logger.error("Keys should be exported as environment variables before starting the application")
                 raise ValueError(error_msg)
             
             # Validate key formats
