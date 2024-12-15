@@ -732,6 +732,7 @@ dependencies = [
     { name = "python-dotenv" },
     { name = "streamlit" },
     { name = "streamlit-aggrid" },
+    { name = "stripe" },
     { name = "watchdog" },
 ]
 
@@ -746,6 +747,7 @@ requires-dist = [
     { name = "python-dotenv", specifier = ">=1.0.1" },
     { name = "streamlit", specifier = ">=1.40.2" },
     { name = "streamlit-aggrid", specifier = ">=1.0.5" },
+    { name = "stripe", specifier = ">=11.3.0" },
     { name = "watchdog" },
 ]
 
@@ -910,6 +912,19 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/9c/6a/1d400578115fea4b8926fe60566d54399409baadaf448ed0bc07e0130312/streamlit_aggrid-1.0.5.tar.gz", hash = "sha256:12e17f88d66e110e5d68504614a4b933f7dca31e40448396252d889a10e761b6", size = 7819216 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/6f/49/892f841d7eb689fb67d83c310c1846423bb14c7fc9976b83b0d0ede1ed24/streamlit_aggrid-1.0.5-py3-none-any.whl", hash = "sha256:ac0a58c1d39418d139da5623c4c8a0a3aa86463c217a41c837e2ef52c8537a34", size = 7903624 },
+]
+
+[[package]]
+name = "stripe"
+version = "11.3.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "requests" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/0d/96/358f9f62960826ee77de447d70e7ed09741dd5d53d684be1371913e51d7f/stripe-11.3.0.tar.gz", hash = "sha256:98e625d9ddbabcecf02666867169696e113d9eaba27979fb310a7a8dfd44097c", size = 1367031 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a4/85/2f4365a0112e49ff646bc701b93e8c4eb314812d84149a43898ea88d377d/stripe-11.3.0-py2.py3-none-any.whl", hash = "sha256:9d2e86943e1e4f325835d3860c4f58aa98d49229c9caf67588f9f9b2451e8e56", size = 1617363 },
 ]
 
 [[package]]

@@ -29,7 +29,7 @@ import random  # Added for jitter calculation
 from utils import GoogleSheetsClient
 from services import (
     SpreadsheetService, FormService, UIService, 
-    FormBuilderService, CopyService
+    FormBuilderService, CopyService, PaymentService
 )
 
 # Configure logging
@@ -334,6 +334,7 @@ def main():
             st.session_state.form_builder_service = FormBuilderService()
             st.session_state.ui_service = UIService()
             st.session_state.copy_service = CopyService(st.session_state.sheets_client)
+            st.session_state.payment_service = PaymentService()
             logger.info("Services initialized successfully")
         except Exception as e:
             st.error(f"Failed to initialize services: {str(e)}")
@@ -633,6 +634,37 @@ def main():
             selected_sheet_name = st.session_state.get('append_sheet_selector', '')
             show_options = st.checkbox(f"Show all the {selected_sheet_name}", value=False, key='show_options_checkbox')
             if show_options:
+                # Add payment test section
+                if st.checkbox("Test Payment", value=False, key='show_payment_test'):
+                    st.subheader("💳 Payment Test")
+                    payment_amount = st.number_input("Amount ($)", min_value=0.5, value=10.0, step=0.5)
+                    
+                    if st.button("Process Payment"):
+                        try:
+                            # Create payment intent
+                            payment_data = st.session_state.payment_service.create_payment_intent(payment_amount)
+                            
+                            if 'error' in payment_data:
+                                st.error(f"Payment Error: {payment_data['error']}")
+                            else:
+                                # Initialize Stripe payment
+                                st.markdown(f"""
+                                    <script src="https://js.stripe.com/v3/"></script>
+                                    <script>
+                                        var stripe = Stripe('{payment_data['publishable_key']}');
+                                        stripe.confirmPayment({{
+                                            clientSecret: '{payment_data['client_secret']}',
+                                            elements: stripe.elements(),
+                                            confirmParams: {{
+                                                return_url: window.location.href,
+                                            }},
+                                        }});
+                                    </script>
+                                """, unsafe_allow_html=True)
+                                
+                                st.success("Payment initiated! Check the browser payment popup.")
+                        except Exception as e:
+                            st.error(f"Error processing payment: {str(e)}")
                 # Get list of available sheets excluding special sheets
                 available_sheets = [s for s in sheet_names if s not in ['INPUTS', 'OUTPUTS', 'USERS']]
                 
