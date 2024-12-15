@@ -63,14 +63,23 @@ class PaymentService:
                     'quantity': 1,
                 }],
                 mode='payment',
-                success_url='https://sheetsyncwebalwayson.alchemysts.repl.co/?payment=success',
-                cancel_url='https://sheetsyncwebalwayson.alchemysts.repl.co/?payment=cancelled',
+                # Use REPL_SLUG and REPL_OWNER from environment for dynamic URL generation
+                success_url=f'https://{os.getenv("REPL_SLUG")}.{os.getenv("REPL_OWNER")}.repl.co/?payment=success',
+                cancel_url=f'https://{os.getenv("REPL_SLUG")}.{os.getenv("REPL_OWNER")}.repl.co/?payment=cancelled',
             )
+            
+            # Log the generated URLs for debugging
+            success_url = f'https://{os.getenv("REPL_SLUG")}.{os.getenv("REPL_OWNER")}.repl.co/?payment=success'
+            cancel_url = f'https://{os.getenv("REPL_SLUG")}.{os.getenv("REPL_OWNER")}.repl.co/?payment=cancelled'
+            logger.info(f"Generated success URL: {success_url}")
+            logger.info(f"Generated cancel URL: {cancel_url}")
             
             return {
                 'session_url': session.url,
                 'session_id': session.id,
-                'publishable_key': self.publishable_key
+                'publishable_key': self.publishable_key,
+                'success_url': success_url,  # Include URLs in response for debugging
+                'cancel_url': cancel_url
             }
         except stripe.error.StripeError as e:
             logger.error(f"Stripe error: {str(e)}")
