@@ -47,6 +47,49 @@ class UIService:
             return original_value
             
         except Exception as e:
+
+    @staticmethod
+    def verify_payment_and_submit(session_id: str, sheets_client) -> bool:
+        """Verify payment and submit form if successful."""
+        try:
+            if 'payment_sessions' not in st.session_state or session_id not in st.session_state.payment_sessions:
+                st.error("Payment session not found")
+                return False
+                
+            session_data = st.session_state.payment_sessions[session_id]
+            
+            # Verify payment with Stripe
+            from services.payment_service import PaymentService
+            payment_service = PaymentService()
+            payment_status = payment_service.get_payment_status(session_id)
+            
+            if payment_status.get('status') == 'succeeded':
+                # Update form data with payment information
+                session_data['form_data']['Paid'] = f"STRIPE_{session_id}"
+                
+                # Process form submission
+                result = UIService._handle_form_submission(
+                    session_data['spreadsheet_id'],
+                    session_data['sheet_name'],
+                    sheets_client,
+                    session_data['form_data']
+                )
+                
+                if result:
+                    st.success("✅ Payment verified and form submitted successfully!")
+                    # Clean up session data
+                    del st.session_state.payment_sessions[session_id]
+                    return True
+                    
+            else:
+                st.error("Payment verification failed")
+                return False
+                
+        except Exception as e:
+            logger.error(f"Error verifying payment: {str(e)}")
+            st.error(f"Error processing payment: {str(e)}")
+            return False
+
             logger.error(f"Error formatting output value: {str(e)}")
             return value_str
 
@@ -185,6 +228,47 @@ class UIService:
         sheets_client,
         form_data: Dict[str, Any]
     ) -> Optional[Dict[str, Any]]:
+        """Handle form submission with payment processing if required."""
+        logger.info("=" * 80)
+        logger.info("FORM SUBMISSION HANDLER")
+        logger.info("=" * 80)
+        logger.info(f"Processing submission for sheet: {sheet_name}")
+        logger.info(f"Form data received: {form_data}")
+        
+        # Check if payment is required
+        payment_amount = None
+        if 'Pay' in form_data:
+            try:
+                payment_amount = float(form_data['Pay'])
+                if payment_amount > 0:
+                    # Create payment intent using PaymentService
+                    from services.payment_service import PaymentService
+                    payment_service = PaymentService()
+                    payment_data = payment_service.create_payment_intent(payment_amount)
+                    
+                    if 'error' in payment_data:
+                        st.error(f"Payment Error: {payment_data['error']}")
+                        return None
+                    
+                    # Display payment link
+                    st.info("💳 Payment Required")
+                    st.write(f"Amount: ${payment_amount:.2f}")
+                    st.link_button("Complete Payment", payment_data['session_url'])
+                    
+                    # Store payment session ID for verification
+                    if 'payment_sessions' not in st.session_state:
+                        st.session_state.payment_sessions = {}
+                    st.session_state.payment_sessions[payment_data['session_id']] = {
+                        'amount': payment_amount,
+                        'form_data': form_data,
+                        'spreadsheet_id': spreadsheet_id,
+                        'sheet_name': sheet_name
+                    }
+                    return None
+            except ValueError:
+                logger.error(f"Invalid payment amount: {form_data['Pay']}")
+                st.error("Invalid payment amount specified")
+                return None
         """Handle the form submission process with proper error handling."""
         logger.info("=" * 80)
         logger.info("FORM SUBMISSION HANDLER")
