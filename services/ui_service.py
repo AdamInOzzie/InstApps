@@ -72,21 +72,33 @@ class UIService:
             payment_status = payment_service.get_payment_status(session_id)
             
             if payment_status.get('status') == 'succeeded':
+                # Initialize GoogleSheetsClient
+                from utils.google_sheets import GoogleSheetsClient
+                client = GoogleSheetsClient()
+                
                 # Update the Paid field in the spreadsheet directly
-                from services.spreadsheet_service import SpreadsheetService
                 cell_updates = [session_data['row_number'], 8, f"STRIPE_{session_id}"]  # Column H is 8
                 
-                update_success = SpreadsheetService.UpdateEntryCells(
-                    spreadsheet_id=session_data['spreadsheet_id'],
-                    sheet_name=session_data['sheet_name'],
-                    cell_updates=cell_updates
-                )
-                
-                if update_success:
-                    st.success("✅ Payment verified and entry updated successfully!")
-                    # Clean up session data
-                    del st.session_state.payment_sessions[session_id]
-                    return True
+                try:
+                    update_success = SpreadsheetService.UpdateEntryCells(
+                        spreadsheet_id=session_data['spreadsheet_id'],
+                        sheet_name=session_data['sheet_name'],
+                        cell_updates=cell_updates
+                    )
+                    
+                    if update_success:
+                        logger.info(f"Successfully updated spreadsheet for session {session_id}")
+                        st.success("✅ Payment verified and entry updated successfully!")
+                        # Clean up session data
+                        del st.session_state.payment_sessions[session_id]
+                        st.rerun()
+                        return True
+                    else:
+                        logger.error("Failed to update spreadsheet")
+                        st.error("Failed to update spreadsheet")
+                except Exception as e:
+                    logger.error(f"Error updating spreadsheet: {str(e)}")
+                    st.error(f"Error updating spreadsheet: {str(e)}")
                     
             else:
                 st.error("Payment verification failed")
