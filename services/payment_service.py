@@ -179,12 +179,18 @@ class PaymentService:
             Dict containing payment status and details
         """
         try:
+            # Ensure Stripe API key is configured
+            stripe.api_key = self.secret_key
+            
             session = stripe.checkout.Session.retrieve(session_id)
             payment_status = session.payment_status
+            logger.info(f"Payment status for session {session_id}: {payment_status}")
+            
             return {
                 'status': 'succeeded' if payment_status == 'paid' else payment_status,
                 'amount': session.amount_total / 100,  # Convert cents to dollars
                 'currency': session.currency
             }
         except stripe.error.StripeError as e:
+            logger.error(f"Stripe error checking payment status: {str(e)}")
             return {'error': str(e)}
