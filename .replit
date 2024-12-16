@@ -27,8 +27,9 @@ task = "packager.installForAll"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "pkill -f streamlit || true && streamlit run main.py --server.address 0.0.0.0 --server.port 5000"
+args = "pkill -f streamlit || true && sleep 2 && streamlit run main.py --server.address 0.0.0.0 --server.port 5000"
 waitForPort = 5000
+restartAfterChanges = true
 
 [deployment]
 run = ["sh", "-c", "streamlit run main.py --server.address 0.0.0.0 --server.port 5000"]
