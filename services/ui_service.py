@@ -118,7 +118,7 @@ class UIService:
                         st.info(f"Payment Amount: ${session_data['amount']:.2f}")
                         st.text(f"Session ID: {session_id}")
                         
-                        # Update sheet with payment info
+                        # Update sheet with payment info using session data
                         from services.spreadsheet_service import SpreadsheetService
                         cell_updates = [session_data['row_number'], 8, f"STRIPE_{session_id}"]
                         update_success = SpreadsheetService.UpdateEntryCells(
@@ -128,11 +128,16 @@ class UIService:
                         )
                         if update_success:
                             st.success("✅ Payment recorded in sheet")
+                            # Only remove session data after successful update
                             del st.session_state.payment_sessions[session_id]
+                            # Rerun to clear URL parameters
+                            st.rerun()
                     else:
                         st.warning("Payment verification pending...")
+                        st.text(f"Current status: {payment_status.get('status', 'unknown')}")
                 else:
                     st.warning("Payment session data not found. This might be a duplicate callback.")
+                    st.text(f"Looking for session ID: {session_id}")
                 st.divider()
         
         with st.sidebar:
