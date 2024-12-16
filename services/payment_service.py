@@ -154,19 +154,20 @@ class PaymentService:
                 'metadata': session.metadata
             }
             
-            # Store payment session data in Streamlit session state
-            if not hasattr(st, 'session_state'):
-                st.session_state = {}
-            if 'payment_sessions' not in st.session_state:
-                st.session_state.payment_sessions = {}
-            
-            # Store session data with metadata
-            st.session_state.payment_sessions[session.id] = {
-                'amount': amount,
-                'currency': currency,
-                'status': 'pending',
-                'sheet_id': session.metadata.get('sheet_id'),
-                'row_index': session.metadata.get('row_index')
+            # Return payment context with metadata
+            payment_context = {
+                'session_url': session.url,
+                'session_id': session.id,
+                'publishable_key': self.publishable_key,
+                'success_url': success_url,
+                'cancel_url': cancel_url,
+                'metadata': {
+                    'amount': amount,
+                    'currency': currency,
+                    'status': 'pending',
+                    'sheet_id': sheet_id,
+                    'row_index': row_index
+                }
             }
             
             return payment_context
