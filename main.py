@@ -389,12 +389,22 @@ def main():
     
     # Persist login state through payment callback
     if payment_status == "success" and session_id:
-        if 'payment_sessions' in st.session_state and session_id in st.session_state.payment_sessions:
-            payment_data = st.session_state.payment_sessions[session_id]
-            if 'username' in payment_data:
-                st.session_state.is_logged_in = True
-                st.session_state.username = payment_data['username']
-                st.session_state.selected_sheet = payment_data['selected_sheet']
+        # Display session information even before verification
+        st.info("Processing payment success callback...")
+        st.write("Session ID:", session_id)
+        
+        # Display session state data if available
+        if 'payment_sessions' in st.session_state:
+            st.write("Available payment sessions:", list(st.session_state.payment_sessions.keys()))
+            if session_id in st.session_state.payment_sessions:
+                payment_data = st.session_state.payment_sessions[session_id]
+                st.success("Found payment session data:")
+                st.json(payment_data)
+                
+                if 'username' in payment_data:
+                    st.session_state.is_logged_in = True
+                    st.session_state.username = payment_data['username']
+                    st.session_state.selected_sheet = payment_data['selected_sheet']
 
         try:
             # Initialize Stripe with the secret key
