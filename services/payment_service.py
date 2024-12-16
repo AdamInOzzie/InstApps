@@ -165,22 +165,23 @@ class PaymentService:
                 'details': str(e)
             }
 
-    def get_payment_status(self, payment_intent_id: str) -> Dict[str, Any]:
+    def get_payment_status(self, session_id: str) -> Dict[str, Any]:
         """
-        Get the status of a payment intent
+        Get the status of a checkout session
         
         Args:
-            payment_intent_id: The ID of the payment intent to check
+            session_id: The ID of the checkout session to check
             
         Returns:
             Dict containing payment status and details
         """
         try:
-            intent = stripe.PaymentIntent.retrieve(payment_intent_id)
+            session = stripe.checkout.Session.retrieve(session_id)
+            payment_status = session.payment_status
             return {
-                'status': intent.status,
-                'amount': intent.amount / 100,  # Convert cents to dollars
-                'currency': intent.currency
+                'status': 'succeeded' if payment_status == 'paid' else payment_status,
+                'amount': session.amount_total / 100,  # Convert cents to dollars
+                'currency': session.currency
             }
         except stripe.error.StripeError as e:
             return {'error': str(e)}
