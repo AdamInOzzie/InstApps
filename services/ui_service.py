@@ -92,8 +92,6 @@ class UIService:
             st.error(f"Error processing payment: {str(e)}")
             return False
 
-            logger.error(f"Error formatting output value: {str(e)}")
-            return value_str
 
     @staticmethod
     def display_admin_sidebar(status: Dict[str, Any]):
@@ -315,10 +313,10 @@ class UIService:
                             'selected_sheet': st.session_state.get('selected_sheet')
                         }
                         return None
-            except ValueError:
-                logger.error(f"Invalid payment amount: {form_data['Price']}")
-                st.error("Invalid payment amount specified")
-                return None
+                except ValueError:
+                    logger.error(f"Invalid payment amount: {form_data['Price']}")
+                    st.error("Invalid payment amount specified")
+                    return None
                 
         except Exception as e:
             logger.error(f"Error in form submission: {str(e)}")
