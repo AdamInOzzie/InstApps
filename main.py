@@ -387,7 +387,15 @@ def main():
     payment_status = st.query_params.get("payment")
     session_id = st.query_params.get("session_id")
     
+    # Persist login state through payment callback
     if payment_status == "success" and session_id:
+        if 'payment_sessions' in st.session_state and session_id in st.session_state.payment_sessions:
+            payment_data = st.session_state.payment_sessions[session_id]
+            if 'username' in payment_data:
+                st.session_state.is_logged_in = True
+                st.session_state.username = payment_data['username']
+                st.session_state.selected_sheet = payment_data['selected_sheet']
+
         try:
             # Initialize Stripe with the secret key
             stripe_key = os.getenv('STRIPE_SECRET_KEY')

@@ -266,7 +266,9 @@ class UIService:
                         'amount': payment_amount,
                         'form_data': form_data,
                         'spreadsheet_id': spreadsheet_id,
-                        'sheet_name': sheet_name
+                        'sheet_name': sheet_name,
+                        'username': st.session_state.get('username'),
+                        'selected_sheet': st.session_state.get('selected_sheet')
                     }
                     return None
             except ValueError:
