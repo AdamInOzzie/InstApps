@@ -142,7 +142,10 @@ class PaymentService:
                 'session_id': session.id,
                 'publishable_key': self.publishable_key,
                 'success_url': success_url,
-                'cancel_url': cancel_url
+                'cancel_url': cancel_url,
+                'payment_status': session.payment_status,
+                'payment_intent': session.payment_intent,
+                'amount': amount_cents / 100.0  # Convert back to dollars for display
             }
         except stripe.error.StripeError as e:
             error_msg = f"Stripe API error: {str(e)}"
