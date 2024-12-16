@@ -47,6 +47,8 @@ class UIService:
             return original_value
             
         except Exception as e:
+            logger.error(f"Error formatting output value: {str(e)}")
+            return value_str
 
     @staticmethod
     def verify_payment_and_submit(session_id: str, sheets_client) -> bool:
