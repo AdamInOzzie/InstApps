@@ -106,12 +106,18 @@ class UIService:
             if st.query_params.get('payment') == 'success':
                 session_id = st.query_params.get('session_id')
                 st.markdown("### 💳 Payment Status")
+                logger.info(f"Processing payment callback for session: {session_id}")
+                logger.info(f"Session state contents: {st.session_state}")
+                
                 if 'payment_sessions' in st.session_state and session_id in st.session_state.payment_sessions:
                     session_data = st.session_state.payment_sessions[session_id]
+                    logger.info(f"Found session data: {session_data}")
+                    
                     # Verify payment with Stripe
                     from services.payment_service import PaymentService
                     payment_service = PaymentService()
                     payment_status = payment_service.get_payment_status(session_id)
+                    logger.info(f"Payment status from Stripe: {payment_status}")
                     
                     if payment_status.get('status') == 'succeeded':
                         st.success("✅ Payment completed successfully!")
