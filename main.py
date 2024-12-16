@@ -1,5 +1,7 @@
 """Main application file for the Streamlit web application."""
 import streamlit as st
+import stripe
+from stripe.error import StripeError, InvalidRequestError
 
 # Configure page with improved layout settings (must be first Streamlit command)
 st.set_page_config(
@@ -381,31 +383,51 @@ def main():
     if payment_status == "success" and session_id:
         try:
             # Initialize Stripe with the secret key
-            stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
+            stripe_key = os.getenv('STRIPE_SECRET_KEY')
+            if not stripe_key:
+                logger.error("Stripe secret key is missing")
+                st.error("⚠️ Payment verification failed: Missing Stripe configuration")
+                return
+
+            stripe.api_key = stripe_key
             
-            # Verify the payment session
-            session = stripe.checkout.Session.retrieve(session_id)
-            if session.payment_status == "paid":
-                st.success("✅ Payment completed successfully! Thank you for your payment.")
-                logger.info(f"Successful payment for session: {session_id}")
-                
-                # Clear the success parameters after showing the message
-                if 'query_params' in st.session_state:
-                    st.session_state.query_params.pop('payment', None)
-                    st.session_state.query_params.pop('session_id', None)
+            try:
+                # Verify the payment session
+                session = stripe.checkout.Session.retrieve(session_id)
+                if session.payment_status == "paid":
+                    st.success("✅ Payment completed successfully! Thank you for your payment.")
+                    logger.info(f"Successful payment for session: {session_id}")
                     
-            elif session.payment_status == "unpaid":
-                st.warning("⏳ Payment is being processed. Please wait a moment.")
-                logger.warning(f"Payment pending for session: {session_id}")
-            else:
-                st.warning(f"Payment status: {session.payment_status}")
-                logger.warning(f"Unexpected payment status for session {session_id}: {session.payment_status}")
-        except stripe.error.StripeError as e:
-            logger.error(f"Stripe error verifying payment: {str(e)}")
-            st.error(f"Payment verification failed: {e.user_message if hasattr(e, 'user_message') else str(e)}")
+                    # Clear the success parameters after showing the message
+                    if 'query_params' in st.session_state:
+                        st.session_state.query_params.pop('payment', None)
+                        st.session_state.query_params.pop('session_id', None)
+                        
+                elif session.payment_status == "unpaid":
+                    st.warning("⏳ Payment is being processed. Please wait a moment.")
+                    logger.warning(f"Payment pending for session: {session_id}")
+                else:
+                    st.warning(f"Payment status: {session.payment_status}")
+                    logger.warning(f"Unexpected payment status for session {session_id}: {session.payment_status}")
+                    
+            except InvalidRequestError as e:
+                logger.error(f"Invalid Stripe session ID: {str(e)}")
+                st.error("⚠️ Invalid payment session. Please try again.")
+                return
+            except StripeError as e:
+                logger.error(f"Stripe error verifying payment: {str(e)}")
+                st.error(f"⚠️ Payment verification failed: {e.user_message if hasattr(e, 'user_message') else str(e)}")
+                return
+            except Exception as e:
+                logger.error(f"Unexpected error during payment verification: {str(e)}")
+                logger.error(f"Full error details: {traceback.format_exc()}")
+                st.error("⚠️ An unexpected error occurred. Please try again or contact support.")
+                return
+                
         except Exception as e:
             logger.error(f"Error verifying payment session: {str(e)}")
-            st.error("Unable to verify payment status. Please try again or contact support.")
+            logger.error(f"Full error details: {traceback.format_exc()}")
+            st.error("⚠️ Unable to verify payment status. Please try again or contact support.")
     elif payment_status == "cancelled":
         st.warning("Payment was cancelled. You can try again when ready.")
         logger.info("Payment cancelled by user")
