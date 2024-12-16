@@ -239,9 +239,11 @@ class UIService:
         
         # Check if payment is required
         payment_amount = None
-        if 'Price' in form_data:
+        if 'Price' in form_data and 'QTY' in form_data:
             try:
-                payment_amount = float(form_data['Price'])
+                price = float(form_data['Price'])
+                qty = float(form_data['QTY'])
+                payment_amount = price * qty
                 if payment_amount > 0:
                     # Create payment intent using PaymentService
                     from services.payment_service import PaymentService
