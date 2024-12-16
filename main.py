@@ -1,4 +1,50 @@
 """Main application file for the Streamlit web application."""
+import os
+import logging
+import streamlit as st
+from datetime import datetime
+import time
+import traceback
+import pandas as pd
+from dotenv import load_dotenv
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Load environment variables
+load_dotenv()
+
+# Handle payment status from URL parameters
+payment_status = st.query_params.get("payment")
+session_id = st.query_params.get("session_id")
+
+if payment_status == "success" and session_id:
+    try:
+        st.success("✅ Payment Success!")
+        st.write("Processing payment verification...")
+        
+        # Get payment status from Stripe
+        payment_result = st.session_state.payment_service.get_payment_status(session_id)
+        
+        if 'error' not in payment_result:
+            st.json(payment_result)
+            if payment_result['status'] == 'succeeded':
+                st.success(f"Payment confirmed! Amount: ${payment_result['amount']:.2f}")
+                
+                # Display session data if available
+                if 'payment_sessions' in st.session_state and session_id in st.session_state.payment_sessions:
+                    session_data = st.session_state.payment_sessions[session_id]
+                    st.write("Payment Details:")
+                    st.json(session_data)
+                else:
+                    st.warning("Session data not found. This might be a page refresh.")
+        else:
+            st.error(f"Payment verification failed: {payment_result['error']}")
+    except Exception as e:
+        st.error(f"Error processing payment callback: {str(e)}")
+        logger.error(f"Payment callback error: {str(e)}")
+        logger.error(traceback.format_exc())
 import streamlit as st
 import stripe
 from stripe.error import (
@@ -580,6 +626,35 @@ def main():
                         value=10.0, 
                         step=0.5,
                         key='admin_payment_amount'
+                        if st.button("Process Payment", key='admin_process_payment'):
+                            try:
+                                # Create payment intent
+                                payment_data = st.session_state.payment_service.create_payment_intent(payment_amount)
+                                
+                                if 'error' in payment_data:
+                                    st.error(f"Payment Error: {payment_data['error']}")
+                                else:
+                                    # Initialize payment sessions if not exists
+                                    if 'payment_sessions' not in st.session_state:
+                                        st.session_state.payment_sessions = {}
+                                    
+                                    # Store payment data in session state
+                                    st.session_state.payment_sessions[payment_data['session_id']] = {
+                                        'amount': payment_amount,
+                                        'session_id': payment_data['session_id'],
+                                        'status': 'pending',
+                                        'created_at': datetime.now().isoformat()
+                                    }
+                                    
+                                    # Show payment success message
+                                    st.success(
+                                        f"Payment session created successfully!\n\n"
+                                        f"Amount: ${payment_amount:.2f}"
+                                    )
+                                    
+                                    # Show Stripe Checkout link
+                                    st.markdown(f"[Complete Payment on Stripe]({payment_data['session_url']})")
+                                    logger.info(f"Created payment session {payment_data['session_id']}")
                     )
                     
                     if st.button("Process Payment", key='admin_process_payment'):
