@@ -158,8 +158,12 @@ if 'query_params' not in st.session_state:
         'healthcheck': "healthcheck" in st.query_params
     }
 
-# Control sidebar visibility
-show_sidebar = st.session_state.query_params['admin'] or st.session_state.query_params['healthcheck']
+# Control sidebar visibility for admin, healthcheck, and successful payments
+show_sidebar = (
+    st.session_state.query_params['admin'] or 
+    st.session_state.query_params['healthcheck'] or
+    ('payment' in st.query_params and st.query_params.get('payment') == 'success')
+)
 
 # Apply sidebar visibility CSS
 if not show_sidebar:
