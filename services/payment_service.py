@@ -79,7 +79,7 @@ class PaymentService:
             logger.error(f"Failed to initialize PaymentService: {str(e)}")
             raise
 
-    def create_payment_intent(self, amount: float, currency: str = 'usd', sheet_id: str = None, row_index: int = None) -> Dict[str, Any]:
+    def create_payment_intent(self, amount: float, currency: str = 'usd') -> Dict[str, Any]:
         """
         Create a Stripe Checkout session for the specified amount
         
@@ -115,13 +115,6 @@ class PaymentService:
             logger.info(f"Cancel URL: {cancel_url}")
             
             # Create Stripe Checkout session
-            # Prepare metadata
-            metadata = {}
-            if sheet_id:
-                metadata['sheet_id'] = sheet_id
-            if row_index is not None:
-                metadata['row_index'] = str(row_index)  # Convert to string for Stripe metadata
-                
             session = stripe.checkout.Session.create(
                 payment_method_types=['card'],
                 line_items=[{
@@ -138,39 +131,19 @@ class PaymentService:
                 mode='payment',
                 success_url=success_url,
                 cancel_url=cancel_url,
-                metadata=metadata
             )
             
             # Log the URLs for debugging
             logger.info(f"Generated success URL: {success_url}")
             logger.info(f"Generated cancel URL: {cancel_url}")
             
-            payment_context = {
+            return {
                 'session_url': session.url,
                 'session_id': session.id,
                 'publishable_key': self.publishable_key,
                 'success_url': success_url,
-                'cancel_url': cancel_url,
-                'metadata': session.metadata
+                'cancel_url': cancel_url
             }
-            
-            # Return payment context with metadata
-            payment_context = {
-                'session_url': session.url,
-                'session_id': session.id,
-                'publishable_key': self.publishable_key,
-                'success_url': success_url,
-                'cancel_url': cancel_url,
-                'metadata': {
-                    'amount': amount,
-                    'currency': currency,
-                    'status': 'pending',
-                    'sheet_id': sheet_id,
-                    'row_index': row_index
-                }
-            }
-            
-            return payment_context
         except stripe.error.StripeError as e:
             error_msg = f"Stripe API error: {str(e)}"
             logger.error(error_msg)

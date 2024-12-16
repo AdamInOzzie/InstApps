@@ -1,50 +1,4 @@
 """Main application file for the Streamlit web application."""
-import os
-import logging
-import streamlit as st
-from datetime import datetime
-import time
-import traceback
-import pandas as pd
-from dotenv import load_dotenv
-
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-# Load environment variables
-load_dotenv()
-
-# Handle payment status from URL parameters
-payment_status = st.query_params.get("payment")
-session_id = st.query_params.get("session_id")
-
-if payment_status == "success" and session_id:
-    try:
-        st.success("✅ Payment Success!")
-        st.write("Processing payment verification...")
-        
-        # Get payment status from Stripe
-        payment_result = st.session_state.payment_service.get_payment_status(session_id)
-        
-        if 'error' not in payment_result:
-            st.json(payment_result)
-            if payment_result['status'] == 'succeeded':
-                st.success(f"Payment confirmed! Amount: ${payment_result['amount']:.2f}")
-                
-                # Display session data if available
-                if 'payment_sessions' in st.session_state and session_id in st.session_state.payment_sessions:
-                    session_data = st.session_state.payment_sessions[session_id]
-                    st.write("Payment Details:")
-                    st.json(session_data)
-                else:
-                    st.warning("Session data not found. This might be a page refresh.")
-        else:
-            st.error(f"Payment verification failed: {payment_result['error']}")
-    except Exception as e:
-        st.error(f"Error processing payment callback: {str(e)}")
-        logger.error(f"Payment callback error: {str(e)}")
-        logger.error(traceback.format_exc())
 import streamlit as st
 import stripe
 from stripe.error import (
@@ -435,22 +389,12 @@ def main():
     
     # Persist login state through payment callback
     if payment_status == "success" and session_id:
-        # Display session information even before verification
-        st.info("Processing payment success callback...")
-        st.write("Session ID:", session_id)
-        
-        # Display session state data if available
-        if 'payment_sessions' in st.session_state:
-            st.write("Available payment sessions:", list(st.session_state.payment_sessions.keys()))
-            if session_id in st.session_state.payment_sessions:
-                payment_data = st.session_state.payment_sessions[session_id]
-                st.success("Found payment session data:")
-                st.json(payment_data)
-                
-                if 'username' in payment_data:
-                    st.session_state.is_logged_in = True
-                    st.session_state.username = payment_data['username']
-                    st.session_state.selected_sheet = payment_data['selected_sheet']
+        if 'payment_sessions' in st.session_state and session_id in st.session_state.payment_sessions:
+            payment_data = st.session_state.payment_sessions[session_id]
+            if 'username' in payment_data:
+                st.session_state.is_logged_in = True
+                st.session_state.username = payment_data['username']
+                st.session_state.selected_sheet = payment_data['selected_sheet']
 
         try:
             # Initialize Stripe with the secret key
@@ -476,62 +420,13 @@ def main():
                         logger.info(f"Payment status: {session.payment_status}")
                         
                         if session.payment_status == "paid":
-                            # Get payment session data
-                            payment_data = st.session_state.payment_sessions.get(session_id, {})
-                            sheet_id = payment_data.get('sheet_id') or session.metadata.get('sheet_id')
-                            row_index = payment_data.get('row_index') or session.metadata.get('row_index')
-                            
-                            if sheet_id and row_index:
-                                try:
-                                    # Get sheet name from metadata
-                                    sheet_name = None
-                                    for sheet in st.session_state.spreadsheets:
-                                        if sheet['id'] == sheet_id:
-                                            sheet_name = sheet['name']
-                                            break
-                                    
-                                    # Update the sheet with Stripe session ID
-                                    sheet_data = st.session_state.spreadsheet_service.read_sheet_data(sheet_id, 'Responses')
-                                    if not sheet_data.empty and int(row_index) < len(sheet_data):
-                                        # Add Stripe session ID to the row
-                                        sheet_data.at[int(row_index), 'Stripe_Session_ID'] = session_id
-                                        st.session_state.spreadsheet_service.update_sheet_data(sheet_id, 'Responses', sheet_data)
-                                        
-                                        st.success("✅ Payment completed successfully!")
-                                        st.markdown("### Payment Details")
-                                        
-                                        details = {
-                                            'Sheet Name': sheet_name or 'Unknown',
-                                            'Sheet ID': sheet_id,
-                                            'Row Index': row_index,
-                                            'Stripe Session ID': session_id,
-                                            'Amount': f"${session.amount_total/100:.2f}",
-                                            'Status': 'Paid and Sheet Updated'
-                                        }
-                                        
-                                        # Display details in a more readable format
-                                        for key, value in details.items():
-                                            st.markdown(f"**{key}:** {value}")
-                                            
-                                        # Show the actual row data
-                                        if not sheet_data.empty:
-                                            st.markdown("### Row Data")
-                                            row_data = sheet_data.iloc[int(row_index)]
-                                            st.dataframe(row_data.to_frame().T)
-                                            
-                                except Exception as sheet_error:
-                                    logger.error(f"Error updating sheet: {str(sheet_error)}")
-                                    st.error(f"⚠️ Error updating sheet: {str(sheet_error)}")
-                                    st.warning("Payment successful, but sheet update failed. Please contact support.")
-                            else:
-                                st.success("✅ Payment completed successfully!")
-                                st.warning("""Sheet information not found in session state. 
-                                Available metadata:
-                                - Session ID: {}
-                                - Metadata: {}
-                                """.format(session_id, session.metadata))
-                            
+                            st.success("✅ Payment completed successfully! Thank you for your payment.")
                             logger.info(f"Successful payment for session: {session_id}")
+                            
+                            # Clear the success parameters after showing the message
+                            if 'query_params' in st.session_state:
+                                st.session_state.query_params.pop('payment', None)
+                                st.session_state.query_params.pop('session_id', None)
                             break
                             
                         elif session.payment_status == "unpaid":
@@ -626,35 +521,6 @@ def main():
                         value=10.0, 
                         step=0.5,
                         key='admin_payment_amount'
-                        if st.button("Process Payment", key='admin_process_payment'):
-                            try:
-                                # Create payment intent
-                                payment_data = st.session_state.payment_service.create_payment_intent(payment_amount)
-                                
-                                if 'error' in payment_data:
-                                    st.error(f"Payment Error: {payment_data['error']}")
-                                else:
-                                    # Initialize payment sessions if not exists
-                                    if 'payment_sessions' not in st.session_state:
-                                        st.session_state.payment_sessions = {}
-                                    
-                                    # Store payment data in session state
-                                    st.session_state.payment_sessions[payment_data['session_id']] = {
-                                        'amount': payment_amount,
-                                        'session_id': payment_data['session_id'],
-                                        'status': 'pending',
-                                        'created_at': datetime.now().isoformat()
-                                    }
-                                    
-                                    # Show payment success message
-                                    st.success(
-                                        f"Payment session created successfully!\n\n"
-                                        f"Amount: ${payment_amount:.2f}"
-                                    )
-                                    
-                                    # Show Stripe Checkout link
-                                    st.markdown(f"[Complete Payment on Stripe]({payment_data['session_url']})")
-                                    logger.info(f"Created payment session {payment_data['session_id']}")
                     )
                     
                     if st.button("Process Payment", key='admin_process_payment'):

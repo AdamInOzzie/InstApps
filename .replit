@@ -27,16 +27,12 @@ task = "packager.installForAll"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "streamlit run main.py"
-waitForPort = 8501
+args = "streamlit run main.py --server.address 0.0.0.0 --server.port 5000"
+waitForPort = 5000
 
 [deployment]
-run = ["sh", "-c", "streamlit run main.py"]
+run = ["sh", "-c", "streamlit run main.py --server.address 0.0.0.0 --server.port 5000"]
 deploymentTarget = "gce"
-
-[[ports]]
-localPort = 80
-externalPort = 3001
 
 [[ports]]
 localPort = 5000

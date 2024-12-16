@@ -55,20 +55,10 @@ class UIService:
         """Verify payment and submit form if successful."""
         try:
             if 'payment_sessions' not in st.session_state or session_id not in st.session_state.payment_sessions:
-                st.error("Payment session not found in state")
-                logger.error(f"Payment session {session_id} not found in session state")
+                st.error("Payment session not found")
                 return False
                 
             session_data = st.session_state.payment_sessions[session_id]
-            
-            # Display session information
-            st.info("💳 Payment Session Information")
-            st.json({
-                "Sheet Name": session_data['sheet_name'],
-                "Row Number": session_data['row_number'],
-                "Stripe Session ID": session_id,
-                "Amount": session_data['amount']
-            })
             
             # Restore session state
             if 'username' in session_data:
@@ -84,11 +74,7 @@ class UIService:
             if payment_status.get('status') == 'succeeded':
                 # Update the Paid field in the spreadsheet directly
                 from services.spreadsheet_service import SpreadsheetService
-                stripe_id = f"STRIPE_{session_id}"
-                cell_updates = [session_data['row_number'], 8, stripe_id]  # Column H is 8
-                
-                # Display payment verification success
-                st.success(f"✅ Payment verified! Amount: ${payment_status.get('amount', 0):.2f}")
+                cell_updates = [session_data['row_number'], 8, f"STRIPE_{session_id}"]  # Column H is 8
                 
                 update_success = SpreadsheetService.UpdateEntryCells(
                     spreadsheet_id=session_data['spreadsheet_id'],
@@ -97,18 +83,13 @@ class UIService:
                 )
                 
                 if update_success:
-                    st.success(f"✅ Sheet updated successfully!")
-                    st.write(f"Updated row {session_data['row_number']} in sheet '{session_data['sheet_name']}'")
-                    st.write(f"Stripe ID: {stripe_id}")
-                    
+                    st.success("✅ Payment verified and entry updated successfully!")
                     # Clean up session data
                     del st.session_state.payment_sessions[session_id]
                     return True
-                else:
-                    st.error("Failed to update spreadsheet with payment information")
-                    return False
+                    
             else:
-                st.error(f"Payment verification failed. Status: {payment_status.get('status', 'unknown')}")
+                st.error("Payment verification failed")
                 return False
                 
         except Exception as e:
