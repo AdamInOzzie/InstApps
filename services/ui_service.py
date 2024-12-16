@@ -60,25 +60,30 @@ class UIService:
                 
             session_data = st.session_state.payment_sessions[session_id]
             
+            # Restore session state
+            if 'username' in session_data:
+                st.session_state.is_logged_in = True
+                st.session_state.username = session_data['username']
+                st.session_state.selected_sheet = session_data['selected_sheet']
+            
             # Verify payment with Stripe
             from services.payment_service import PaymentService
             payment_service = PaymentService()
             payment_status = payment_service.get_payment_status(session_id)
             
             if payment_status.get('status') == 'succeeded':
-                # Update form data with payment information
-                session_data['form_data']['Paid'] = f"STRIPE_{session_id}"
+                # Update the Paid field in the spreadsheet directly
+                from services.spreadsheet_service import SpreadsheetService
+                cell_updates = [session_data['row_number'], 8, f"STRIPE_{session_id}"]  # Column H is 8
                 
-                # Process form submission
-                result = UIService._handle_form_submission(
-                    session_data['spreadsheet_id'],
-                    session_data['sheet_name'],
-                    sheets_client,
-                    session_data['form_data']
+                update_success = SpreadsheetService.UpdateEntryCells(
+                    spreadsheet_id=session_data['spreadsheet_id'],
+                    sheet_name=session_data['sheet_name'],
+                    cell_updates=cell_updates
                 )
                 
-                if result:
-                    st.success("✅ Payment verified and form submitted successfully!")
+                if update_success:
+                    st.success("✅ Payment verified and entry updated successfully!")
                     # Clean up session data
                     del st.session_state.payment_sessions[session_id]
                     return True
