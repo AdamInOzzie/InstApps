@@ -1,7 +1,14 @@
 """Main application file for the Streamlit web application."""
 import streamlit as st
 import stripe
-from stripe.error import StripeError, InvalidRequestError
+from stripe.error import (
+    StripeError,
+    InvalidRequestError,
+    APIConnectionError,
+    APIError,
+    AuthenticationError,
+    CardError,
+)
 
 # Configure page with improved layout settings (must be first Streamlit command)
 st.set_page_config(
@@ -392,32 +399,72 @@ def main():
             stripe.api_key = stripe_key
             
             try:
-                # Verify the payment session
-                session = stripe.checkout.Session.retrieve(session_id)
-                if session.payment_status == "paid":
-                    st.success("✅ Payment completed successfully! Thank you for your payment.")
-                    logger.info(f"Successful payment for session: {session_id}")
-                    
-                    # Clear the success parameters after showing the message
-                    if 'query_params' in st.session_state:
-                        st.session_state.query_params.pop('payment', None)
-                        st.session_state.query_params.pop('session_id', None)
+                logger.info(f"Starting payment verification for session: {session_id}")
+                # Initialize Stripe with retry logic
+                max_retries = 3
+                retry_count = 0
+                
+                while retry_count < max_retries:
+                    try:
+                        # Verify the payment session
+                        session = stripe.checkout.Session.retrieve(session_id)
+                        logger.info(f"Successfully retrieved session {session_id}")
+                        logger.info(f"Payment status: {session.payment_status}")
                         
-                elif session.payment_status == "unpaid":
-                    st.warning("⏳ Payment is being processed. Please wait a moment.")
-                    logger.warning(f"Payment pending for session: {session_id}")
-                else:
-                    st.warning(f"Payment status: {session.payment_status}")
-                    logger.warning(f"Unexpected payment status for session {session_id}: {session.payment_status}")
+                        if session.payment_status == "paid":
+                            st.success("✅ Payment completed successfully! Thank you for your payment.")
+                            logger.info(f"Successful payment for session: {session_id}")
+                            
+                            # Clear the success parameters after showing the message
+                            if 'query_params' in st.session_state:
+                                st.session_state.query_params.pop('payment', None)
+                                st.session_state.query_params.pop('session_id', None)
+                            break
+                            
+                        elif session.payment_status == "unpaid":
+                            st.warning("⏳ Payment is being processed. Please wait a moment.")
+                            logger.warning(f"Payment pending for session: {session_id}")
+                            break
+                        else:
+                            st.warning(f"Payment status: {session.payment_status}")
+                            logger.warning(f"Unexpected payment status for session {session_id}: {session.payment_status}")
+                            break
+                            
+                    except APIConnectionError as e:
+                        retry_count += 1
+                        if retry_count < max_retries:
+                            logger.warning(f"Connection error, attempt {retry_count} of {max_retries}: {str(e)}")
+                            time.sleep(1 * retry_count)  # Exponential backoff
+                            continue
+                        logger.error(f"Failed to connect to Stripe after {max_retries} attempts: {str(e)}")
+                        st.error("⚠️ Unable to verify payment status. Please refresh the page or try again later.")
+                        return
+                        
+                    except APIError as e:
+                        logger.error(f"Stripe API error: {str(e)}")
+                        st.error("⚠️ Unable to process payment verification. Please try again later.")
+                        return
                     
             except InvalidRequestError as e:
                 logger.error(f"Invalid Stripe session ID: {str(e)}")
                 st.error("⚠️ Invalid payment session. Please try again.")
                 return
+                
+            except AuthenticationError as e:
+                logger.error(f"Stripe authentication error: {str(e)}")
+                st.error("⚠️ Payment verification failed due to authentication error.")
+                return
+                
+            except CardError as e:
+                logger.error(f"Card error: {str(e)}")
+                st.error(f"⚠️ Card error: {e.user_message if hasattr(e, 'user_message') else str(e)}")
+                return
+                
             except StripeError as e:
                 logger.error(f"Stripe error verifying payment: {str(e)}")
                 st.error(f"⚠️ Payment verification failed: {e.user_message if hasattr(e, 'user_message') else str(e)}")
                 return
+                
             except Exception as e:
                 logger.error(f"Unexpected error during payment verification: {str(e)}")
                 logger.error(f"Full error details: {traceback.format_exc()}")
