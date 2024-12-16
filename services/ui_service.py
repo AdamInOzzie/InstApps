@@ -270,10 +270,10 @@ class UIService:
                     }
                     return None
             except ValueError:
-                logger.error(f"Invalid payment amount: {form_data['Pay']}")
+                logger.error(f"Invalid payment amount: {form_data['Price']}")
                 st.error("Invalid payment amount specified")
                 return None
-        """Handle the form submission process with proper error handling."""
+                
         logger.info("=" * 80)
         logger.info("FORM SUBMISSION HANDLER")
         logger.info("=" * 80)
