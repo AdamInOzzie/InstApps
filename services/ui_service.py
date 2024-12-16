@@ -102,6 +102,16 @@ class UIService:
     def display_admin_sidebar(status: Dict[str, Any]):
         """Display admin-only information in the sidebar."""
         with st.sidebar:
+            # Check for payment success in URL
+            if 'payment' in st.query_params and 'session_id' in st.query_params:
+                if st.query_params.get('payment') == 'success':
+                    session_id = st.query_params.get('session_id')
+                    if 'payment_sessions' in st.session_state and session_id in st.session_state.payment_sessions:
+                        session_data = st.session_state.payment_sessions[session_id]
+                        st.markdown("### 💳 Payment Info")
+                        st.info(f"Amount: ${session_data['amount']:.2f}")
+                        st.text(f"Session ID: {session_id}")
+                        
             st.subheader("Admin Dashboard")
             
             # Add API Debug section when admin mode is active
