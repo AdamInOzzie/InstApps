@@ -420,13 +420,62 @@ def main():
                         logger.info(f"Payment status: {session.payment_status}")
                         
                         if session.payment_status == "paid":
-                            st.success("✅ Payment completed successfully! Thank you for your payment.")
-                            logger.info(f"Successful payment for session: {session_id}")
+                            # Get payment session data
+                            payment_data = st.session_state.payment_sessions.get(session_id, {})
+                            sheet_id = payment_data.get('sheet_id') or session.metadata.get('sheet_id')
+                            row_index = payment_data.get('row_index') or session.metadata.get('row_index')
                             
-                            # Clear the success parameters after showing the message
-                            if 'query_params' in st.session_state:
-                                st.session_state.query_params.pop('payment', None)
-                                st.session_state.query_params.pop('session_id', None)
+                            if sheet_id and row_index:
+                                try:
+                                    # Get sheet name from metadata
+                                    sheet_name = None
+                                    for sheet in st.session_state.spreadsheets:
+                                        if sheet['id'] == sheet_id:
+                                            sheet_name = sheet['name']
+                                            break
+                                    
+                                    # Update the sheet with Stripe session ID
+                                    sheet_data = st.session_state.spreadsheet_service.read_sheet_data(sheet_id, 'Responses')
+                                    if not sheet_data.empty and int(row_index) < len(sheet_data):
+                                        # Add Stripe session ID to the row
+                                        sheet_data.at[int(row_index), 'Stripe_Session_ID'] = session_id
+                                        st.session_state.spreadsheet_service.update_sheet_data(sheet_id, 'Responses', sheet_data)
+                                        
+                                        st.success("✅ Payment completed successfully!")
+                                        st.markdown("### Payment Details")
+                                        
+                                        details = {
+                                            'Sheet Name': sheet_name or 'Unknown',
+                                            'Sheet ID': sheet_id,
+                                            'Row Index': row_index,
+                                            'Stripe Session ID': session_id,
+                                            'Amount': f"${session.amount_total/100:.2f}",
+                                            'Status': 'Paid and Sheet Updated'
+                                        }
+                                        
+                                        # Display details in a more readable format
+                                        for key, value in details.items():
+                                            st.markdown(f"**{key}:** {value}")
+                                            
+                                        # Show the actual row data
+                                        if not sheet_data.empty:
+                                            st.markdown("### Row Data")
+                                            row_data = sheet_data.iloc[int(row_index)]
+                                            st.dataframe(row_data.to_frame().T)
+                                            
+                                except Exception as sheet_error:
+                                    logger.error(f"Error updating sheet: {str(sheet_error)}")
+                                    st.error(f"⚠️ Error updating sheet: {str(sheet_error)}")
+                                    st.warning("Payment successful, but sheet update failed. Please contact support.")
+                            else:
+                                st.success("✅ Payment completed successfully!")
+                                st.warning("""Sheet information not found in session state. 
+                                Available metadata:
+                                - Session ID: {}
+                                - Metadata: {}
+                                """.format(session_id, session.metadata))
+                            
+                            logger.info(f"Successful payment for session: {session_id}")
                             break
                             
                         elif session.payment_status == "unpaid":
