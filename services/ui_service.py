@@ -108,11 +108,29 @@ class UIService:
                 st.markdown("### 💳 Payment Status")
                 if 'payment_sessions' in st.session_state and session_id in st.session_state.payment_sessions:
                     session_data = st.session_state.payment_sessions[session_id]
-                    st.success("✅ Payment completed successfully!")
-                    st.info(f"Payment Amount: ${session_data['amount']:.2f}")
-                    st.text(f"Session ID: {session_id}")
-                    if 'payment_intent' in session_data:
-                        st.text(f"Payment Intent ID: {session_data['payment_intent']}")
+                    # Verify payment with Stripe
+                    from services.payment_service import PaymentService
+                    payment_service = PaymentService()
+                    payment_status = payment_service.get_payment_status(session_id)
+                    
+                    if payment_status.get('status') == 'succeeded':
+                        st.success("✅ Payment completed successfully!")
+                        st.info(f"Payment Amount: ${session_data['amount']:.2f}")
+                        st.text(f"Session ID: {session_id}")
+                        
+                        # Update sheet with payment info
+                        from services.spreadsheet_service import SpreadsheetService
+                        cell_updates = [session_data['row_number'], 8, f"STRIPE_{session_id}"]
+                        update_success = SpreadsheetService.UpdateEntryCells(
+                            spreadsheet_id=session_data['spreadsheet_id'],
+                            sheet_name=session_data['sheet_name'],
+                            cell_updates=cell_updates
+                        )
+                        if update_success:
+                            st.success("✅ Payment recorded in sheet")
+                            del st.session_state.payment_sessions[session_id]
+                    else:
+                        st.warning("Payment verification pending...")
                 else:
                     st.warning("Payment session data not found. This might be a duplicate callback.")
                 st.divider()
