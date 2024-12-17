@@ -140,7 +140,7 @@ class NewEntriesFormsService:
         field_values = {}
         
         try:
-            with st.form("entry_form"):
+            with st.form(key="entry_form"):
                 for field in form_fields:
                     if not field.is_formula:  # Only render non-formula fields
                         logger.info(f"Rendering field: {field.name} (column {field.column_letter}, index {field.column_index})")
@@ -160,8 +160,7 @@ class NewEntriesFormsService:
                 submitted = st.form_submit_button("Submit Entry")
                 if submitted:
                     return field_values
-                    
-            return field_values
+                return None
             
         except Exception as e:
             logger.error(f"Error rendering form: {str(e)}")
@@ -249,7 +248,7 @@ class NewEntriesFormsService:
             form_data = self.render_form(form_fields)
             
             # Handle form submission
-            if st.button("Submit Entry", type="primary"):
+            if form_data and st.button("Submit Entry", type="primary"): # Added check for form_data
                 return self.handle_form_submission(
                     spreadsheet_id=spreadsheet_id,
                     sheet_name=sheet_name,
