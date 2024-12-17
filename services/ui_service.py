@@ -76,13 +76,28 @@ class UIService:
                 from utils.google_sheets import GoogleSheetsClient
                 client = GoogleSheetsClient()
                 
+                # Log session data details
+                logger.info("="*80)
+                logger.info("SESSION DATA DETAILS")
+                logger.info(f"Row Number: {session_data['row_number']}")
+                logger.info(f"Sheet Name: {session_data['sheet_name']}")
+                logger.info(f"Spreadsheet ID: {session_data['spreadsheet_id']}")
+                logger.info(f"Amount: ${session_data['amount']}")
+                logger.info(f"Session ID: {session_id}")
+                logger.info("="*80)
+
                 # Update the Paid field in the spreadsheet directly
                 cell_updates = [session_data['row_number'], 8, f"STRIPE_{session_id}"]  # Column H is 8
-                
+                logger.info(f"Updating cell - Row: {cell_updates[0]}, Column: {cell_updates[1]}, Value: {cell_updates[2]}")
+
                 try:
                     from services.spreadsheet_service import SpreadsheetService
-                    metadata = client.get_spreadsheet_metadata(session_data['spreadsheet_id'])
-                    sheets = metadata.get('sheets', [])
+                    logger.info("Initializing update operation...")
+                    update_success = SpreadsheetService.UpdateEntryCells(
+                        spreadsheet_id=session_data['spreadsheet_id'],
+                        sheet_name=session_data['sheet_name'],
+                        cell_updates=cell_updates
+                    )
                     
                     update_success = SpreadsheetService.UpdateEntryCells(
                         spreadsheet_id=session_data['spreadsheet_id'],
