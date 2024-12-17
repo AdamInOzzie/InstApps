@@ -121,10 +121,8 @@ class UIService:
                     else:
                         logger.error("Failed to update spreadsheet")
                         st.error("Failed to update spreadsheet")
-                        sheet_name=session_data['sheet_name'],
-                        cell_updates=cell_updates
-                    )
-                    
+                        return False
+
                     if update_success:
                         logger.info(f"Successfully updated spreadsheet for session {session_id}")
                         st.success("✅ Payment verified and entry updated successfully!")
@@ -135,6 +133,7 @@ class UIService:
                     else:
                         logger.error("Failed to update spreadsheet")
                         st.error("Failed to update spreadsheet")
+                        return False
                 except Exception as e:
                     logger.error(f"Error updating spreadsheet: {str(e)}")
                     st.error(f"Error updating spreadsheet: {str(e)}")
