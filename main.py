@@ -222,6 +222,19 @@ def check_user_access(sheet_id: str, username: str) -> bool:
         return True  # Fail open on other errors for better user experience
 
 def main():
+    # Check for payment callback first
+    if 'payment' in st.query_params and 'session_id' in st.query_params:
+        if st.query_params.get('payment') == 'success':
+            session_id = st.query_params.get('session_id')
+            logger.info("="*80)
+            logger.info("PAYMENT CALLBACK RECEIVED")
+            logger.info(f"Processing payment callback for session: {session_id}")
+            if 'payment_sessions' in st.session_state:
+                logger.info(f"Session data: {st.session_state.payment_sessions.get(session_id)}")
+            logger.info("="*80)
+            if st.session_state.ui_service.verify_payment_and_submit(session_id, st.session_state.sheets_client):
+                st.rerun()
+
     # Initialize login state if not exists
     if 'is_logged_in' not in st.session_state:
         st.session_state.is_logged_in = False
