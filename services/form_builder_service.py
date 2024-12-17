@@ -170,6 +170,10 @@ class FormBuilderService:
             Tuple of (form field definitions, formula fields dictionary)
             where formula fields dictionary maps column names to their formula strings
         """
+        # Create cache key for this sheet
+        cache_key = f"form_fields_{spreadsheet_id}_{sheet_name}" if spreadsheet_id and sheet_name else None
+        if cache_key and cache_key in st.session_state:
+            return st.session_state[cache_key]
         try:
             # Add debug logging
             logger.debug(f"Raw cell data:\n{sheet_data}")
@@ -267,6 +271,9 @@ class FormBuilderService:
                     continue
             
             logger.info(f"Generated {len(form_fields)} form fields and {len(formula_fields)} formula fields")
+            # Cache the results
+            if cache_key:
+                st.session_state[cache_key] = (form_fields, formula_fields)
             return form_fields, formula_fields
             
         except Exception as e:
