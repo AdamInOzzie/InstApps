@@ -144,7 +144,16 @@ class UIService:
             if st.query_params.get('payment') == 'success':
                 session_id = st.query_params.get('session_id')
                 st.markdown("### 💳 Payment Status")
+                logger.info("="*80)
+                logger.info("PAYMENT CALLBACK RECEIVED")
+                logger.info("="*80)
                 logger.info(f"Processing payment callback for session: {session_id}")
+                
+                if 'payment_sessions' in st.session_state and session_id in st.session_state.payment_sessions:
+                    session_data = st.session_state.payment_sessions[session_id]
+                    logger.info(f"Sheet to update: {session_data['sheet_name']}")
+                    logger.info(f"Row to update: {session_data['row_number']}")
+                    
                 logger.info(f"Session state contents: {st.session_state}")
                 
                 if 'payment_sessions' in st.session_state and session_id in st.session_state.payment_sessions:
