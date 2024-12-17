@@ -222,8 +222,13 @@ def check_user_access(sheet_id: str, username: str) -> bool:
         return True  # Fail open on other errors for better user experience
 
 def main():
-    # Initialize services if not already initialized
-    if 'ui_service' not in st.session_state:
+    # Initialize all required services
+    if 'sheets_client' not in st.session_state:
+        logger.info("Initializing Google Sheets client")
+        st.session_state.sheets_client = GoogleSheetsClient()
+        st.session_state.spreadsheet_service = SpreadsheetService(st.session_state.sheets_client)
+        st.session_state.form_service = FormService(st.session_state.sheets_client)
+        st.session_state.form_builder_service = FormBuilderService()
         st.session_state.ui_service = UIService()
 
     # Check for payment callback first
