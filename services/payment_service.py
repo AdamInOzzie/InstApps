@@ -94,8 +94,12 @@ class PaymentService:
             # Convert dollars to cents for Stripe
             amount_cents = int(amount * 100)
             
-            # Get the application URL from environment or fallback to a local URL
-            base_url = os.getenv('APP_URL', 'http://localhost:5000')
+            # Get the application URL from environment with fallbacks
+            base_url = os.getenv('REPL_SLUG')
+            if base_url:
+                base_url = f"https://{base_url}.repl.co"
+            else:
+                base_url = os.getenv('APP_URL', 'http://0.0.0.0:5000')
             
             # Remove trailing slash if present
             base_url = base_url.rstrip('/')
