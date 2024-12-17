@@ -110,9 +110,17 @@ class UIService:
                     else:
                         logger.error(f"Row {session_data['row_number']} not found in sheet")
                         return False
-                    
-                    update_success = SpreadsheetService.UpdateEntryCells(
-                        spreadsheet_id=session_data['spreadsheet_id'],
+
+                    if update_success:
+                        logger.info(f"Successfully updated spreadsheet for session {session_id}")
+                        st.success("✅ Payment verified and entry updated successfully!")
+                        # Clean up session data
+                        del st.session_state.payment_sessions[session_id]
+                        st.rerun()
+                        return True
+                    else:
+                        logger.error("Failed to update spreadsheet")
+                        st.error("Failed to update spreadsheet")
                         sheet_name=session_data['sheet_name'],
                         cell_updates=cell_updates
                     )
