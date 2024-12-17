@@ -140,21 +140,26 @@ class NewEntriesFormsService:
         field_values = {}
         
         try:
-            for field in form_fields:
-                if not field.is_formula:  # Only render non-formula fields
-                    logger.info(f"Rendering field: {field.name} (column {field.column_letter}, index {field.column_index})")
-                    value = st.text_input(
-                        field.name,
-                        value="" if pd.isna(field.current_value) else str(field.current_value),
-                        key=f"field_{field.name}"
-                    )
-                    # Store field metadata including column information
-                    field_values[field.name] = {
-                        'value': value,
-                        'column_index': field.column_index,
-                        'column_letter': field.column_letter,
-                        'is_formula': field.is_formula
-                    }
+            with st.form("entry_form"):
+                for field in form_fields:
+                    if not field.is_formula:  # Only render non-formula fields
+                        logger.info(f"Rendering field: {field.name} (column {field.column_letter}, index {field.column_index})")
+                        value = st.text_input(
+                            field.name,
+                            value="" if pd.isna(field.current_value) else str(field.current_value),
+                            key=f"field_{field.name}"
+                        )
+                        # Store field metadata including column information
+                        field_values[field.name] = {
+                            'value': value,
+                            'column_index': field.column_index,  
+                            'column_letter': field.column_letter,
+                            'is_formula': field.is_formula
+                        }
+                
+                submitted = st.form_submit_button("Submit Entry")
+                if submitted:
+                    return field_values
                     
             return field_values
             
