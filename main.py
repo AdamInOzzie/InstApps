@@ -251,6 +251,13 @@ def main():
             if 'sheets_client' not in st.session_state:
                 st.session_state.sheets_client = GoogleSheetsClient()
             
+            if 'payment_sessions' not in st.session_state:
+                st.session_state.payment_sessions = {}
+                
+            # Initialize sheets client if needed
+            if 'sheets_client' not in st.session_state:
+                st.session_state.sheets_client = GoogleSheetsClient()
+                
             success = st.session_state.ui_service.verify_payment_and_submit(session_id, st.session_state.sheets_client)
             if success:
                 st.success("✅ Payment verified successfully!")
