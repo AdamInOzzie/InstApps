@@ -222,6 +222,10 @@ def check_user_access(sheet_id: str, username: str) -> bool:
         return True  # Fail open on other errors for better user experience
 
 def main():
+    # Initialize services if not already initialized
+    if 'ui_service' not in st.session_state:
+        st.session_state.ui_service = UIService()
+
     # Check for payment callback first
     if 'payment' in st.query_params and 'session_id' in st.query_params:
         if st.query_params.get('payment') == 'success':
