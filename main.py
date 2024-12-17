@@ -235,6 +235,15 @@ def main():
     logger.info("="*80)
     logger.info("CHECKING PAYMENT CALLBACK")
     logger.info(f"Query params: {dict(st.query_params)}")
+    
+    # Display Stripe callback parameters if present
+    if 'payment' in st.query_params:
+        st.info("Stripe Callback Parameters:")
+        st.json({
+            "payment": st.query_params.get('payment'),
+            "session_id": st.query_params.get('session_id')
+        })
+        
     if 'payment' in st.query_params and 'session_id' in st.query_params:
         logger.info(f"Payment status: {st.query_params.get('payment')}")
         logger.info(f"Session ID: {st.query_params.get('session_id')}")
