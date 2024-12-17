@@ -146,51 +146,51 @@ class UIService:
                 st.markdown("### 💳 Payment Status")
                 logger.info("="*80)
                 logger.info("PAYMENT CALLBACK RECEIVED")
-                logger.info("="*80)
                 logger.info(f"Processing payment callback for session: {session_id}")
-                
-                if 'payment_sessions' in st.session_state and session_id in st.session_state.payment_sessions:
-                    session_data = st.session_state.payment_sessions[session_id]
-                    logger.info(f"Sheet to update: {session_data['sheet_name']}")
-                    logger.info(f"Row to update: {session_data['row_number']}")
-                    
-                logger.info(f"Session state contents: {st.session_state}")
-                
-                if 'payment_sessions' in st.session_state and session_id in st.session_state.payment_sessions:
-                    session_data = st.session_state.payment_sessions[session_id]
-                    logger.info(f"Found session data: {session_data}")
-                    
-                    # Verify payment with Stripe
-                    from services.payment_service import PaymentService
-                    payment_service = PaymentService()
-                    payment_status = payment_service.get_payment_status(session_id)
-                    logger.info(f"Payment status from Stripe: {payment_status}")
-                    
-                    if payment_status.get('status') == 'succeeded':
-                        st.success("✅ Payment completed successfully!")
-                        st.info(f"Payment Amount: ${session_data['amount']:.2f}")
-                        st.text(f"Session ID: {session_id}")
-                        
-                        # Update sheet with payment info using session data
-                        from services.spreadsheet_service import SpreadsheetService
-                        cell_updates = [session_data['row_number'], 8, f"STRIPE_{session_id}"]
-                        update_success = SpreadsheetService.UpdateEntryCells(
-                            spreadsheet_id=session_data['spreadsheet_id'],
-                            sheet_name=session_data['sheet_name'],
-                            cell_updates=cell_updates
-                        )
-                        if update_success:
-                            st.success("✅ Payment recorded in sheet")
-                            # Only remove session data after successful update
-                            del st.session_state.payment_sessions[session_id]
-                            # Rerun to clear URL parameters
-                            st.rerun()
-                    else:
-                        st.warning("Payment verification pending...")
-                        st.text(f"Current status: {payment_status.get('status', 'unknown')}")
-                else:
+                logger.info("="*80)
+
+                if 'payment_sessions' not in st.session_state or session_id not in st.session_state.payment_sessions:
+                    logger.warning(f"Payment session {session_id} not found in session state")
                     st.warning("Payment session data not found. This might be a duplicate callback.")
                     st.text(f"Looking for session ID: {session_id}")
+                    return
+
+                session_data = st.session_state.payment_sessions[session_id]
+                logger.info(f"Found session data: {session_data}")
+                logger.info(f"Sheet to update: {session_data['sheet_name']}")
+                logger.info(f"Row to update: {session_data['row_number']}")
+
+                # Verify payment with Stripe
+                from services.payment_service import PaymentService
+                payment_service = PaymentService()
+                payment_status = payment_service.get_payment_status(session_id)
+                logger.info(f"Payment status from Stripe: {payment_status}")
+
+                if payment_status.get('status') == 'succeeded':
+                    st.success("✅ Payment completed successfully!")
+                    st.info(f"Payment Amount: ${session_data['amount']:.2f}")
+                    st.text(f"Session ID: {session_id}")
+
+                    # Update sheet with payment info using session data
+                    logger.info(f"Updating sheet {session_data['sheet_name']} row {session_data['row_number']}")
+                    from services.spreadsheet_service import SpreadsheetService
+                    cell_updates = [session_data['row_number'], 8, f"STRIPE_{session_id}"]
+                    update_success = SpreadsheetService.UpdateEntryCells(
+                        spreadsheet_id=session_data['spreadsheet_id'],
+                        sheet_name=session_data['sheet_name'],
+                        cell_updates=cell_updates
+                    )
+                    logger.info(f"Sheet update result: {update_success}")
+
+                    if update_success:
+                        st.success("✅ Payment recorded in sheet")
+                        # Clean up session data
+                        del st.session_state.payment_sessions[session_id]
+                        st.rerun()
+                else:
+                    st.warning("Payment verification pending...")
+                    st.text(f"Current status: {payment_status.get('status', 'unknown')}")
+
                 st.divider()
         
         with st.sidebar:
