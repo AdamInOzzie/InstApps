@@ -88,16 +88,28 @@ class UIService:
 
                 # Update the Paid field in the spreadsheet directly
                 cell_updates = [session_data['row_number'], 8, f"STRIPE_{session_id}"]  # Column H is 8
-                logger.info(f"Updating cell - Row: {cell_updates[0]}, Column: {cell_updates[1]}, Value: {cell_updates[2]}")
+                logger.info(f"Updating Paid field - Row: {cell_updates[0]}, Column: {cell_updates[1]}, Value: {cell_updates[2]}")
+                logger.info(f"Full session data for verification: {session_data}")
 
                 try:
                     from services.spreadsheet_service import SpreadsheetService
-                    logger.info("Initializing update operation...")
-                    update_success = SpreadsheetService.UpdateEntryCells(
-                        spreadsheet_id=session_data['spreadsheet_id'],
-                        sheet_name=session_data['sheet_name'],
-                        cell_updates=cell_updates
-                    )
+                    logger.info("Initializing spreadsheet update...")
+                    logger.info(f"Spreadsheet ID: {session_data['spreadsheet_id']}")
+                    logger.info(f"Sheet Name: {session_data['sheet_name']}")
+                    
+                    # First verify the row exists
+                    df = sheets_client.read_spreadsheet(session_data['spreadsheet_id'], f"{session_data['sheet_name']}!A:H")
+                    if df is not None and len(df) >= session_data['row_number']:
+                        logger.info("Row verification successful")
+                        update_success = SpreadsheetService.UpdateEntryCells(
+                            spreadsheet_id=session_data['spreadsheet_id'],
+                            sheet_name=session_data['sheet_name'],
+                            cell_updates=cell_updates
+                        )
+                        logger.info(f"Update operation result: {update_success}")
+                    else:
+                        logger.error(f"Row {session_data['row_number']} not found in sheet")
+                        return False
                     
                     update_success = SpreadsheetService.UpdateEntryCells(
                         spreadsheet_id=session_data['spreadsheet_id'],
