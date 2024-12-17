@@ -80,6 +80,10 @@ class UIService:
                 cell_updates = [session_data['row_number'], 8, f"STRIPE_{session_id}"]  # Column H is 8
                 
                 try:
+                    from services.spreadsheet_service import SpreadsheetService
+                    metadata = client.get_spreadsheet_metadata(session_data['spreadsheet_id'])
+                    sheets = metadata.get('sheets', [])
+                    
                     update_success = SpreadsheetService.UpdateEntryCells(
                         spreadsheet_id=session_data['spreadsheet_id'],
                         sheet_name=session_data['sheet_name'],
