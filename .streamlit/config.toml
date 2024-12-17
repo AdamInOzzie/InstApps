@@ -1,20 +1,11 @@
+
 [server]
-headless = true
 address = "0.0.0.0"
-port = 5000
+port = 80
+headless = true
 enableCORS = false
 enableXsrfProtection = false
-maxMessageSize = 200
 
 [browser]
-gatherUsageStats = false
-
-[runner]
-fastReruns = true
-
-[theme]
-primaryColor = "#FF4B4B"
-backgroundColor = "#FFFFFF"
-secondaryBackgroundColor = "#F0F2F6"
-textColor = "#262730"
-font = "sans serif"
+serverAddress = "0.0.0.0"
+serverPort = 80
