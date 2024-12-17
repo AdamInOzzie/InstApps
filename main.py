@@ -232,7 +232,12 @@ def main():
         st.session_state.ui_service = UIService()
 
     # Check for payment callback first
+    logger.info("="*80)
+    logger.info("CHECKING PAYMENT CALLBACK")
+    logger.info(f"Query params: {dict(st.query_params)}")
     if 'payment' in st.query_params and 'session_id' in st.query_params:
+        logger.info(f"Payment status: {st.query_params.get('payment')}")
+        logger.info(f"Session ID: {st.query_params.get('session_id')}")
         if st.query_params.get('payment') == 'success':
             session_id = st.query_params.get('session_id')
             logger.info("="*80)
@@ -241,7 +246,15 @@ def main():
             if 'payment_sessions' in st.session_state:
                 logger.info(f"Session data: {st.session_state.payment_sessions.get(session_id)}")
             logger.info("="*80)
-            if st.session_state.ui_service.verify_payment_and_submit(session_id, st.session_state.sheets_client):
+            
+            # Initialize services before verification
+            if 'sheets_client' not in st.session_state:
+                st.session_state.sheets_client = GoogleSheetsClient()
+            
+            success = st.session_state.ui_service.verify_payment_and_submit(session_id, st.session_state.sheets_client)
+            if success:
+                st.success("✅ Payment verified successfully!")
+                time.sleep(2)
                 st.rerun()
 
     # Initialize login state if not exists
