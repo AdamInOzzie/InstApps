@@ -95,11 +95,16 @@ class PaymentService:
             amount_cents = int(amount * 100)
             
             # Get the application URL from environment with fallbacks
-            base_url = os.getenv('REPL_SLUG')
-            if base_url:
-                base_url = f"https://{base_url}.repl.co"
+            base_url = os.getenv('REPL_DOMAIN')  # Get deployment domain first
+            if not base_url:
+                # Fallback to repl domain if not deployed
+                repl_slug = os.getenv('REPL_SLUG')
+                if repl_slug:
+                    base_url = f"https://{repl_slug}.repl.co"
+                else:
+                    base_url = os.getenv('APP_URL', 'http://0.0.0.0:5000')
             else:
-                base_url = os.getenv('APP_URL', 'http://0.0.0.0:5000')
+                base_url = f"https://{base_url}"
             
             # Remove trailing slash if present
             base_url = base_url.rstrip('/')
