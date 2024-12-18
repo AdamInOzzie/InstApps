@@ -376,32 +376,34 @@ class UIService:
                         current_session_id = f"session_{next_row}"
                         st.session_state.current_session_id = current_session_id
                         try:
-                            # Create session data with all required fields
-                            session_data = {
-                                'amount': str(payment_amount),
+                            # Create minimal metadata for payment
+                            payment_metadata = {
                                 'row_number': str(next_row),
                                 'sheet_name': sheet_name,
-                                'spreadsheet_id': spreadsheet_id
+                                'spreadsheet_id': spreadsheet_id,
+                                'amount': str(payment_amount)
                             }
-
-                            # Store full session data separately
-                            full_session_data = {
-                                **session_data,
-                                'username': st.session_state.get('username', ''),
-                                'selected_sheet': sheet_name,
-                                'form_data': form_data
-                            }
-                            st.session_state.payment_sessions[current_session_id] = full_session_data
-
+                            
                             # Initialize payment service
                             from services.payment_service import PaymentService
                             payment_service = PaymentService()
                             
-                            # Create payment intent with minimal required metadata
+                            # Create payment intent with required metadata
                             payment_data = payment_service.create_payment_intent(
                                 payment_amount,
-                                session_data=session_data
+                                session_data=payment_metadata
                             )
+                            
+                            if payment_data and 'session_id' in payment_data:
+                                # Store full session data after successful payment intent creation
+                                full_session_data = {
+                                    **payment_metadata,
+                                    'username': st.session_state.get('username', ''),
+                                    'selected_sheet': sheet_name,
+                                    'form_data': form_data,
+                                    'session_id': payment_data['session_id']
+                                }
+                                st.session_state.payment_sessions[current_session_id] = full_session_data
 
                         except Exception as e:
                             logger.error(f"Error creating session data: {str(e)}")
