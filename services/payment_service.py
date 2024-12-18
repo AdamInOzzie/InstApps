@@ -1,7 +1,6 @@
 import os
 import logging
 import stripe
-import streamlit as st
 from typing import Dict, Any
 
 # Configure logging
@@ -80,7 +79,7 @@ class PaymentService:
             logger.error(f"Failed to initialize PaymentService: {str(e)}")
             raise
 
-    def create_payment_intent(self, amount: float, currency: str = 'usd', session_data: Dict = None) -> Dict[str, Any]:
+    def create_payment_intent(self, amount: float, currency: str = 'usd') -> Dict[str, Any]:
         """
         Create a Stripe Checkout session for the specified amount
         
@@ -115,29 +114,7 @@ class PaymentService:
             logger.info(f"Success URL template: {success_url}")
             logger.info(f"Cancel URL: {cancel_url}")
             
-            # Initialize payment_sessions if not exists
-            if 'payment_sessions' not in st.session_state:
-                st.session_state.payment_sessions = {}
-                
             # Create Stripe Checkout session
-            session_data = {}
-            
-            # Get metadata from session_data parameter
-            if session_data and 'row_number' in session_data and 'sheet_name' in session_data and 'spreadsheet_id' in session_data:
-                metadata = {
-                    'row_number': str(session_data['row_number']),
-                    'sheet_name': session_data['sheet_name'],
-                    'spreadsheet_id': session_data['spreadsheet_id'],
-                    'amount': str(amount)
-                }
-            else:
-                logger.error("Missing required metadata for payment session")
-                return {
-                    'error': 'Missing required session data',
-                    'error_type': 'metadata_error', 
-                    'details': 'Session requires row number, sheet name and spreadsheet ID'
-                }
-
             session = stripe.checkout.Session.create(
                 payment_method_types=['card'],
                 line_items=[{
@@ -154,12 +131,6 @@ class PaymentService:
                 mode='payment',
                 success_url=success_url,
                 cancel_url=cancel_url,
-                metadata={
-                    'row_number': str(session_data['row_number']),
-                    'sheet_name': session_data['sheet_name'],
-                    'spreadsheet_id': session_data['spreadsheet_id'],
-                    'amount': str(amount)
-                }
             )
             
             # Log the URLs for debugging
@@ -215,8 +186,7 @@ class PaymentService:
                 'status': 'succeeded' if payment_status == 'paid' else payment_status,
                 'amount': session.amount_total / 100,  # Convert cents to dollars
                 'currency': session.currency,
-                'payment_intent': session.payment_intent,
-                'metadata': session.metadata
+                'payment_intent': session.payment_intent
             }
         except stripe.error.StripeError as e:
             return {'error': str(e)}

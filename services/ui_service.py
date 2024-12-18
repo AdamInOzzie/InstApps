@@ -54,48 +54,17 @@ class UIService:
     def verify_payment_and_submit(session_id: str, sheets_client) -> bool:
         """Verify payment and submit form if successful."""
         try:
-            # Initialize session state if needed
-            if 'payment_sessions' not in st.session_state:
-                st.session_state.payment_sessions = {}
-            
-            # Get payment status and metadata from Stripe
-            from services.payment_service import PaymentService
-            payment_service = PaymentService()
-            payment_status = payment_service.get_payment_status(session_id)
-            
-            if 'error' in payment_status:
-                st.error(f"Payment verification failed: {payment_status['error']}")
+            if 'payment_sessions' not in st.session_state or session_id not in st.session_state.payment_sessions:
+                st.error("Payment session not found")
                 return False
-
-            # Extract metadata from Stripe payment status
-            try:
-                if 'metadata' not in payment_status:
-                    st.error("Payment verification failed: No metadata found in payment")
-                    return False
-                    
-                metadata = payment_status['metadata']
-                session_data = {
-                    'amount': float(metadata.get('amount', 0)),
-                    'row_number': int(metadata.get('row_number', 0)),
-                    'sheet_name': metadata.get('sheet_name', ''),
-                    'spreadsheet_id': metadata.get('spreadsheet_id', ''),
-                    'status': payment_status.get('status', '')
-                }
                 
-                # Validate required fields
-                if not all([session_data['row_number'], session_data['sheet_name'], session_data['spreadsheet_id']]):
-                    st.error("Payment verification failed: Missing required metadata")
-                    return False
-                    
-                # Restore session state
-                if 'username' in session_data:
-                    st.session_state.is_logged_in = True
-                    st.session_state.username = session_data['username']
-                    st.session_state.selected_sheet = session_data['selected_sheet']
-            except Exception as e:
-                logger.error(f"Error processing payment metadata: {str(e)}")
-                st.error("Error processing payment metadata")
-                return False
+            session_data = st.session_state.payment_sessions[session_id]
+            
+            # Restore session state
+            if 'username' in session_data:
+                st.session_state.is_logged_in = True
+                st.session_state.username = session_data['username']
+                st.session_state.selected_sheet = session_data['selected_sheet']
             
             # Verify payment with Stripe
             from services.payment_service import PaymentService
@@ -368,55 +337,32 @@ class UIService:
                     qty = float(form_data['QTY'])
                     payment_amount = price * qty
                     if payment_amount > 0:
-                        # Store session information before creating payment
-                        if 'payment_sessions' not in st.session_state:
-                            st.session_state.payment_sessions = {}
-                            
-                        # Store complete session data
-                        current_session_id = f"session_{next_row}"
-                        st.session_state.current_session_id = current_session_id
-                        try:
-                            # Create minimal metadata for payment
-                            payment_metadata = {
-                                'row_number': str(next_row),
-                                'sheet_name': sheet_name,
-                                'spreadsheet_id': spreadsheet_id,
-                                'amount': str(payment_amount)
-                            }
-                            
-                            # Initialize payment service
-                            from services.payment_service import PaymentService
-                            payment_service = PaymentService()
-                            
-                            # Create payment intent with required metadata
-                            payment_data = payment_service.create_payment_intent(
-                                payment_amount,
-                                session_data=payment_metadata
-                            )
-                            
-                            if payment_data and 'session_id' in payment_data:
-                                # Store full session data after successful payment intent creation
-                                full_session_data = {
-                                    **payment_metadata,
-                                    'username': st.session_state.get('username', ''),
-                                    'selected_sheet': sheet_name,
-                                    'form_data': form_data,
-                                    'session_id': payment_data['session_id']
-                                }
-                                st.session_state.payment_sessions[current_session_id] = full_session_data
-
-                        except Exception as e:
-                            logger.error(f"Error creating session data: {str(e)}")
-                            st.error("Error processing form submission")
-                            return None
+                        # Create payment intent using PaymentService
+                        from services.payment_service import PaymentService
+                        payment_service = PaymentService()
+                        payment_data = payment_service.create_payment_intent(payment_amount)
                         
                         if 'error' in payment_data:
                             st.error(f"Payment Error: {payment_data['error']}")
                             return None
-                            
+                        
+                        # Display payment link
                         st.info("💳 Payment Required")
                         st.write(f"Amount: ${payment_amount:.2f}")
                         st.link_button("Complete Payment", payment_data['session_url'])
+                        
+                        # Store payment session with row information
+                        if 'payment_sessions' not in st.session_state:
+                            st.session_state.payment_sessions = {}
+                        st.session_state.payment_sessions[payment_data['session_id']] = {
+                            'amount': payment_amount,
+                            'form_data': form_data,
+                            'spreadsheet_id': spreadsheet_id,
+                            'sheet_name': sheet_name,
+                            'row_number': next_row,
+                            'username': st.session_state.get('username'),
+                            'selected_sheet': st.session_state.get('selected_sheet')
+                        }
                         return None
                 except ValueError:
                     logger.error(f"Invalid payment amount: {form_data['Price']}")
