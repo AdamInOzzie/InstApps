@@ -115,6 +115,9 @@ class PaymentService:
             logger.info(f"Cancel URL: {cancel_url}")
             
             # Create Stripe Checkout session
+            # Get session data from st.session_state
+            session_data = st.session_state.payment_sessions.get(session_id, {})
+            
             session = stripe.checkout.Session.create(
                 payment_method_types=['card'],
                 line_items=[{
@@ -131,6 +134,12 @@ class PaymentService:
                 mode='payment',
                 success_url=success_url,
                 cancel_url=cancel_url,
+                metadata={
+                    'row_number': str(session_data.get('row_number')),
+                    'sheet_name': session_data.get('sheet_name'),
+                    'spreadsheet_id': session_data.get('spreadsheet_id'),
+                    'amount': str(amount)
+                }
             )
             
             # Log the URLs for debugging
@@ -186,7 +195,8 @@ class PaymentService:
                 'status': 'succeeded' if payment_status == 'paid' else payment_status,
                 'amount': session.amount_total / 100,  # Convert cents to dollars
                 'currency': session.currency,
-                'payment_intent': session.payment_intent
+                'payment_intent': session.payment_intent,
+                'metadata': session.metadata
             }
         except stripe.error.StripeError as e:
             return {'error': str(e)}
