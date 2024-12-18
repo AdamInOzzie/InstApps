@@ -381,14 +381,23 @@ class UIService:
                                 'amount': str(payment_amount),
                                 'row_number': str(next_row),
                                 'sheet_name': sheet_name,
-                                'spreadsheet_id': spreadsheet_id,
+                                'spreadsheet_id': spreadsheet_id
+                            }
+
+                            # Store full session data separately
+                            full_session_data = {
+                                **session_data,
                                 'username': st.session_state.get('username', ''),
                                 'selected_sheet': sheet_name,
                                 'form_data': form_data
                             }
-                            
-                            # Store full session data
-                            st.session_state.payment_sessions[current_session_id] = session_data
+                            st.session_state.payment_sessions[current_session_id] = full_session_data
+
+                            # Create payment intent with minimal required metadata
+                            payment_data = payment_service.create_payment_intent(
+                                payment_amount,
+                                session_data=session_data
+                            )
 
                         except Exception as e:
                             logger.error(f"Error creating session data: {str(e)}")
