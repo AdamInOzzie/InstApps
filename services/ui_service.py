@@ -390,7 +390,6 @@ class UIService:
                             **session_data,
                             'form_data': form_data
                         }
-                        st.session_state.payment_sessions[current_session_id] = full_session_data
 
                         # Create payment intent with minimal required data
                         from services.payment_service import PaymentService
