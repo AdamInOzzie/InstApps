@@ -54,9 +54,25 @@ class UIService:
     def verify_payment_and_submit(session_id: str, sheets_client) -> bool:
         """Verify payment and submit form if successful."""
         try:
-            if 'payment_sessions' not in st.session_state or session_id not in st.session_state.payment_sessions:
-                st.error("Payment session not found")
+            # Initialize session state if needed
+            if 'payment_sessions' not in st.session_state:
+                st.session_state.payment_sessions = {}
+            
+            # Get payment status first
+            from services.payment_service import PaymentService
+            payment_service = PaymentService()
+            payment_status = payment_service.get_payment_status(session_id)
+            
+            if 'error' in payment_status:
+                st.error(f"Payment verification failed: {payment_status['error']}")
                 return False
+                
+            # If we don't have session data but payment is valid, create minimal session data
+            if session_id not in st.session_state.payment_sessions:
+                st.session_state.payment_sessions[session_id] = {
+                    'amount': payment_status['amount'],
+                    'status': payment_status['status']
+                }
                 
             session_data = st.session_state.payment_sessions[session_id]
             
