@@ -126,6 +126,15 @@ class PaymentService:
             current_session_id = st.session_state.get('current_session_id', '')
             session_data = st.session_state.payment_sessions.get(current_session_id, {})
 
+            # Ensure we have required metadata before creating session
+            if not session_data.get('row_number') or not session_data.get('sheet_name') or not session_data.get('spreadsheet_id'):
+                logger.error("Missing required metadata for payment session")
+                return {
+                    'error': 'Missing required session data',
+                    'error_type': 'metadata_error', 
+                    'details': 'Session requires row number, sheet name and spreadsheet ID'
+                }
+
             session = stripe.checkout.Session.create(
                 payment_method_types=['card'],
                 line_items=[{
@@ -143,9 +152,9 @@ class PaymentService:
                 success_url=success_url,
                 cancel_url=cancel_url,
                 metadata={
-                    'row_number': str(session_data.get('row_number', '')),
-                    'sheet_name': session_data.get('sheet_name', ''),
-                    'spreadsheet_id': session_data.get('spreadsheet_id', ''),
+                    'row_number': str(session_data['row_number']),
+                    'sheet_name': session_data['sheet_name'],
+                    'spreadsheet_id': session_data['spreadsheet_id'],
                     'amount': str(amount)
                 }
             )
