@@ -376,17 +376,22 @@ class UIService:
                         current_session_id = f"session_{next_row}"
                         st.session_state.current_session_id = current_session_id
                         session_data = {
-                            'amount': payment_amount,
-                            'form_data': form_data,
-                            'spreadsheet_id': spreadsheet_id,
-                            'row_number': next_row,
+                            'amount': str(payment_amount),
+                            'row_number': str(next_row),
                             'sheet_name': sheet_name,
+                            'spreadsheet_id': spreadsheet_id
+                        }
+
+                        # Store full data in session state
+                        full_session_data = {
+                            **session_data,
+                            'form_data': form_data,
                             'username': st.session_state.get('username'),
                             'selected_sheet': st.session_state.get('selected_sheet')
                         }
-                        st.session_state.payment_sessions[current_session_id] = session_data
-                        
-                        # Create payment intent
+                        st.session_state.payment_sessions[current_session_id] = full_session_data
+
+                        # Create payment intent with minimal required data
                         from services.payment_service import PaymentService
                         payment_service = PaymentService()
                         payment_data = payment_service.create_payment_intent(
