@@ -86,9 +86,13 @@ class UIService:
                 if not all([session_data['row_number'], session_data['sheet_name'], session_data['spreadsheet_id']]):
                     st.error("Payment verification failed: Missing required metadata")
                     return False
-            
-            # Restore session state
-            if 'username' in session_data:
+                    
+                # Restore session state
+                if 'username' in session_data:
+            except Exception as e:
+                logger.error(f"Error processing payment metadata: {str(e)}")
+                st.error("Error processing payment metadata")
+                return False
                 st.session_state.is_logged_in = True
                 st.session_state.username = session_data['username']
                 st.session_state.selected_sheet = session_data['selected_sheet']
