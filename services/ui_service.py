@@ -58,7 +58,7 @@ class UIService:
             if 'payment_sessions' not in st.session_state:
                 st.session_state.payment_sessions = {}
             
-            # Get payment status first
+            # Get payment status and metadata from Stripe
             from services.payment_service import PaymentService
             payment_service = PaymentService()
             payment_status = payment_service.get_payment_status(session_id)
@@ -66,15 +66,19 @@ class UIService:
             if 'error' in payment_status:
                 st.error(f"Payment verification failed: {payment_status['error']}")
                 return False
+
+            # Get session data directly from Stripe metadata
+            if 'metadata' not in payment_status:
+                st.error("Payment verification failed: No metadata found in payment")
+                return False
                 
-            # If we don't have session data but payment is valid, create minimal session data
-            if session_id not in st.session_state.payment_sessions:
-                st.session_state.payment_sessions[session_id] = {
-                    'amount': payment_status['amount'],
-                    'status': payment_status['status']
-                }
-                
-            session_data = st.session_state.payment_sessions[session_id]
+            session_data = {
+                'amount': float(payment_status['metadata']['amount']),
+                'row_number': int(payment_status['metadata']['row_number']),
+                'sheet_name': payment_status['metadata']['sheet_name'],
+                'spreadsheet_id': payment_status['metadata']['spreadsheet_id'],
+                'status': payment_status['status']
+            }
             
             # Restore session state
             if 'username' in session_data:
