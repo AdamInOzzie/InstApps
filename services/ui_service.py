@@ -58,10 +58,21 @@ class UIService:
             if 'payment_sessions' not in st.session_state:
                 st.session_state.payment_sessions = {}
             
+            logger.info("Current payment sessions:")
+            logger.info(st.session_state.payment_sessions)
+            logger.info(f"Looking for session ID: {session_id}")
+            
             # Get payment status first
             from services.payment_service import PaymentService
             payment_service = PaymentService()
             payment_status = payment_service.get_payment_status(session_id)
+
+            if session_id in st.session_state.payment_sessions:
+                logger.info(f"Found session data: {st.session_state.payment_sessions[session_id]}")
+            else:
+                logger.error("Session data not found in session state")
+                st.error("Payment verification failed: Session data not found")
+                return False
             
             if 'error' in payment_status:
                 st.error(f"Payment verification failed: {payment_status['error']}")
