@@ -383,14 +383,12 @@ class UIService:
                                 'sheet_name': sheet_name,
                                 'spreadsheet_id': spreadsheet_id,
                                 'username': st.session_state.get('username', ''),
-                                'selected_sheet': st.session_state.get('selected_sheet', '')
+                                'selected_sheet': sheet_name,
+                                'form_data': form_data
                             }
                             
                             # Store full session data
-                            st.session_state.payment_sessions[current_session_id] = {
-                                **session_data,
-                                'form_data': form_data
-                            }
+                            st.session_state.payment_sessions[current_session_id] = session_data
 
                         except Exception as e:
                             logger.error(f"Error creating session data: {str(e)}")
