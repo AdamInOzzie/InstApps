@@ -375,19 +375,20 @@ class UIService:
                         # Store complete session data
                         current_session_id = f"session_{next_row}"
                         st.session_state.current_session_id = current_session_id
+                        # Create session data with all required fields
                         session_data = {
                             'amount': str(payment_amount),
                             'row_number': str(next_row),
                             'sheet_name': sheet_name,
-                            'spreadsheet_id': spreadsheet_id
+                            'spreadsheet_id': spreadsheet_id,
+                            'username': st.session_state.get('username', ''),
+                            'selected_sheet': st.session_state.get('selected_sheet', '')
                         }
 
-                        # Store full data in session state
-                        full_session_data = {
+                        # Store session data
+                        st.session_state.payment_sessions[current_session_id] = {
                             **session_data,
-                            'form_data': form_data,
-                            'username': st.session_state.get('username'),
-                            'selected_sheet': st.session_state.get('selected_sheet')
+                            'form_data': form_data
                         }
                         st.session_state.payment_sessions[current_session_id] = full_session_data
 
