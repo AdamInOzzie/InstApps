@@ -367,10 +367,13 @@ class UIService:
                         st.write(f"Amount: ${payment_amount:.2f}")
                         st.link_button("Complete Payment", payment_data['session_url'])
                         
-                        # Store payment session with row information
+                        # Store session information before creating payment
                         if 'payment_sessions' not in st.session_state:
                             st.session_state.payment_sessions = {}
-                        st.session_state.payment_sessions[payment_data['session_id']] = {
+                            
+                        current_session_id = f"session_{next_row}"
+                        st.session_state.current_session_id = current_session_id
+                        st.session_state.payment_sessions[current_session_id] = {
                             'amount': payment_amount,
                             'form_data': form_data,
                             'spreadsheet_id': spreadsheet_id,
