@@ -371,13 +371,15 @@ class UIService:
                         if 'payment_sessions' not in st.session_state:
                             st.session_state.payment_sessions = {}
                             
-                        # Store session data before creating payment
+                        # Store complete session data before creating payment
                         current_session_id = f"session_{next_row}"
                         st.session_state.current_session_id = current_session_id
                         session_data = {
                             'amount': payment_amount,
                             'form_data': form_data,
                             'spreadsheet_id': spreadsheet_id,
+                            'row_number': next_row,
+                            'sheet_name': sheet_name,
                             'sheet_name': sheet_name,
                             'row_number': next_row,
                             'username': st.session_state.get('username'),
@@ -385,9 +387,10 @@ class UIService:
                         }
                         st.session_state.payment_sessions[current_session_id] = session_data
                         
-                        # Create payment with stored session data
+                        # Create payment intent with complete session data
                         payment_data = payment_service.create_payment_intent(
                             payment_amount,
+                            currency='usd',
                             session_data=session_data
                         )
                         
