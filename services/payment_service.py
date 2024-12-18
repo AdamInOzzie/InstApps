@@ -80,7 +80,7 @@ class PaymentService:
             logger.error(f"Failed to initialize PaymentService: {str(e)}")
             raise
 
-    def create_payment_intent(self, amount: float, currency: str = 'usd') -> Dict[str, Any]:
+    def create_payment_intent(self, amount: float, currency: str = 'usd', session_data: Dict = None) -> Dict[str, Any]:
         """
         Create a Stripe Checkout session for the specified amount
         
