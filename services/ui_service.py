@@ -380,14 +380,14 @@ class UIService:
                             'amount': str(payment_amount),
                             'row_number': str(next_row),
                             'sheet_name': sheet_name,
-                            'spreadsheet_id': spreadsheet_id,
-                            'username': st.session_state.get('username', ''),
-                            'selected_sheet': st.session_state.get('selected_sheet', '')
+                            'spreadsheet_id': spreadsheet_id
                         }
-
-                        # Store session data
+                        
+                        # Store full session data
                         st.session_state.payment_sessions[current_session_id] = {
                             **session_data,
+                            'username': st.session_state.get('username', ''),
+                            'selected_sheet': st.session_state.get('selected_sheet', ''),
                             'form_data': form_data
                         }
 
