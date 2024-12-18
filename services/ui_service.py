@@ -357,7 +357,7 @@ class UIService:
                         if 'payment_sessions' not in st.session_state:
                             st.session_state.payment_sessions = {}
                             
-                        # Store complete session data before creating payment
+                        # Store complete session data
                         current_session_id = f"session_{next_row}"
                         st.session_state.current_session_id = current_session_id
                         session_data = {
@@ -369,45 +369,11 @@ class UIService:
                             'username': st.session_state.get('username'),
                             'selected_sheet': st.session_state.get('selected_sheet')
                         }
-                        st.session_state.payment_sessions[current_session_id] = session_data
-                        
-                        # Create payment intent using PaymentService
-                        from services.payment_service import PaymentService
-                        payment_service = PaymentService()
-                        payment_data = payment_service.create_payment_intent(
-                            payment_amount,
-                            session_data=session_data
-                        )
-                        
-                        if 'error' in payment_data:
-                            st.error(f"Payment Error: {payment_data['error']}")
-                            return None
-                            
-                        st.info("💳 Payment Required")
-                        st.write(f"Amount: ${payment_amount:.2f}")
-                        st.link_button("Complete Payment", payment_data['session_url'])
-                        
-                        # Store session information before creating payment
-                        if 'payment_sessions' not in st.session_state:
-                            st.session_state.payment_sessions = {}
-                            
-                        # Store complete session data before creating payment
-                        current_session_id = f"session_{next_row}"
-                        st.session_state.current_session_id = current_session_id
-                        session_data = {
-                            'amount': payment_amount,
-                            'form_data': form_data,
-                            'spreadsheet_id': spreadsheet_id,
-                            'row_number': next_row,
-                            'sheet_name': sheet_name,
-                            'username': st.session_state.get('username'),
-                            'selected_sheet': st.session_state.get('selected_sheet')
-                        }
-                        
-                        # Store session data before creating payment
                         st.session_state.payment_sessions[current_session_id] = session_data
                         
                         # Create payment intent
+                        from services.payment_service import PaymentService
+                        payment_service = PaymentService()
                         payment_data = payment_service.create_payment_intent(
                             payment_amount,
                             session_data=session_data
