@@ -122,6 +122,10 @@ class PaymentService:
             # Create Stripe Checkout session
             session_data = {}
             
+            # Get current session data if it exists
+            current_session_id = st.session_state.get('current_session_id', '')
+            session_data = st.session_state.payment_sessions.get(current_session_id, {})
+
             session = stripe.checkout.Session.create(
                 payment_method_types=['card'],
                 line_items=[{
@@ -139,9 +143,9 @@ class PaymentService:
                 success_url=success_url,
                 cancel_url=cancel_url,
                 metadata={
-                    'row_number': str(session_data.get('row_number')),
-                    'sheet_name': session_data.get('sheet_name'),
-                    'spreadsheet_id': session_data.get('spreadsheet_id'),
+                    'row_number': str(session_data.get('row_number', '')),
+                    'sheet_name': session_data.get('sheet_name', ''),
+                    'spreadsheet_id': session_data.get('spreadsheet_id', ''),
                     'amount': str(amount)
                 }
             )
