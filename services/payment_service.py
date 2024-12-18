@@ -115,9 +115,12 @@ class PaymentService:
             logger.info(f"Success URL template: {success_url}")
             logger.info(f"Cancel URL: {cancel_url}")
             
+            # Initialize payment_sessions if not exists
+            if 'payment_sessions' not in st.session_state:
+                st.session_state.payment_sessions = {}
+                
             # Create Stripe Checkout session
-            # Get session data from st.session_state
-            session_data = st.session_state.payment_sessions.get(session_id, {})
+            session_data = {}
             
             session = stripe.checkout.Session.create(
                 payment_method_types=['card'],
