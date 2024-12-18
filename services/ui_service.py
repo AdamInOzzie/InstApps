@@ -400,17 +400,16 @@ class UIService:
                             'spreadsheet_id': spreadsheet_id,
                             'row_number': next_row,
                             'sheet_name': sheet_name,
-                            'sheet_name': sheet_name,
-                            'row_number': next_row,
                             'username': st.session_state.get('username'),
                             'selected_sheet': st.session_state.get('selected_sheet')
                         }
+                        
+                        # Store session data before creating payment
                         st.session_state.payment_sessions[current_session_id] = session_data
                         
-                        # Create payment intent with complete session data
+                        # Create payment intent
                         payment_data = payment_service.create_payment_intent(
                             payment_amount,
-                            currency='usd',
                             session_data=session_data
                         )
                         
