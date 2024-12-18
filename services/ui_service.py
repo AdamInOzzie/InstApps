@@ -393,6 +393,10 @@ class UIService:
                             }
                             st.session_state.payment_sessions[current_session_id] = full_session_data
 
+                            # Initialize payment service
+                            from services.payment_service import PaymentService
+                            payment_service = PaymentService()
+                            
                             # Create payment intent with minimal required metadata
                             payment_data = payment_service.create_payment_intent(
                                 payment_amount,
@@ -403,14 +407,6 @@ class UIService:
                             logger.error(f"Error creating session data: {str(e)}")
                             st.error("Error processing form submission")
                             return None
-
-                        # Create payment intent with minimal required data
-                        from services.payment_service import PaymentService
-                        payment_service = PaymentService()
-                        payment_data = payment_service.create_payment_intent(
-                            payment_amount,
-                            session_data=session_data
-                        )
                         
                         if 'error' in payment_data:
                             st.error(f"Payment Error: {payment_data['error']}")
