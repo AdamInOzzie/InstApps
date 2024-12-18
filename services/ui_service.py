@@ -67,18 +67,25 @@ class UIService:
                 st.error(f"Payment verification failed: {payment_status['error']}")
                 return False
 
-            # Get session data directly from Stripe metadata
-            if 'metadata' not in payment_status:
-                st.error("Payment verification failed: No metadata found in payment")
-                return False
+            # Extract metadata from Stripe payment status
+            try:
+                if 'metadata' not in payment_status:
+                    st.error("Payment verification failed: No metadata found in payment")
+                    return False
+                    
+                metadata = payment_status['metadata']
+                session_data = {
+                    'amount': float(metadata.get('amount', 0)),
+                    'row_number': int(metadata.get('row_number', 0)),
+                    'sheet_name': metadata.get('sheet_name', ''),
+                    'spreadsheet_id': metadata.get('spreadsheet_id', ''),
+                    'status': payment_status.get('status', '')
+                }
                 
-            session_data = {
-                'amount': float(payment_status['metadata']['amount']),
-                'row_number': int(payment_status['metadata']['row_number']),
-                'sheet_name': payment_status['metadata']['sheet_name'],
-                'spreadsheet_id': payment_status['metadata']['spreadsheet_id'],
-                'status': payment_status['status']
-            }
+                # Validate required fields
+                if not all([session_data['row_number'], session_data['sheet_name'], session_data['spreadsheet_id']]):
+                    st.error("Payment verification failed: Missing required metadata")
+                    return False
             
             # Restore session state
             if 'username' in session_data:

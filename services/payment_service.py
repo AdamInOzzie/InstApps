@@ -122,12 +122,15 @@ class PaymentService:
             # Create Stripe Checkout session
             session_data = {}
             
-            # Get current session data if it exists
-            current_session_id = st.session_state.get('current_session_id', '')
-            session_data = st.session_state.payment_sessions.get(current_session_id, {})
-
-            # Ensure we have required metadata before creating session
-            if not session_data.get('row_number') or not session_data.get('sheet_name') or not session_data.get('spreadsheet_id'):
+            # Get metadata from session_data parameter
+            if session_data and 'row_number' in session_data and 'sheet_name' in session_data and 'spreadsheet_id' in session_data:
+                metadata = {
+                    'row_number': str(session_data['row_number']),
+                    'sheet_name': session_data['sheet_name'],
+                    'spreadsheet_id': session_data['spreadsheet_id'],
+                    'amount': str(amount)
+                }
+            else:
                 logger.error("Missing required metadata for payment session")
                 return {
                     'error': 'Missing required session data',
