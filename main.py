@@ -260,7 +260,9 @@ def main():
     query_params = dict(st.query_params)
     logger.info(f"All query parameters: {query_params}")
     logger.info(f"Raw URL being accessed: {query_params}")
-    logger.info(f"Full request URL path: {st.runtime.scriptrunner.script_run_context.get_script_run_ctx().session_id if st.runtime.scriptrunner.script_run_context.get_script_run_ctx() else 'No URL context'}")
+    logger.info("Session and Request Information")
+    if hasattr(st, 'session_state'):
+        logger.info(f"Session State Keys: {list(st.session_state.keys())}")
     
     if 'payment' in st.query_params and 'session_id' in st.query_params:
         logger.info(f"Payment status: {st.query_params.get('payment')}")
