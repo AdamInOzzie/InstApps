@@ -1,6 +1,7 @@
 import os
 import logging
 import stripe
+import json
 from typing import Dict, Any
 from datetime import datetime
 
@@ -148,7 +149,13 @@ class PaymentService:
                     'created_at': datetime.now().isoformat(),
                     'currency': currency,
                     'spreadsheet_id': spreadsheet_id if spreadsheet_id else '',
-                    'row_number': str(row_number) if row_number else ''
+                    'row_number': str(row_number) if row_number else '',
+                    'form_data': json.dumps({
+                        'spreadsheet_id': spreadsheet_id,
+                        'row_number': row_number,
+                        'amount': amount,
+                        'timestamp': datetime.now().isoformat()
+                    })
                 }
             )
             
