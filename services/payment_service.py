@@ -79,12 +79,14 @@ class PaymentService:
             logger.error(f"Failed to initialize PaymentService: {str(e)}")
             raise
 
-    def create_payment_intent(self, amount: float, currency: str = 'usd') -> Dict[str, Any]:
+    def create_payment_intent(self, amount: float, spreadsheet_id: str = None, row_number: int = None, currency: str = 'usd') -> Dict[str, Any]:
         """
         Create a Stripe Checkout session for the specified amount
         
         Args:
             amount: Amount in dollars (will be converted to cents)
+            spreadsheet_id: ID of the Google Sheet to update
+            row_number: Row number to update in the spreadsheet
             currency: Currency code (default: 'usd')
             
         Returns:
@@ -143,7 +145,9 @@ class PaymentService:
                 metadata={
                     'amount': str(amount),
                     'created_at': datetime.now().isoformat(),
-                    'currency': currency
+                    'currency': currency,
+                    'spreadsheet_id': spreadsheet_id if spreadsheet_id else '',
+                    'row_number': str(row_number) if row_number else ''
                 }
             )
             

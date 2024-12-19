@@ -678,9 +678,11 @@ def main():
                     if st.button("Process Payment",
                                  key='admin_process_payment'):
                         try:
-                            # Create payment intent
+                            # Create payment intent with spreadsheet details
                             payment_data = st.session_state.payment_service.create_payment_intent(
-                                payment_amount)
+                                amount=payment_amount,
+                                spreadsheet_id=st.session_state.selected_sheet,
+                                row_number=payment_row_number if 'payment_row_number' in locals() else None)
 
                             if 'error' in payment_data:
                                 st.error(
