@@ -274,10 +274,17 @@ def main():
             logger.info("PAYMENT CALLBACK RECEIVED")
             logger.info(
                 f"Processing payment callback for session: {session_id}")
+            # Log detailed payment session state
+            logger.info("=" * 80)
+            logger.info("PAYMENT SESSION STATE CHECK")
+            logger.info(f"Current session ID: {session_id}")
+            logger.info(f"payment_sessions exists in state: {'payment_sessions' in st.session_state}")
             if 'payment_sessions' in st.session_state:
-                logger.info(
-                    f"Session data: {st.session_state.payment_sessions.get(session_id)}"
-                )
+                logger.info(f"All stored session IDs: {list(st.session_state.payment_sessions.keys())}")
+                logger.info(f"Session data for current ID: {st.session_state.payment_sessions.get(session_id)}")
+            else:
+                logger.info("No payment sessions stored in state")
+            logger.info("=" * 80)
             logger.info("=" * 80)
 
             # Initialize services before verification
@@ -691,10 +698,23 @@ def main():
                                     f"[Complete Payment on Stripe]({payment_data['session_url']})"
                                 )
 
-                                # Store session ID for later verification
-                                st.session_state[
-                                    'last_payment_session_id'] = payment_data[
-                                        'session_id']
+                                # Initialize payment_sessions if not exists
+                                if 'payment_sessions' not in st.session_state:
+                                    st.session_state.payment_sessions = {}
+                                
+                                # Store payment session data
+                                logger.info("=" * 80)
+                                logger.info("STORING PAYMENT SESSION")
+                                logger.info(f"Session ID being stored: {payment_data['session_id']}")
+                                
+                                st.session_state.payment_sessions[payment_data['session_id']] = {
+                                    'amount': payment_amount,
+                                    'created_at': datetime.now().isoformat(),
+                                    'status': 'pending'
+                                }
+                                
+                                logger.info(f"Updated payment sessions: {st.session_state.payment_sessions}")
+                                logger.info("=" * 80)
 
                         except Exception as e:
                             st.error(f"Error processing payment: {str(e)}")
