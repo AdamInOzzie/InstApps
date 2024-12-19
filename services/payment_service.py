@@ -123,6 +123,7 @@ class PaymentService:
             # Create Stripe Checkout session
             # Create session with enhanced logging
             logger.info("Creating Stripe checkout session...")
+            # Create session with metadata
             session = stripe.checkout.Session.create(
                 payment_method_types=['card'],
                 line_items=[{
@@ -139,6 +140,11 @@ class PaymentService:
                 mode='payment',
                 success_url=success_url,
                 cancel_url=cancel_url,
+                metadata={
+                    'amount': str(amount),
+                    'created_at': datetime.now().isoformat(),
+                    'currency': currency
+                }
             )
             
             # Log session details
@@ -198,11 +204,16 @@ class PaymentService:
             logger.info(f"Payment status retrieved: {payment_status}")
             logger.info(f"Full session data: {session}")
             
+            # Get metadata along with payment status
+            metadata = session.metadata or {}
+            
             return {
                 'status': 'succeeded' if payment_status == 'paid' else payment_status,
                 'amount': session.amount_total / 100,  # Convert cents to dollars
                 'currency': session.currency,
-                'payment_intent': session.payment_intent
+                'payment_intent': session.payment_intent,
+                'metadata': metadata,
+                'created_at': metadata.get('created_at')
             }
         except stripe.error.StripeError as e:
             return {'error': str(e)}
