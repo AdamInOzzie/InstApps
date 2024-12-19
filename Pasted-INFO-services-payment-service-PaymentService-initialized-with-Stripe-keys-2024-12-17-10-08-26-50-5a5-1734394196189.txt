@@ -1,0 +1,64 @@
+INFO:services.payment_service:PaymentService initialized with Stripe keys
+2024-12-17 10:08:26.50
+5a5832f8
+User
+INFO:services.payment_service:Secret key prefix: sk_test...
+2024-12-17 10:08:26.50
+5a5832f8
+User
+INFO:services.payment_service:Publishable key prefix: pk_live...
+2024-12-17 10:08:26.50
+5a5832f8
+User
+INFO:__main__:PaymentService initialized successfully
+2024-12-17 10:08:26.50
+5a5832f8
+User
+INFO:__main__:All services initialized successfully
+2024-12-17 10:08:26.50
+5a5832f8
+User
+INFO:__main__:Starting payment verification for session: cs_test_a1owT1GqyLwWj1K01KUrOlzjkGY5d95bgLZeuOoFzvp19pEyf0txjzckNR
+2024-12-17 10:08:26.50
+5a5832f8
+User
+INFO:stripe:message='Request to Stripe api' method=get url=https://api.stripe.com/v1/checkout/sessions/cs_test_a1owT1GqyLwWj1K01KUrOlzjkGY5d95bgLZeuOoFzvp19pEyf0txjzckNR
+2024-12-17 10:08:26.77
+5a5832f8
+User
+INFO:stripe:message='Stripe API response' path=https://api.stripe.com/v1/checkout/sessions/cs_test_a1owT1GqyLwWj1K01KUrOlzjkGY5d95bgLZeuOoFzvp19pEyf0txjzckNR response_code=200
+2024-12-17 10:08:26.78
+5a5832f8
+User
+INFO:__main__:Successfully retrieved session cs_test_a1owT1GqyLwWj1K01KUrOlzjkGY5d95bgLZeuOoFzvp19pEyf0txjzckNR
+2024-12-17 10:08:26.78
+5a5832f8
+User
+INFO:__main__:Payment status: paid
+2024-12-17 10:08:26.78
+5a5832f8
+User
+INFO:__main__:Successful payment for session: cs_test_a1owT1GqyLwWj1K01KUrOlzjkGY5d95bgLZeuOoFzvp19pEyf0txjzckNR
+2024-12-17 10:08:26.78
+5a5832f8
+User
+INFO:__main__:Query parameters: {'payment': 'success', 'session_id': 'cs_test_a1owT1GqyLwWj1K01KUrOlzjkGY5d95bgLZeuOoFzvp19pEyf0txjzckNR'}
+2024-12-17 10:08:26.78
+5a5832f8
+User
+INFO:__main__:Admin status: False, Healthcheck status: False
+2024-12-17 10:08:27.43
+5a5832f8
+User
+INFO:utils.google_sheets:Successfully listed 5 spreadsheets
+2024-12-17 10:08:27.43
+5a5832f8
+User
+INFO:services.spreadsheet_service:Successfully loaded 5 spreadsheets
+2024-12-17 10:08:27.85
+5a5832f8
+User
+INFO:utils.google_sheets:Successfully retrieved metadata for spreadsheet 10oGsPnfLO7-bpyn18CJhPI1iNeksGacCSGwNLXGbidc
+2024-12-17 10:08:27.85
+5a5832f8
+User

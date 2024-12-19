@@ -1,0 +1,105 @@
+NFO:__main__:APPLICATION DEPLOYMENT VERIFICATION
+2024-12-17 16:29:53.69
+79e31216
+User
+INFO:__main__:============================================================
+2024-12-17 16:29:53.69
+79e31216
+User
+INFO:__main__:Version: 2024-12-07-v2
+2024-12-17 16:29:53.69
+79e31216
+User
+INFO:__main__:Timestamp: 2024-12-17T06:29:53.692506
+2024-12-17 16:29:53.69
+79e31216
+User
+INFO:__main__:============================================================
+2024-12-17 16:29:53.69
+79e31216
+User
+INFO:__main__:Starting application initialization
+2024-12-17 16:29:53.69
+79e31216
+User
+INFO:__main__:Reading credentials from file: Pasted--type-service-account-project-id-flash-etching-442206-j6-private-key-id-be4ff-1733997763234.txt
+2024-12-17 16:29:53.69
+79e31216
+User
+INFO:__main__:Service account email: alchemysts@flash-etching-442206-j6.iam.gserviceaccount.com
+2024-12-17 16:29:53.69
+79e31216
+User
+INFO:__main__:Project ID: flash-etching-442206-j6
+2024-12-17 16:29:53.69
+79e31216
+User
+INFO:__main__:Successfully loaded and validated service account JSON
+2024-12-17 16:29:53.69
+79e31216
+User
+INFO:__main__:Initializing Google Sheets client
+2024-12-17 16:29:53.69
+79e31216
+User
+INFO:utils.google_sheets:Successfully authenticated with service account
+2024-12-17 16:29:53.70
+79e31216
+User
+INFO:googleapiclient.discovery_cache:file_cache is only supported with oauth2client<4.0.0
+2024-12-17 16:29:53.71
+79e31216
+User
+INFO:googleapiclient.discovery_cache:file_cache is only supported with oauth2client<4.0.0
+2024-12-17 16:29:53.71
+79e31216
+User
+INFO:utils.google_sheets:Successfully connected to Google Sheets and Drive APIs
+2024-12-17 16:29:53.71
+79e31216
+User
+INFO:__main__:================================================================================
+2024-12-17 16:29:53.71
+79e31216
+User
+INFO:__main__:PAYMENT CALLBACK RECEIVED
+2024-12-17 16:29:53.71
+79e31216
+User
+INFO:__main__:Processing payment callback for session: cs_test_a1OwXn0ZixNZHlykF29tZkXN5amB6GEzmLFiNtk7jhRxiVmIUCLvQyXcw6
+2024-12-17 16:29:53.71
+79e31216
+User
+INFO:__main__:================================================================================
+2024-12-17 16:29:53.71
+79e31216
+User
+INFO:__main__:Starting payment verification for session: cs_test_a1OwXn0ZixNZHlykF29tZkXN5amB6GEzmLFiNtk7jhRxiVmIUCLvQyXcw6
+2024-12-17 16:29:53.71
+79e31216
+User
+INFO:stripe:message='Request to Stripe api' method=get url=https://api.stripe.com/v1/checkout/sessions/cs_test_a1OwXn0ZixNZHlykF29tZkXN5amB6GEzmLFiNtk7jhRxiVmIUCLvQyXcw6
+2024-12-17 16:29:54.03
+79e31216
+User
+INFO:stripe:message='Stripe API response' path=https://api.stripe.com/v1/checkout/sessions/cs_test_a1OwXn0ZixNZHlykF29tZkXN5amB6GEzmLFiNtk7jhRxiVmIUCLvQyXcw6 response_code=200
+2024-12-17 16:29:54.03
+79e31216
+User
+INFO:__main__:Successfully retrieved session cs_test_a1OwXn0ZixNZHlykF29tZkXN5amB6GEzmLFiNtk7jhRxiVmIUCLvQyXcw6
+2024-12-17 16:29:54.03
+79e31216
+User
+INFO:__main__:Payment status: paid
+2024-12-17 16:29:54.03
+79e31216
+User
+INFO:__main__:Successful payment for session: cs_test_a1OwXn0ZixNZHlykF29tZkXN5amB6GEzmLFiNtk7jhRxiVmIUCLvQyXcw6
+2024-12-17 16:29:54.03
+79e31216
+User
+INFO:__main__:Query parameters: {'payment': 'success', 'session_id': 'cs_test_a1OwXn0ZixNZHlykF29tZkXN5amB6GEzmLFiNtk7jhRxiVmIUCLvQyXcw6'}
+2024-12-17 16:29:54.03
+79e31216
+User
+INFO:__main__:Admin status: False, Healthcheck status: False

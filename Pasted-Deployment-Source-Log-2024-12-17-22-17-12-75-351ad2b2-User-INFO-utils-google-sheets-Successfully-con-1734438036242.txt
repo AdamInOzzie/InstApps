@@ -1,0 +1,123 @@
+Deployment
+Source
+Log
+2024-12-17 22:17:12.75
+351ad2b2
+User
+INFO:utils.google_sheets:Successfully connected to Google Sheets and Drive APIs
+2024-12-17 22:17:17.34
+351ad2b2
+User
+INFO:utils.google_sheets:Successfully connected to Google Sheets and Drive APIs
+2024-12-17 22:17:17.34
+351ad2b2
+User
+INFO:services.spreadsheet_service:Calling Google Sheets API Method: spreadsheets.values.batchUpdate
+2024-12-17 22:17:17.34
+351ad2b2
+User
+INFO:services.spreadsheet_service:API Request Parameters:
+2024-12-17 22:17:17.34
+351ad2b2
+User
+INFO:services.spreadsheet_service: - Method: values.batchUpdate
+2024-12-17 22:17:17.34
+351ad2b2
+User
+INFO:services.spreadsheet_service: - Spreadsheet ID: 10oGsPnfLO7-bpyn18CJhPI1iNeksGacCSGwNLXGbidc
+2024-12-17 22:17:17.34
+351ad2b2
+User
+INFO:services.spreadsheet_service: - Body Structure:
+2024-12-17 22:17:17.34
+351ad2b2
+User
+INFO:services.spreadsheet_service: - Value Input Option: USER_ENTERED
+2024-12-17 22:17:17.34
+351ad2b2
+User
+INFO:services.spreadsheet_service: - Updates Count: 5
+2024-12-17 22:17:17.34
+351ad2b2
+User
+INFO:services.spreadsheet_service: - Full Body: {'valueInputOption': 'USER_ENTERED', 'data': [{'range': 'Sponsors!A9', 'values': [['Allyson']]}, {'range': 'Sponsors!B9', 'values': [['2024-12-17']]}, {'range': 'Sponsors!E9', 'values': [['8.5']]}, {'range': 'Sponsors!F9', 'values': [['45']]}, {'range': 'Sponsors!H9', 'values': [['']]}]}
+2024-12-17 22:17:17.95
+351ad2b2
+User
+INFO:services.spreadsheet_service:Raw API Response:
+2024-12-17 22:17:17.95
+351ad2b2
+User
+INFO:services.spreadsheet_service:{'spreadsheetId': '10oGsPnfLO7-bpyn18CJhPI1iNeksGacCSGwNLXGbidc', 'totalUpdatedRows': 1, 'totalUpdatedColumns': 5, 'totalUpdatedCells': 5, 'totalUpdatedSheets': 1, 'responses': [{'spreadsheetId': '10oGsPnfLO7-bpyn18CJhPI1iNeksGacCSGwNLXGbidc', 'updatedRange': 'Sponsors!A9', 'updatedRows': 1, 'updatedColumns': 1, 'updatedCells': 1}, {'spreadsheetId': '10oGsPnfLO7-bpyn18CJhPI1iNeksGacCSGwNLXGbidc', 'updatedRange': 'Sponsors!B9', 'updatedRows': 1, 'updatedColumns': 1, 'updatedCells': 1}, {'spreadsheetId': '10oGsPnfLO7-bpyn18CJhPI1iNeksGacCSGwNLXGbidc', 'updatedRange': 'Sponsors!E9', 'updatedRows': 1, 'updatedColumns': 1, 'updatedCells': 1}, {'spreadsheetId': '10oGsPnfLO7-bpyn18CJhPI1iNeksGacCSGwNLXGbidc', 'updatedRange': 'Sponsors!F9', 'updatedRows': 1, 'updatedColumns': 1, 'updatedCells': 1}, {'spreadsheetId': '10oGsPnfLO7-bpyn18CJhPI1iNeksGacCSGwNLXGbidc', 'updatedRange': 'Sponsors!H9', 'updatedRows': 1, 'updatedColumns': 1, 'updatedCells': 1}]}
+2024-12-17 22:17:17.95
+351ad2b2
+User
+INFO:services.spreadsheet_service:Successfully updated 5 cells
+2024-12-17 22:17:17.95
+351ad2b2
+User
+INFO:services.payment_service:Checking Stripe API keys...
+2024-12-17 22:17:17.95
+351ad2b2
+User
+INFO:services.payment_service:STRIPE_SECRET_KEY is present in environment
+2024-12-17 22:17:17.95
+351ad2b2
+User
+INFO:services.payment_service:STRIPE_PUBLISHABLE_KEY is present in environment
+2024-12-17 22:17:17.95
+351ad2b2
+User
+INFO:services.payment_service:Configuring Stripe client...
+2024-12-17 22:17:17.95
+351ad2b2
+User
+INFO:services.payment_service:Stripe client configured successfully
+2024-12-17 22:17:17.95
+351ad2b2
+User
+INFO:services.payment_service:PaymentService initialized with Stripe keys
+2024-12-17 22:17:17.95
+351ad2b2
+User
+INFO:services.payment_service:Secret key prefix: sk_test...
+2024-12-17 22:17:17.95
+351ad2b2
+User
+INFO:services.payment_service:Publishable key prefix: pk_live...
+2024-12-17 22:17:17.95
+351ad2b2
+User
+INFO:services.payment_service:Using base URL for redirects: https://sheet-sync-web-always-on-anzinozzie.replit.app
+2024-12-17 22:17:17.95
+351ad2b2
+User
+INFO:services.payment_service:Using Replit URL for callbacks: https://sheet-sync-web-always-on-anzinozzie.replit.app
+2024-12-17 22:17:17.95
+351ad2b2
+User
+INFO:services.payment_service:Base URL for Stripe redirects: https://sheet-sync-web-always-on-anzinozzie.replit.app
+2024-12-17 22:17:17.95
+351ad2b2
+User
+INFO:services.payment_service:Success URL template: https://sheet-sync-web-always-on-anzinozzie.replit.app/?payment=success&session_id={CHECKOUT_SESSION_ID}
+2024-12-17 22:17:17.95
+351ad2b2
+User
+INFO:services.payment_service:Cancel URL: https://sheet-sync-web-always-on-anzinozzie.replit.app/?payment=cancelled
+2024-12-17 22:17:19.39
+351ad2b2
+User
+INFO:stripe:message='Request to Stripe api' method=post url=https://api.stripe.com/v1/checkout/sessions
+2024-12-17 22:17:19.98
+351ad2b2
+User
+INFO:stripe:message='Stripe API response' path=https://api.stripe.com/v1/checkout/sessions response_code=200
+2024-12-17 22:17:20.01
+351ad2b2
+User
+INFO:services.payment_service:Generated success URL: https://sheet-sync-web-always-on-anzinozzie.replit.app/?payment=success&session_id={CHECKOUT_SESSION_ID}
+2024-12-17 22:17:20.01
+351ad2b2
+User
+INFO:services.payment_service:Generated cancel URL: https://sheet-sync-web-always-on-anzinozzie.replit.app/?payment=cancelled

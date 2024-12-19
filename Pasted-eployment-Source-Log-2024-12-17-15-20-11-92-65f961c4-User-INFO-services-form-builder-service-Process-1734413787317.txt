@@ -1,0 +1,131 @@
+eployment
+Source
+Log
+2024-12-17 15:20:11.92
+65f961c4
+User
+INFO:services.form_builder_service:Processing header field: Pay
+2024-12-17 15:34:35.36
+65f961c4
+User
+INFO:utils.google_sheets:Successfully authenticated with service account
+2024-12-17 15:34:35.37
+65f961c4
+User
+INFO:googleapiclient.discovery_cache:file_cache is only supported with oauth2client<4.0.0
+2024-12-17 15:34:35.37
+65f961c4
+User
+INFO:googleapiclient.discovery_cache:file_cache is only supported with oauth2client<4.0.0
+2024-12-17 15:34:35.38
+65f961c4
+User
+INFO:utils.google_sheets:Successfully connected to Google Sheets and Drive APIs
+2024-12-17 15:34:35.38
+65f961c4
+User
+INFO:__main__:Initializing PaymentService...
+2024-12-17 15:34:35.38
+65f961c4
+User
+INFO:__main__:Checking deployment environment variables...
+2024-12-17 15:34:35.38
+65f961c4
+User
+INFO:__main__:STRIPE_SECRET_KEY present in environment: True
+2024-12-17 15:34:35.38
+65f961c4
+User
+INFO:__main__:STRIPE_PUBLISHABLE_KEY present in environment: True
+2024-12-17 15:34:35.38
+65f961c4
+User
+INFO:services.payment_service:Checking Stripe API keys...
+2024-12-17 15:34:35.38
+65f961c4
+User
+INFO:services.payment_service:STRIPE_SECRET_KEY is present in environment
+2024-12-17 15:34:35.38
+65f961c4
+User
+INFO:services.payment_service:STRIPE_PUBLISHABLE_KEY is present in environment
+2024-12-17 15:34:35.38
+65f961c4
+User
+INFO:services.payment_service:Configuring Stripe client...
+2024-12-17 15:34:35.38
+65f961c4
+User
+INFO:services.payment_service:Stripe client configured successfully
+2024-12-17 15:34:35.38
+65f961c4
+User
+INFO:services.payment_service:PaymentService initialized with Stripe keys
+2024-12-17 15:34:35.38
+65f961c4
+User
+INFO:services.payment_service:Secret key prefix: sk_test...
+2024-12-17 15:34:35.38
+65f961c4
+User
+INFO:services.payment_service:Publishable key prefix: pk_live...
+2024-12-17 15:34:35.38
+65f961c4
+User
+INFO:__main__:PaymentService initialized successfully
+2024-12-17 15:34:35.38
+65f961c4
+User
+INFO:__main__:All services initialized successfully
+2024-12-17 15:34:35.38
+65f961c4
+User
+INFO:__main__:Starting payment verification for session: cs_test_a1FP5PO82WHljczkuOWzdl16FQrKHyzl6eoDz2wxOi4DOtNY0JbDF7fIlm
+2024-12-17 15:34:35.38
+65f961c4
+User
+INFO:stripe:message='Request to Stripe api' method=get url=https://api.stripe.com/v1/checkout/sessions/cs_test_a1FP5PO82WHljczkuOWzdl16FQrKHyzl6eoDz2wxOi4DOtNY0JbDF7fIlm
+2024-12-17 15:34:35.68
+65f961c4
+User
+INFO:stripe:message='Stripe API response' path=https://api.stripe.com/v1/checkout/sessions/cs_test_a1FP5PO82WHljczkuOWzdl16FQrKHyzl6eoDz2wxOi4DOtNY0JbDF7fIlm response_code=200
+2024-12-17 15:34:35.68
+65f961c4
+User
+INFO:__main__:Successfully retrieved session cs_test_a1FP5PO82WHljczkuOWzdl16FQrKHyzl6eoDz2wxOi4DOtNY0JbDF7fIlm
+2024-12-17 15:34:35.68
+65f961c4
+User
+INFO:__main__:Payment status: paid
+2024-12-17 15:34:35.68
+65f961c4
+User
+INFO:__main__:Successful payment for session: cs_test_a1FP5PO82WHljczkuOWzdl16FQrKHyzl6eoDz2wxOi4DOtNY0JbDF7fIlm
+2024-12-17 15:34:35.68
+65f961c4
+User
+INFO:__main__:Query parameters: {'payment': 'success', 'session_id': 'cs_test_a1FP5PO82WHljczkuOWzdl16FQrKHyzl6eoDz2wxOi4DOtNY0JbDF7fIlm'}
+2024-12-17 15:34:35.68
+65f961c4
+User
+INFO:__main__:Admin status: False, Healthcheck status: False
+2024-12-17 15:34:36.36
+65f961c4
+User
+INFO:utils.google_sheets:Successfully listed 5 spreadsheets
+2024-12-17 15:34:36.36
+65f961c4
+User
+INFO:services.spreadsheet_service:Successfully loaded 5 spreadsheets
+2024-12-17 15:34:37.18
+65f961c4
+User
+INFO:utils.google_sheets:Successfully retrieved metadata for spreadsheet 10oGsPnfLO7-bpyn18CJhPI1iNeksGacCSGwNLXGbidc
+2024-12-17 15:34:37.18
+65f961c4
+User
+INFO:services.spreadsheet_service:Found 4 sheets in spreadsheet
+
+Wrap
+
+Colors

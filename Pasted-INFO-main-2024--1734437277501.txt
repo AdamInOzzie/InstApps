@@ -1,0 +1,85 @@
+INFO:__main__:================================================================================
+2024-12-17 22:05:41.94
+b02a7e74
+User
+INFO:__main__:CHECKING PAYMENT CALLBACK
+2024-12-17 22:05:41.94
+b02a7e74
+User
+INFO:__main__:Query params: {'payment': 'success', 'session_id': 'cs_test_a1J8aoNN4Kr34FF4kKZuQggztWZDhXPCXa6Ky77jg7dPmH2yIwHNjkb4y8'}
+2024-12-17 22:05:41.94
+b02a7e74
+User
+INFO:__main__:Payment status: success
+2024-12-17 22:05:41.94
+b02a7e74
+User
+INFO:__main__:Session ID: cs_test_a1J8aoNN4Kr34FF4kKZuQggztWZDhXPCXa6Ky77jg7dPmH2yIwHNjkb4y8
+2024-12-17 22:05:41.94
+b02a7e74
+User
+INFO:__main__:================================================================================
+2024-12-17 22:05:41.94
+b02a7e74
+User
+INFO:__main__:PAYMENT CALLBACK RECEIVED
+2024-12-17 22:05:41.94
+b02a7e74
+User
+INFO:__main__:Processing payment callback for session: cs_test_a1J8aoNN4Kr34FF4kKZuQggztWZDhXPCXa6Ky77jg7dPmH2yIwHNjkb4y8
+2024-12-17 22:05:41.94
+b02a7e74
+User
+INFO:__main__:================================================================================
+2024-12-17 22:05:41.94
+b02a7e74
+User
+INFO:__main__:Starting payment verification for session: cs_test_a1J8aoNN4Kr34FF4kKZuQggztWZDhXPCXa6Ky77jg7dPmH2yIwHNjkb4y8
+2024-12-17 22:05:41.94
+b02a7e74
+User
+INFO:stripe:message='Request to Stripe api' method=get url=https://api.stripe.com/v1/checkout/sessions/cs_test_a1J8aoNN4Kr34FF4kKZuQggztWZDhXPCXa6Ky77jg7dPmH2yIwHNjkb4y8
+2024-12-17 22:05:42.22
+b02a7e74
+User
+INFO:stripe:message='Stripe API response' path=https://api.stripe.com/v1/checkout/sessions/cs_test_a1J8aoNN4Kr34FF4kKZuQggztWZDhXPCXa6Ky77jg7dPmH2yIwHNjkb4y8 response_code=200
+2024-12-17 22:05:42.23
+b02a7e74
+User
+INFO:__main__:Successfully retrieved session cs_test_a1J8aoNN4Kr34FF4kKZuQggztWZDhXPCXa6Ky77jg7dPmH2yIwHNjkb4y8
+2024-12-17 22:05:42.23
+b02a7e74
+User
+INFO:__main__:Payment status: paid
+2024-12-17 22:05:42.23
+b02a7e74
+User
+INFO:__main__:Successful payment for session: cs_test_a1J8aoNN4Kr34FF4kKZuQggztWZDhXPCXa6Ky77jg7dPmH2yIwHNjkb4y8
+2024-12-17 22:05:42.23
+b02a7e74
+User
+INFO:__main__:Query parameters: {'payment': 'success', 'session_id': 'cs_test_a1J8aoNN4Kr34FF4kKZuQggztWZDhXPCXa6Ky77jg7dPmH2yIwHNjkb4y8'}
+2024-12-17 22:05:42.23
+b02a7e74
+User
+INFO:__main__:Admin status: False, Healthcheck status: False
+2024-12-17 22:05:42.81
+b02a7e74
+User
+INFO:utils.google_sheets:Successfully listed 5 spreadsheets
+2024-12-17 22:05:42.81
+b02a7e74
+User
+INFO:services.spreadsheet_service:Successfully loaded 5 spreadsheets
+2024-12-17 22:05:43.27
+b02a7e74
+User
+INFO:utils.google_sheets:Successfully retrieved metadata for spreadsheet 10oGsPnfLO7-bpyn18CJhPI1iNeksGacCSGwNLXGbidc
+2024-12-17 22:05:43.27
+b02a7e74
+User
+INFO:services.spreadsheet_service:Found 4 sheets in spreadsheet
+
+Wrap
+
+Colors
