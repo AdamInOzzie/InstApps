@@ -110,11 +110,19 @@ class PaymentService:
             success_url = f"{base_url}/?payment=success&session_id={{CHECKOUT_SESSION_ID}}"
             cancel_url = f"{base_url}/?payment=cancelled"
             
-            # Log the generated URLs
+            # Enhanced logging for URL construction and parameters
+            logger.info("=" * 80)
+            logger.info("PAYMENT SESSION CREATION DETAILS")
+            logger.info(f"Base URL used: {base_url}")
             logger.info(f"Success URL template: {success_url}")
             logger.info(f"Cancel URL: {cancel_url}")
+            logger.info(f"Amount in cents: {amount_cents}")
+            logger.info(f"Currency: {currency}")
+            logger.info("=" * 80)
             
             # Create Stripe Checkout session
+            # Create session with enhanced logging
+            logger.info("Creating Stripe checkout session...")
             session = stripe.checkout.Session.create(
                 payment_method_types=['card'],
                 line_items=[{
@@ -132,6 +140,14 @@ class PaymentService:
                 success_url=success_url,
                 cancel_url=cancel_url,
             )
+            
+            # Log session details
+            logger.info("=" * 80)
+            logger.info("STRIPE SESSION CREATED")
+            logger.info(f"Session ID: {session.id}")
+            logger.info(f"Session URL: {session.url}")
+            logger.info(f"Session object: {session}")
+            logger.info("=" * 80)
             
             # Log the URLs for debugging
             logger.info(f"Generated success URL: {success_url}")

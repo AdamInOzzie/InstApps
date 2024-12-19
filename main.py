@@ -257,10 +257,15 @@ def main():
     # Check for payment callback first
     logger.info("=" * 80)
     logger.info("CHECKING PAYMENT CALLBACK")
-    logger.info(f"Query params: {dict(st.query_params)}")
+    query_params = dict(st.query_params)
+    logger.info(f"All query parameters: {query_params}")
+    logger.info(f"Raw URL being accessed: {query_params}")
+    logger.info(f"Full request URL path: {st.runtime.scriptrunner.script_run_context.get_script_run_ctx().session_id if st.runtime.scriptrunner.script_run_context.get_script_run_ctx() else 'No URL context'}")
+    
     if 'payment' in st.query_params and 'session_id' in st.query_params:
         logger.info(f"Payment status: {st.query_params.get('payment')}")
         logger.info(f"Session ID: {st.query_params.get('session_id')}")
+        logger.info("Payment callback parameters detected")
         if st.query_params.get('payment') == 'success':
             session_id = st.query_params.get('session_id')
             logger.info("=" * 80)
