@@ -94,10 +94,14 @@ class UIService:
                     logger.error("Missing required metadata")
                     return False
 
-            # Initialize payment_sessions if not exists
-            if 'payment_sessions' not in st.session_state:
-                st.session_state.payment_sessions = {}
-                logger.info("Initialized empty payment_sessions in session state")
+                # Initialize payment_sessions if not exists
+                if 'payment_sessions' not in st.session_state:
+                    st.session_state.payment_sessions = {}
+                    logger.info("Initialized empty payment_sessions in session state")
+
+            except Exception as e:
+                logger.error(f"Error initializing payment service or getting payment status: {str(e)}")
+                return False
             
             # Get the stored session data if it exists
             stored_session = st.session_state.payment_sessions.get(session_id)
