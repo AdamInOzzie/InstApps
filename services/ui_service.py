@@ -159,10 +159,11 @@ class UIService:
                     logger.error(f"Error updating spreadsheet: {str(e)}")
                     st.error(f"Error updating spreadsheet: {str(e)}")
                     
-            else:
-                st.error("Payment verification failed")
-                return False
-                
+            except Exception as e:
+                    logger.error(f"Error updating spreadsheet: {str(e)}")
+                    st.error(f"Error updating spreadsheet: {str(e)}")
+                    return False
+                    
         except Exception as e:
             logger.error(f"Error verifying payment: {str(e)}")
             st.error(f"Error processing payment: {str(e)}")
