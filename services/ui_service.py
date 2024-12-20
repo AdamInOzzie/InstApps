@@ -157,11 +157,15 @@ class UIService:
             logger.info("DETECTING PAID COLUMN")
             logger.info("=" * 80)
             
-            # Read headers to find exact "Paid" column
-            sheet_data = sheets_client.read_spreadsheet(spreadsheet_id, 'Sponsors!A1:Z1')
+            # Read headers to find exact "Paid" column with more specific range
+            logger.info("Attempting to read sheet headers...")
+            header_range = 'Sponsors!A1:H1'  # More specific range including known columns
+            sheet_data = sheets_client.read_spreadsheet(spreadsheet_id, header_range)
+            
             if sheet_data is not None and not sheet_data.empty:
                 headers = sheet_data.columns.tolist()
-                logger.info(f"All headers found: {headers}")
+                logger.info(f"Successfully read headers from range {header_range}")
+                logger.info(f"Found headers: {headers}")
                 
                 # Look for exact match of "Paid"
                 paid_column_index = None
