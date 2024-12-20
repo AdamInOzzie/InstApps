@@ -156,8 +156,10 @@ class PaymentService:
             logger.info("=" * 80)
             
             # Create comprehensive metadata with all necessary information
+            # Create metadata with proper amount formatting and required fields
             metadata = {
-                'amount': str(amount),
+                'amount': str(float(amount)),  # Ensure consistent float formatting
+                'amount_cents': str(int(amount * 100)),  # Store cents amount for verification
                 'created_at': datetime.now().isoformat(),
                 'currency': currency,
                 'spreadsheet_id': str(spreadsheet_id),
@@ -165,6 +167,10 @@ class PaymentService:
                 'payment_status': 'pending',
                 'payment_type': 'form_submission'
             }
+            
+            # Log the metadata being stored
+            logger.info("Creating Stripe session with metadata:")
+            logger.info(json.dumps(metadata, indent=2))
             
             # Log the complete metadata
             logger.info("Complete metadata being stored:")
@@ -231,17 +237,17 @@ class PaymentService:
 
     def get_payment_status(self, session_id: str) -> Dict[str, Any]:
         """
-        Get the status of a checkout session
+        Get the status of a checkout session with enhanced validation
         
         Args:
             session_id: The ID of the checkout session to check
             
         Returns:
-            Dict containing payment status and details
+            Dict containing payment status and details with validation
         """
         try:
             logger.info("=" * 80)
-            logger.info("RETRIEVING STRIPE SESSION DATA")
+            logger.info("RETRIEVING AND VALIDATING STRIPE SESSION")
             logger.info(f"Session ID: {session_id}")
             
             # Retrieve the session from Stripe
@@ -254,21 +260,31 @@ class PaymentService:
             logger.info(f"Amount Total: {session.amount_total}")
             logger.info(f"Currency: {session.currency}")
             logger.info(f"Customer Details: {session.customer_details if hasattr(session, 'customer_details') else 'None'}")
-            logger.info(f"Metadata: {json.dumps(session.metadata, indent=2)}")
-            logger.info("=" * 80)
             
-            payment_status = session.payment_status
-            
-            # Get metadata along with payment status
+            # Get and validate metadata
             metadata = session.metadata or {}
+            logger.info(f"Original Metadata: {json.dumps(metadata, indent=2)}")
             
-            # Log metadata details for debugging
+            # Verify amount consistency
+            stored_amount_cents = int(float(metadata.get('amount_cents', 0)))
+            actual_amount = session.amount_total
+            
+            if stored_amount_cents != actual_amount:
+                logger.error(f"Amount mismatch - Stored: {stored_amount_cents}, Actual: {actual_amount}")
+                return {'error': 'Amount verification failed'}
+            
+            # Update metadata with current payment status
+            metadata = {
+                **metadata,
+                'payment_status': session.payment_status,
+                'amount_paid': str(session.amount_total / 100)  # Convert cents to dollars
+            }
+            
             logger.info("=" * 80)
-            logger.info("PAYMENT SESSION METADATA CHECK")
-            logger.info(f"Raw metadata: {metadata}")
-            logger.info(f"Spreadsheet ID: {metadata.get('spreadsheet_id', 'NOT FOUND')}")
-            logger.info(f"Row Number: {metadata.get('row_number', 'NOT FOUND')}")
-            logger.info(f"Form Data: {metadata.get('form_data', 'NOT FOUND')}")
+            logger.info("VALIDATED PAYMENT DATA")
+            logger.info(f"Payment Status: {session.payment_status}")
+            logger.info(f"Amount Verified: {stored_amount_cents == actual_amount}")
+            logger.info(f"Updated Metadata: {json.dumps(metadata, indent=2)}")
             logger.info("=" * 80)
             
             # Verify required metadata fields
