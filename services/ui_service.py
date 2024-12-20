@@ -181,21 +181,37 @@ class UIService:
                 # Update the Paid field in the spreadsheet directly
                 try:
                     # Update the Paid field in the spreadsheet directly
-                    cell_updates = [session_data['row_number'], 8, f"STRIPE_{session_id}"]  # Column H is 8
-                    logger.info(f"Updating Paid field - Row: {cell_updates[0]}, Column: {cell_updates[1]}, Value: {cell_updates[2]}")
-                    logger.info(f"Full session data for verification: {session_data}")
+                    logger.info("="*80)
+                    logger.info("ATTEMPTING SPREADSHEET UPDATE")
+                    logger.info("="*80)
 
                     # Import SpreadsheetService
-                    from services.spreadsheet_service import SpreadsheetService
-                    
-                    # Use SpreadsheetService's UpdateEntryCells method directly
-                    update_success = SpreadsheetService.UpdateEntryCells(
-                        spreadsheet_id=session_data['spreadsheet_id'],
-                        sheet_name=session_data['sheet_name'],
-                        cell_updates=cell_updates
-                    )
-                    
-                    logger.info(f"Update operation result: {update_success}")
+                    try:
+                        from services.spreadsheet_service import SpreadsheetService
+                        logger.info("Successfully imported SpreadsheetService")
+                        
+                        # Prepare cell updates for the Paid field (Column H)
+                        cell_updates = [session_data['row_number'], 8, f"STRIPE_{session_id}"]
+                        logger.info(f"Prepared cell updates:")
+                        logger.info(f"- Row: {cell_updates[0]}")
+                        logger.info(f"- Column: {cell_updates[1]} (H)")
+                        logger.info(f"- Value: {cell_updates[2]}")
+                        logger.info(f"Full session data: {json.dumps(session_data, indent=2)}")
+                        
+                        # Use SpreadsheetService's UpdateEntryCells method
+                        logger.info("Calling SpreadsheetService.UpdateEntryCells...")
+                        update_success = SpreadsheetService.UpdateEntryCells(
+                            spreadsheet_id=session_data['spreadsheet_id'],
+                            sheet_name=session_data['sheet_name'],
+                            cell_updates=cell_updates
+                        )
+                        
+                        logger.info(f"Update operation completed. Success: {update_success}")
+                        logger.info("="*80)
+                    except Exception as e:
+                        logger.error(f"Error during spreadsheet update: {str(e)}")
+                        logger.error(f"Error type: {type(e).__name__}")
+                        return False
                     
                     if update_success:
                         logger.info(f"Successfully updated spreadsheet for session {session_id}")
