@@ -190,13 +190,36 @@ class UIService:
                         from services.spreadsheet_service import SpreadsheetService
                         logger.info("Successfully imported SpreadsheetService")
                         
+                        # Log detailed session data
+                        logger.info("="*80)
+                        logger.info("PREPARING CELL UPDATE")
+                        logger.info(f"Session Data:")
+                        logger.info(f"- Spreadsheet ID: {session_data['spreadsheet_id']}")
+                        logger.info(f"- Sheet Name: {session_data['sheet_name']}")
+                        logger.info(f"- Row Number: {session_data['row_number']}")
+                        logger.info(f"- Amount: ${session_data['amount']}")
+                        logger.info(f"- Session ID: {session_id}")
+                        
+                        # Verify row exists first
+                        logger.info("Verifying row exists...")
+                        df = sheets_client.read_spreadsheet(
+                            session_data['spreadsheet_id'], 
+                            f"{session_data['sheet_name']}!A:H"
+                        )
+                        if df is None or len(df) < session_data['row_number']:
+                            logger.error(f"Row {session_data['row_number']} not found in sheet")
+                            return False
+                            
+                        logger.info(f"Row verification successful - Sheet has {len(df)} rows")
+                        
                         # Prepare cell updates for the Paid field (Column H)
                         cell_updates = [session_data['row_number'], 8, f"STRIPE_{session_id}"]
-                        logger.info(f"Prepared cell updates:")
-                        logger.info(f"- Row: {cell_updates[0]}")
-                        logger.info(f"- Column: {cell_updates[1]} (H)")
-                        logger.info(f"- Value: {cell_updates[2]}")
-                        logger.info(f"Full session data: {json.dumps(session_data, indent=2)}")
+                        logger.info("="*80)
+                        logger.info("CELL UPDATE DETAILS")
+                        logger.info(f"Row: {cell_updates[0]}")
+                        logger.info(f"Column: {cell_updates[1]} (H)")
+                        logger.info(f"Value: {cell_updates[2]}")
+                        logger.info("="*80)
                         
                         # Use SpreadsheetService's UpdateEntryCells method
                         logger.info("Calling SpreadsheetService.UpdateEntryCells...")
@@ -206,7 +229,9 @@ class UIService:
                             cell_updates=cell_updates
                         )
                         
-                        logger.info(f"Update operation completed. Success: {update_success}")
+                        logger.info("="*80)
+                        logger.info("UPDATE OPERATION RESULT")
+                        logger.info(f"Success: {update_success}")
                         logger.info("="*80)
                     except Exception as e:
                         logger.error(f"Error during spreadsheet update: {str(e)}")
