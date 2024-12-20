@@ -133,17 +133,50 @@ class UIService:
 
                     if spreadsheet_id and row_number:
                         logger.info(f"Updating sheet {spreadsheet_id} at row {row_number}")
-                        cell_updates = [row_number, 8, f"PAID_STRIPE_{session_id}"]
                         
-                        update_success = SpreadsheetService.UpdateEntryCells(
-                            spreadsheet_id=spreadsheet_id,
-                            sheet_name='Sponsors',  # Default to Sponsors sheet
-                            cell_updates=cell_updates
-                        )
+                        # First verify spreadsheet exists and get available sheets
+                        from utils.google_sheets import GoogleSheetsClient
+                        sheets_client = GoogleSheetsClient()
                         
-                        if update_success:
-                            logger.info("Successfully updated payment status in sheet")
-                            return True
+                        try:
+                            # Get spreadsheet metadata to verify sheets
+                            sheet_metadata = sheets_client.get_spreadsheet_metadata(spreadsheet_id)
+                            available_sheets = [sheet['properties']['title'] for sheet in sheet_metadata.get('sheets', [])]
+                            logger.info(f"Available sheets: {available_sheets}")
+                            
+                            if 'Sponsors' not in available_sheets:
+                                logger.error("Sponsors sheet not found in spreadsheet")
+                                return False
+                            
+                            # Verify the row exists by reading the sheet
+                            df = sheets_client.read_spreadsheet(spreadsheet_id, 'Sponsors!A:H')
+                            if df is None or len(df) < row_number:
+                                logger.error(f"Row {row_number} not found in Sponsors sheet")
+                                return False
+                                
+                            logger.info(f"Verified row {row_number} exists in sheet with {len(df)} rows")
+                            
+                            # Prepare and execute the update
+                            cell_updates = [row_number, 8, f"PAID_STRIPE_{session_id}"]
+                            logger.info(f"Updating cell H{row_number} with: PAID_STRIPE_{session_id}")
+                            
+                            update_success = SpreadsheetService.UpdateEntryCells(
+                                spreadsheet_id=spreadsheet_id,
+                                sheet_name='Sponsors',
+                                cell_updates=cell_updates
+                            )
+                            
+                            if update_success:
+                                logger.info("Successfully updated payment status in sheet")
+                                return True
+                            else:
+                                logger.error("Sheet update failed")
+                                return False
+                                
+                        except Exception as e:
+                            logger.error(f"Error during sheet update: {str(e)}")
+                            return False
+                            
                     else:
                         logger.error("Missing required metadata for sheet update")
                         return False
