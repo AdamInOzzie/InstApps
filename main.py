@@ -690,15 +690,27 @@ def main():
 
                             # Get required data from session state
                             current_row = st.session_state.get('current_row_number')
-                            selected_sheet = st.session_state.get('selected_sheet')
+                            selected_sheet = st.session_state.get('current_sheet_id', st.session_state.get('selected_sheet'))
+                            
+                            # Log session state for debugging
+                            logger.info("=" * 80)
+                            logger.info("PAYMENT SESSION STATE CHECK")
+                            logger.info(f"Current Row: {current_row}")
+                            logger.info(f"Selected Sheet: {selected_sheet}")
+                            logger.info(f"Session State Keys: {list(st.session_state.keys())}")
+                            logger.info(f"current_sheet_id: {st.session_state.get('current_sheet_id')}")
+                            logger.info(f"selected_sheet: {st.session_state.get('selected_sheet')}")
+                            logger.info("=" * 80)
                             
                             # Validate required data
                             if not current_row:
                                 st.error("Missing row number for payment processing")
+                                logger.error("Missing row number in session state")
                                 return
                             
                             if not selected_sheet:
                                 st.error("No spreadsheet selected for payment processing")
+                                logger.error("Missing spreadsheet ID in session state")
                                 return
                                 
                             logger.info("=" * 80)
