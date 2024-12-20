@@ -66,12 +66,10 @@ class UIService:
             logger.info(f"Current query parameters: {dict(st.query_params)}")
             logger.info(f"Available session state keys: {list(st.session_state.keys())}")
 
-            # Log all URL parameters and session state
+            # Log payment session information
             logger.info("="*80)
             logger.info("PAYMENT CALLBACK PARAMETERS")
-            logger.info(f"All query parameters: {dict(st.query_params)}")
-            logger.info(f"Raw session ID from parameter: {session_id}")
-            logger.info(f"Current URL path: {st.runtime.get_instance()._get_url_path()}")
+            logger.info(f"Session ID: {session_id}")
             logger.info(f"Payment sessions in state: {list(st.session_state.payment_sessions.keys()) if 'payment_sessions' in st.session_state else 'None'}")
             logger.info("="*80)
 
