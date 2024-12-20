@@ -81,12 +81,15 @@ class UIService:
                 # Get payment status from Stripe
                 payment_status = payment_service.get_payment_status(session_id)
                 logger.info("Payment status retrieved:")
-                logger.info(json.dumps(payment_status, indent=2))
+                logger.info(f"Payment status: {payment_status}")
 
                 # Extract metadata for sheet update
                 metadata = payment_status.get('metadata', {})
                 spreadsheet_id = metadata.get('spreadsheet_id')
                 row_number = int(metadata.get('row_number', 0))
+
+                # Log metadata details
+                logger.info(f"Extracted metadata - Spreadsheet ID: {spreadsheet_id}, Row Number: {row_number}")
 
                 if not spreadsheet_id or not row_number:
                     logger.error("Missing required metadata")
@@ -96,6 +99,14 @@ class UIService:
                 if 'payment_sessions' not in st.session_state:
                     st.session_state.payment_sessions = {}
                     logger.info("Initialized empty payment_sessions in session state")
+
+                # Verify payment was successful
+                if payment_status.get('status') != 'succeeded':
+                    logger.error(f"Payment not successful. Status: {payment_status.get('status')}")
+                    return False
+
+                # Prepare for sheet update
+                logger.info(f"Preparing to update sheet {spreadsheet_id} at row {row_number}")
 
             except Exception as e:
                 logger.error(f"Error initializing payment service or getting payment status: {str(e)}")
@@ -117,86 +128,58 @@ class UIService:
             logger.info("="*80)
 
             try:
-                # Get payment status from Stripe
-                logger.info("="*80)
-                logger.info("INITIALIZING STRIPE PAYMENT SERVICE")
-                logger.info("="*80)
-                
-                from services.payment_service import PaymentService
+                # Initialize SpreadsheetService for sheet update
                 from services.spreadsheet_service import SpreadsheetService
-                payment_service = PaymentService()
+                from utils.google_sheets import GoogleSheetsClient
+                sheets_client = GoogleSheetsClient()
                 
                 logger.info("="*80)
-                logger.info("RETRIEVING STRIPE SESSION IN CALLBACK")
-                logger.info(f"Session ID: {session_id}")
-                logger.info("Attempting to retrieve payment status...")
+                logger.info("PROCESSING SHEET UPDATE")
+                logger.info(f"Spreadsheet ID: {spreadsheet_id}")
+                logger.info(f"Row Number: {row_number}")
+                logger.info("="*80)
                 
-                try:
-                    payment_status = payment_service.get_payment_status(session_id)
-                    logger.info("Successfully retrieved payment status")
-                    logger.info("Full payment status response:")
-                    logger.info("="*80)
-                    logger.info(json.dumps(payment_status, indent=2))
-                    logger.info("="*80)
-
-                    # Extract metadata for sheet update
-                    metadata = payment_status.get('metadata', {})
-                    spreadsheet_id = metadata.get('spreadsheet_id')
-                    row_number = int(metadata.get('row_number', 0))
-
-                    if spreadsheet_id and row_number:
-                        logger.info(f"Updating sheet {spreadsheet_id} at row {row_number}")
-                        
-                        # First verify spreadsheet exists and get available sheets
-                        from utils.google_sheets import GoogleSheetsClient
-                        sheets_client = GoogleSheetsClient()
-                        
-                        try:
-                            # Get spreadsheet metadata to verify sheets
-                            sheet_metadata = sheets_client.get_spreadsheet_metadata(spreadsheet_id)
-                            available_sheets = [sheet['properties']['title'] for sheet in sheet_metadata.get('sheets', [])]
-                            logger.info(f"Available sheets: {available_sheets}")
-                            
-                            if 'Sponsors' not in available_sheets:
-                                logger.error("Sponsors sheet not found in spreadsheet")
-                                return False
-                            
-                            # Verify the row exists by reading the sheet
-                            df = sheets_client.read_spreadsheet(spreadsheet_id, 'Sponsors!A:H')
-                            if df is None or len(df) < row_number:
-                                logger.error(f"Row {row_number} not found in Sponsors sheet")
-                                return False
-                                
-                            logger.info(f"Verified row {row_number} exists in sheet with {len(df)} rows")
-                            
-                            # Prepare and execute the update
-                            cell_updates = [row_number, 8, f"PAID_STRIPE_{session_id}"]
-                            logger.info(f"Updating cell H{row_number} with: PAID_STRIPE_{session_id}")
-                            
-                            update_success = SpreadsheetService.UpdateEntryCells(
-                                spreadsheet_id=spreadsheet_id,
-                                sheet_name='Sponsors',
-                                cell_updates=cell_updates
-                            )
-                            
-                            if update_success:
-                                logger.info("Successfully updated payment status in sheet")
-                                return True
-                            else:
-                                logger.error("Sheet update failed")
-                                return False
-                                
-                        except Exception as e:
-                            logger.error(f"Error during sheet update: {str(e)}")
-                            return False
-                            
-                    else:
-                        logger.error("Missing required metadata for sheet update")
-                        return False
-                        
-                except Exception as e:
-                    logger.error(f"Error retrieving Stripe session: {str(e)}")
+                # Verify sheet exists and is accessible
+                sheet_metadata = sheets_client.get_spreadsheet_metadata(spreadsheet_id)
+                available_sheets = [sheet['properties']['title'] for sheet in sheet_metadata.get('sheets', [])]
+                logger.info(f"Available sheets: {available_sheets}")
+                
+                if 'Sponsors' not in available_sheets:
+                    logger.error("Sponsors sheet not found in spreadsheet")
                     return False
+                
+                # Verify row exists
+                df = sheets_client.read_spreadsheet(spreadsheet_id, 'Sponsors!A:H')
+                if df is None or len(df) < row_number:
+                    logger.error(f"Row {row_number} not found in Sponsors sheet")
+                    return False
+                
+                logger.info(f"Verified row {row_number} exists in sheet with {len(df)} rows")
+                
+                # Prepare update with payment verification
+                cell_updates = [row_number, 8, f"PAID_STRIPE_{session_id}"]
+                logger.info(f"Updating cell H{row_number} with: PAID_STRIPE_{session_id}")
+                
+                # Execute the update
+                update_success = SpreadsheetService.UpdateEntryCells(
+                    spreadsheet_id=spreadsheet_id,
+                    sheet_name='Sponsors',
+                    cell_updates=cell_updates
+                )
+                
+                if update_success:
+                    logger.info("Successfully updated payment status in sheet")
+                    st.success("✅ Payment verified and entry updated successfully!")
+                    return True
+                else:
+                    logger.error("Failed to update sheet")
+                    st.error("Failed to update payment status in sheet")
+                    return False
+                    
+            except Exception as e:
+                logger.error(f"Error updating sheet: {str(e)}")
+                st.error(f"Error updating payment status: {str(e)}")
+                return False
                 
                 if not payment_status or payment_status.get('status') != 'succeeded':
                     logger.warning(f"Payment not successful. Full status: {json.dumps(payment_status, indent=2)}")
