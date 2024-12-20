@@ -146,54 +146,61 @@ class PaymentService:
             # Create session with enhanced logging
             logger.info("Creating Stripe checkout session...")
             # Create session with metadata
-            # Log the data being stored in session
             logger.info("=" * 80)
-            logger.info("CREATING STRIPE SESSION WITH METADATA")
-            logger.info(f"Spreadsheet ID: {spreadsheet_id}")
-            logger.info(f"Row Number: {row_number}")
-            logger.info(f"Amount: {amount}")
-            logger.info(f"Currency: {currency}")
+            logger.info("CREATING STRIPE SESSION")
             logger.info("=" * 80)
-            
-            # Create comprehensive metadata with all necessary information
-            # Create metadata with proper amount formatting and required fields
-            metadata = {
-                'amount': str(float(amount)),  # Ensure consistent float formatting
-                'amount_cents': str(int(amount * 100)),  # Store cents amount for verification
-                'created_at': datetime.now().isoformat(),
-                'currency': currency,
-                'spreadsheet_id': str(spreadsheet_id),
-                'row_number': str(row_number),
-                'payment_status': 'pending',
-                'payment_type': 'form_submission'
-            }
-            
-            # Log the metadata being stored
-            logger.info("Creating Stripe session with metadata:")
+            logger.info("Metadata to be stored:")
             logger.info(json.dumps(metadata, indent=2))
             
-            # Log the complete metadata
-            logger.info("Complete metadata being stored:")
-            logger.info(json.dumps(metadata, indent=2))
-            
-            session = stripe.checkout.Session.create(
-                payment_method_types=['card'],
-                line_items=[{
-                    'price_data': {
-                        'currency': currency,
-                        'unit_amount': amount_cents,
-                        'product_data': {
-                            'name': 'Payment',
-                            'description': 'Form submission payment',
+            try:
+                # Configure Stripe with SSL verification
+                stripe.verify_ssl_certs = True
+                stripe.max_network_retries = 2
+                
+                logger.info("Creating Stripe checkout session...")
+                session = stripe.checkout.Session.create(
+                    payment_method_types=['card'],
+                    line_items=[{
+                        'price_data': {
+                            'currency': currency,
+                            'unit_amount': amount_cents,
+                            'product_data': {
+                                'name': 'Payment',
+                                'description': 'Form submission payment',
+                            },
                         },
-                    },
-                    'quantity': 1,
-                }],
-                mode='payment',
-                success_url=success_url,
-                cancel_url=cancel_url,
-                metadata=metadata
-            )
+                        'quantity': 1,
+                    }],
+                    mode='payment',
+                    success_url=success_url,
+                    cancel_url=cancel_url,
+                    metadata=metadata
+                )
+                logger.info("Stripe session created successfully")
+                logger.info(f"Session ID: {session.id}")
+                
+            except stripe.error.SSLError as e:
+                logger.error("=" * 80)
+                logger.error("STRIPE SSL ERROR")
+                logger.error(f"Error: {str(e)}")
+                logger.error(f"Error Type: {type(e).__name__}")
+                logger.error("=" * 80)
+                return {
+                    'error': 'SSL connection error with payment provider',
+                    'error_type': 'ssl_error',
+                    'details': str(e)
+                }
+            except stripe.error.APIConnectionError as e:
+                logger.error("=" * 80)
+                logger.error("STRIPE CONNECTION ERROR")
+                logger.error(f"Error: {str(e)}")
+                logger.error(f"Error Type: {type(e).__name__}")
+                logger.error("=" * 80)
+                return {
+                    'error': 'Unable to connect to payment provider',
+                    'error_type': 'connection_error',
+                    'details': str(e)
+                }
             
             # Log session details
             logger.info("=" * 80)
