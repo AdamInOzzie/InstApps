@@ -274,16 +274,17 @@ def main():
             logger.info("PAYMENT CALLBACK RECEIVED")
             logger.info(
                 f"Processing payment callback for session: {session_id}")
-            # Log detailed payment session state
+            # Log Stripe session metadata
             logger.info("=" * 80)
-            logger.info("PAYMENT SESSION STATE CHECK")
-            logger.info(f"Current session ID: {session_id}")
-            logger.info(f"payment_sessions exists in state: {'payment_sessions' in st.session_state}")
-            if 'payment_sessions' in st.session_state:
-                logger.info(f"All stored session IDs: {list(st.session_state.payment_sessions.keys())}")
-                logger.info(f"Session data for current ID: {st.session_state.payment_sessions.get(session_id)}")
-            else:
-                logger.info("No payment sessions stored in state")
+            logger.info("STRIPE SESSION METADATA CHECK")
+            logger.info(f"Processing payment session ID: {session_id}")
+            try:
+                stripe_session = stripe.checkout.Session.retrieve(session_id)
+                logger.info(f"Retrieved metadata from Stripe session: {stripe_session.metadata}")
+                logger.info(f"Spreadsheet ID: {stripe_session.metadata.get('spreadsheet_id')}")
+                logger.info(f"Row Number: {stripe_session.metadata.get('row_number')}")
+            except Exception as e:
+                logger.error(f"Failed to retrieve Stripe session metadata: {str(e)}")
             logger.info("=" * 80)
             logger.info("=" * 80)
 
