@@ -152,16 +152,39 @@ class UIService:
                 
             logger.info(f"Row {row_number} is within valid range, proceeding with update")
 
-            # Verify sheet structure before update
+            # Verify sheet structure before update with enhanced logging
+            logger.info("=" * 80)
+            logger.info("DETECTING PAID COLUMN")
+            logger.info("=" * 80)
+            
+            # Read a wider range to ensure we capture all headers
             sheet_data = sheets_client.read_spreadsheet(spreadsheet_id, 'Sponsors!A1:Z1')
             if sheet_data is not None and not sheet_data.empty:
                 headers = sheet_data.columns.tolist()
-                paid_column_index = next((i + 1 for i, col in enumerate(headers) if 'paid' in str(col).lower()), 8)
-                logger.info(f"Found headers: {headers}")
-                logger.info(f"Using column index {paid_column_index} for Paid status")
+                logger.info(f"All headers found: {headers}")
+                
+                # Look for variations of 'paid' column
+                paid_variations = ['paid', 'payment', 'payment status']
+                found_indices = []
+                
+                for i, col in enumerate(headers):
+                    col_str = str(col).lower().strip()
+                    logger.info(f"Checking column {i+1} ({chr(65+i)}): '{col_str}'")
+                    
+                    if any(variation in col_str for variation in paid_variations):
+                        found_indices.append((i+1, col))
+                        logger.info(f"Found potential paid column: {col} at index {i+1} (column {chr(65+i)})")
+                
+                if found_indices:
+                    # Use the first found paid column
+                    paid_column_index = found_indices[0][0]
+                    logger.info(f"Selected paid column: {found_indices[0][1]} at index {paid_column_index} (column {chr(64+paid_column_index)})")
+                else:
+                    paid_column_index = 8  # Default to column H
+                    logger.warning("No 'paid' column found in headers, defaulting to column H (index 8)")
             else:
                 paid_column_index = 8
-                logger.warning("Could not read headers, defaulting to column H (index 8)")
+                logger.error("Failed to read headers, defaulting to column H (index 8)")
 
             # Prepare update with payment verification
             payment_status = f"PAID_STRIPE_{session_id}"
