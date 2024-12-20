@@ -58,13 +58,31 @@ class UIService:
                 st.error("Payment session not found")
                 return False
                 
-            session_data = st.session_state.payment_sessions[session_id]
+            # Initialize payment_sessions if not exists
+            if 'payment_sessions' not in st.session_state:
+                st.session_state.payment_sessions = {}
+
+            # Log session data details
+            logger.info("="*80)
+            logger.info("VERIFYING PAYMENT SESSION")
+            logger.info(f"Session ID: {session_id}")
+            logger.info(f"Payment Sessions: {list(st.session_state.payment_sessions.keys()) if 'payment_sessions' in st.session_state else 'None'}")
+            logger.info("="*80)
+
+            # Get payment status from Stripe first
+            from services.payment_service import PaymentService
+            payment_service = PaymentService()
+            payment_status = payment_service.get_payment_status(session_id)
             
-            # Restore session state
-            if 'username' in session_data:
-                st.session_state.is_logged_in = True
-                st.session_state.username = session_data['username']
-                st.session_state.selected_sheet = session_data['selected_sheet']
+            if payment_status.get('status') == 'succeeded':
+                # Extract metadata from the Stripe session
+                metadata = payment_status.get('metadata', {})
+                session_data = {
+                    'spreadsheet_id': metadata.get('spreadsheet_id'),
+                    'row_number': int(metadata.get('row_number', 0)),
+                    'amount': float(metadata.get('amount', 0)),
+                    'sheet_name': 'Sponsors'  # Default to Sponsors sheet
+                }
             
             # Verify payment with Stripe
             from services.payment_service import PaymentService
