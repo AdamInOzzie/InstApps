@@ -136,17 +136,32 @@ class UIService:
                     if df is not None and len(df) >= session_data['row_number']:
                         logger.info("Row verification successful")
                         
+                        # Define the cell updates - Column H (8) for payment status
+                        payment_column = 8  # Column H
+                        payment_value = f"STRIPE_{session_id}"
+                        
                         # Create range string for the update
-                        column_letter = chr(ord('A') + cell_updates[1] - 1)  # Convert column number to letter
-                        range_name = f"{session_data['sheet_name']}!{column_letter}{cell_updates[0]}"
+                        column_letter = chr(ord('A') + payment_column - 1)  # Convert column number to letter
+                        range_name = f"{session_data['sheet_name']}!{column_letter}{session_data['row_number']}"
+                        
+                        logger.info(f"Updating payment status - Range: {range_name}, Value: {payment_value}")
                         
                         # Perform the update
                         update_success = sheets_client.update_cell(
                             spreadsheet_id=session_data['spreadsheet_id'],
                             range_name=range_name,
-                            value=cell_updates[2]
+                            value=payment_value
                         )
                         logger.info(f"Update operation result: {update_success}")
+                        
+                        if update_success:
+                            logger.info(f"Successfully updated spreadsheet for session {session_id}")
+                            st.success("✅ Payment verified and entry updated successfully!")
+                            # Clean up session data
+                            if session_id in st.session_state.payment_sessions:
+                                del st.session_state.payment_sessions[session_id]
+                            st.rerun()
+                            return True
                     else:
                         logger.error(f"Row {session_data['row_number']} not found in sheet")
                         return False
