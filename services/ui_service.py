@@ -141,13 +141,20 @@ class UIService:
                 form_data = json.loads(metadata.get('form_data', '{}'))
                 logger.info(f"Parsed form data: {form_data}")
                 
+                # Create session data from the Stripe metadata directly
                 session_data = {
-                    'spreadsheet_id': form_data.get('spreadsheet_id'),
-                    'row_number': int(form_data.get('row_number', 0)),
+                    'spreadsheet_id': metadata.get('spreadsheet_id'),
+                    'row_number': int(metadata.get('row_number', 0)),
                     'amount': float(metadata.get('amount', 0)),
                     'sheet_name': 'Sponsors'  # Default to Sponsors sheet
                 }
-                logger.info(f"Session data created: {session_data}")
+                logger.info("="*80)
+                logger.info("SESSION DATA DETAILS")
+                logger.info(f"Row Number: {session_data['row_number']}")
+                logger.info(f"Sheet Name: {session_data['sheet_name']}")
+                logger.info(f"Spreadsheet ID: {session_data['spreadsheet_id']}")
+                logger.info(f"Amount: ${session_data['amount']}")
+                logger.info(f"Session ID: {session_id}")
                 logger.info("="*80)
                 
             except Exception as e:
@@ -187,22 +194,23 @@ class UIService:
                     if df is not None and len(df) >= session_data['row_number']:
                         logger.info("Row verification successful")
                         
-                        # Define the cell updates - Column H (8) for payment status
-                        payment_column = 8  # Column H
-                        payment_value = f"STRIPE_{session_id}"
-                        
-                        # Create range string for the update
-                        column_letter = chr(ord('A') + payment_column - 1)  # Convert column number to letter
-                        range_name = f"{session_data['sheet_name']}!{column_letter}{session_data['row_number']}"
-                        
-                        logger.info(f"Updating payment status - Range: {range_name}, Value: {payment_value}")
-                        
-                        # Perform the update
-                        update_success = sheets_client.update_cell(
+                        # Use SpreadsheetService's UpdateEntryCells method directly
+                        update_success = SpreadsheetService.UpdateEntryCells(
                             spreadsheet_id=session_data['spreadsheet_id'],
-                            range_name=range_name,
-                            value=payment_value
+                            sheet_name=session_data['sheet_name'],
+                            cell_updates=cell_updates
                         )
+                        
+                        logger.info(f"Update operation result: {update_success}")
+                        
+                        if update_success:
+                            logger.info(f"Successfully updated spreadsheet for session {session_id}")
+                            st.success("✅ Payment verified and entry updated successfully!")
+                            # Clean up session data
+                            if session_id in st.session_state.payment_sessions:
+                                del st.session_state.payment_sessions[session_id]
+                            st.rerun()
+                            return True
                         logger.info(f"Update operation result: {update_success}")
                         
                         if update_success:
