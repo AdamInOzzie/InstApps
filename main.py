@@ -588,6 +588,18 @@ def main():
                         
                         logger.info("\nMetadata Details:")
                         logger.info(f"Raw Metadata: {session.metadata}")
+                        # Check for required metadata fields
+                        required_fields = ['spreadsheet_id', 'row_number']
+                        missing_fields = [field for field in required_fields if field not in session.metadata]
+                        
+                        if missing_fields:
+                            logger.error(f"Missing required metadata fields: {missing_fields}")
+                        else:
+                            logger.info("Required Metadata Fields:")
+                            logger.info(f"  spreadsheet_id: {session.metadata.get('spreadsheet_id')}")
+                            logger.info(f"  row_number: {session.metadata.get('row_number')}")
+                            
+                        logger.info("\nAll Metadata Fields:")
                         for key, value in session.metadata.items():
                             logger.info(f"  {key}: {value}")
                         
