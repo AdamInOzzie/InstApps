@@ -304,7 +304,7 @@ class PaymentService:
                 form_data = {}
             
             return {
-                'status': 'succeeded' if payment_status == 'paid' else payment_status,
+                'status': 'succeeded' if session.payment_status == 'paid' else session.payment_status,
                 'amount': session.amount_total / 100,  # Convert cents to dollars
                 'currency': session.currency,
                 'payment_intent': session.payment_intent,
