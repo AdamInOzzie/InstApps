@@ -1,0 +1,99 @@
+NFO:__main__:Required Metadata Fields:
+INFO:__main__:  spreadsheet_id: 10oGsPnfLO7-bpyn18CJhPI1iNeksGacCSGwNLXGbidc
+INFO:__main__:  row_number: 6
+INFO:__main__:
+All Metadata Fields:
+INFO:__main__:  amount: 930.25
+INFO:__main__:  amount_cents: 93025
+INFO:__main__:  created_at: 2024-12-20T03:27:05.567850
+INFO:__main__:  currency: usd
+INFO:__main__:  payment_status: pending
+INFO:__main__:  payment_type: form_submission
+INFO:__main__:  row_number: 6
+INFO:__main__:  spreadsheet_id: 10oGsPnfLO7-bpyn18CJhPI1iNeksGacCSGwNLXGbidc
+INFO:__main__:
+Customer Details:
+INFO:__main__:Email: adambosworth@gmail.com
+INFO:__main__:Name: Adam Bosworth
+INFO:__main__:
+Payment Intent Details:
+INFO:__main__:Payment Intent ID: pi_3QXwsALajLjQ3ZpQ2UjnBX8P
+INFO:stripe:message='Request to Stripe api' method=get url=https://api.stripe.com/v1/payment_intents/pi_3QXwsALajLjQ3ZpQ2UjnBX8P
+INFO:stripe:message='Stripe API response' path=https://api.stripe.com/v1/payment_intents/pi_3QXwsALajLjQ3ZpQ2UjnBX8P response_code=200
+INFO:__main__:Payment Intent Status: succeeded
+INFO:__main__:Payment Method: ['card']
+INFO:__main__:
+Complete Session Object:
+INFO:__main__:{
+  "adaptive_pricing": {
+    "enabled": false
+  },
+  "after_expiration": null,
+  "allow_promotion_codes": null,
+  "amount_subtotal": 93025,
+  "amount_total": 93025,
+  "automatic_tax": {
+    "enabled": false,
+    "liability": null,
+    "status": null
+  },
+  "billing_address_collection": null,
+  "cancel_url": "https://sheet-sync-web-always-on-anzinozzie.replit.app/?payment=cancelled",
+  "client_reference_id": null,
+  "client_secret": null,
+  "consent": null,
+  "consent_collection": null,
+  "created": 1734665225,
+  "currency": "usd",
+  "currency_conversion": null,
+  "custom_fields": [],
+  "custom_text": {
+    "after_submit": null,
+    "shipping_address": null,
+    "submit": null,
+    "terms_of_service_acceptance": null
+  },
+  "customer": null,
+  "customer_creation": "if_required",
+  "customer_details": {
+    "address": {
+      "city": null,
+      "country": "AU",
+      "line1": null,
+      "line2": null,
+      "postal_code": null,
+      "state": null
+    },
+    "email": "adambosworth@gmail.com",
+    "name": "Adam Bosworth",
+    "phone": null,
+    "tax_exempt": "none",
+    "tax_ids": []
+  },
+  "customer_email": null,
+  "expires_at": 1734751625,
+  "id": "cs_test_a1tTjD3cYAvXan1B4jzlTVhZEMcKgjPMmE4LllkfLZKsZgXHNHuPLaYuoB",
+  "invoice": null,
+  "invoice_creation": {
+    "enabled": false,
+    "invoice_data": {
+      "account_tax_ids": null,
+      "custom_fields": null,
+      "description": null,
+      "footer": null,
+      "issuer": null,
+      "metadata": {},
+      "rendering_options": null
+    }
+  },
+  "livemode": false,
+  "locale": null,
+  "metadata": {
+    "amount": "930.25",
+    "amount_cents": "93025",
+    "created_at": "2024-12-20T03:27:05.567850",
+    "currency": "usd",
+    "payment_status": "pending",
+    "payment_type": "form_submission",
+    "row_number": "6",
+    "spreadsheet_id": "10oGsPnfLO7-bpyn18CJhPI1iNeksGacCSGwNLXGbidc"
