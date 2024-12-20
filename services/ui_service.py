@@ -152,9 +152,21 @@ class UIService:
                 
             logger.info(f"Row {row_number} is within valid range, proceeding with update")
 
+            # Verify sheet structure before update
+            sheet_data = sheets_client.read_spreadsheet(spreadsheet_id, 'Sponsors!A1:Z1')
+            if sheet_data is not None and not sheet_data.empty:
+                headers = sheet_data.columns.tolist()
+                paid_column_index = next((i + 1 for i, col in enumerate(headers) if 'paid' in str(col).lower()), 8)
+                logger.info(f"Found headers: {headers}")
+                logger.info(f"Using column index {paid_column_index} for Paid status")
+            else:
+                paid_column_index = 8
+                logger.warning("Could not read headers, defaulting to column H (index 8)")
+
             # Prepare update with payment verification
-            cell_updates = [row_number, 8, f"PAID_STRIPE_{session_id}"]
-            logger.info(f"Updating cell H{row_number} with: PAID_STRIPE_{session_id}")
+            payment_status = f"PAID_STRIPE_{session_id}"
+            cell_updates = [row_number, paid_column_index, payment_status]
+            logger.info(f"Updating cell {chr(64 + paid_column_index)}{row_number} with: {payment_status}")
 
             # Log sheet update attempt
             logger.info("="*80)
@@ -162,8 +174,14 @@ class UIService:
             logger.info(f"Spreadsheet ID: {spreadsheet_id}")
             logger.info(f"Sheet Name: Sponsors")
             logger.info(f"Row Number: {row_number}")
+            logger.info(f"Column Index: {paid_column_index}")
             logger.info(f"Cell Updates: {cell_updates}")
             logger.info("="*80)
+
+            # Verify current value before update
+            current_data = sheets_client.read_spreadsheet(spreadsheet_id, f'Sponsors!{chr(64 + paid_column_index)}{row_number}')
+            if current_data is not None and not current_data.empty:
+                logger.info(f"Current value in cell: {current_data.iloc[0, 0] if not current_data.empty else 'Empty'}")
 
             # Execute the update
             try:
