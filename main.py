@@ -688,13 +688,30 @@ def main():
                             if 'payment_sessions' not in st.session_state:
                                 st.session_state.payment_sessions = {}
 
-                            # Get the current row number from session state
+                            # Get required data from session state
                             current_row = st.session_state.get('current_row_number')
+                            selected_sheet = st.session_state.get('selected_sheet')
+                            
+                            # Validate required data
+                            if not current_row:
+                                st.error("Missing row number for payment processing")
+                                return
+                            
+                            if not selected_sheet:
+                                st.error("No spreadsheet selected for payment processing")
+                                return
+                                
+                            logger.info("=" * 80)
+                            logger.info("CREATING PAYMENT INTENT")
+                            logger.info(f"Spreadsheet ID: {selected_sheet}")
+                            logger.info(f"Row Number: {current_row}")
+                            logger.info(f"Amount: {payment_amount}")
+                            logger.info("=" * 80)
                             
                             # Create payment intent with spreadsheet details
                             payment_data = st.session_state.payment_service.create_payment_intent(
                                 amount=payment_amount,
-                                spreadsheet_id=st.session_state.selected_sheet,
+                                spreadsheet_id=selected_sheet,
                                 row_number=current_row)
 
                             if 'error' in payment_data:
