@@ -678,18 +678,42 @@ def main():
                     if st.button("Process Payment",
                                  key='admin_process_payment'):
                         try:
+                            # Initialize payment_sessions if not exists
+                            if 'payment_sessions' not in st.session_state:
+                                st.session_state.payment_sessions = {}
+
+                            # Get the current row number from session state
+                            current_row = st.session_state.get('current_row_number')
+                            
                             # Create payment intent with spreadsheet details
                             payment_data = st.session_state.payment_service.create_payment_intent(
                                 amount=payment_amount,
                                 spreadsheet_id=st.session_state.selected_sheet,
-                                row_number=payment_row_number if 'payment_row_number' in locals() else None)
+                                row_number=current_row)
 
                             if 'error' in payment_data:
                                 st.error(
                                     f"Payment Error: {payment_data['error']}")
                             else:
-                                # Store payment data in session state
+                                # Store payment data in session state with complete context
                                 st.session_state.payment_intent_data = payment_data
+                                
+                                # Store payment session data with full context
+                                logger.info("=" * 80)
+                                logger.info("STORING PAYMENT SESSION")
+                                logger.info(f"Session ID being stored: {payment_data['session_id']}")
+                                logger.info(f"Spreadsheet ID: {st.session_state.selected_sheet}")
+                                logger.info(f"Row Number: {current_row}")
+                                
+                                # Store complete context in session state
+                                st.session_state.payment_sessions[payment_data['session_id']] = {
+                                    'amount': payment_amount,
+                                    'spreadsheet_id': st.session_state.selected_sheet,
+                                    'row_number': current_row,
+                                    'created_at': datetime.now().isoformat(),
+                                    'status': 'pending'
+                                }
+                                
                                 # Show payment success message
                                 st.success(
                                     f"Payment session created successfully!\n\n"
@@ -699,21 +723,6 @@ def main():
                                 st.markdown(
                                     f"[Complete Payment on Stripe]({payment_data['session_url']})"
                                 )
-
-                                # Initialize payment_sessions if not exists
-                                if 'payment_sessions' not in st.session_state:
-                                    st.session_state.payment_sessions = {}
-                                
-                                # Store payment session data
-                                logger.info("=" * 80)
-                                logger.info("STORING PAYMENT SESSION")
-                                logger.info(f"Session ID being stored: {payment_data['session_id']}")
-                                
-                                st.session_state.payment_sessions[payment_data['session_id']] = {
-                                    'amount': payment_amount,
-                                    'created_at': datetime.now().isoformat(),
-                                    'status': 'pending'
-                                }
                                 
                                 logger.info(f"Updated payment sessions: {st.session_state.payment_sessions}")
                                 logger.info("=" * 80)
