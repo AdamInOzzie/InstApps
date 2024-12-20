@@ -126,6 +126,7 @@ class UIService:
 
                 try:
                     from services.spreadsheet_service import SpreadsheetService
+                    spreadsheet_service = SpreadsheetService(sheets_client)
                     logger.info("Initializing spreadsheet update...")
                     logger.info(f"Spreadsheet ID: {session_data['spreadsheet_id']}")
                     logger.info(f"Sheet Name: {session_data['sheet_name']}")
@@ -134,10 +135,16 @@ class UIService:
                     df = sheets_client.read_spreadsheet(session_data['spreadsheet_id'], f"{session_data['sheet_name']}!A:H")
                     if df is not None and len(df) >= session_data['row_number']:
                         logger.info("Row verification successful")
-                        update_success = SpreadsheetService.UpdateEntryCells(
+                        
+                        # Create range string for the update
+                        column_letter = chr(ord('A') + cell_updates[1] - 1)  # Convert column number to letter
+                        range_name = f"{session_data['sheet_name']}!{column_letter}{cell_updates[0]}"
+                        
+                        # Perform the update
+                        update_success = sheets_client.update_cell(
                             spreadsheet_id=session_data['spreadsheet_id'],
-                            sheet_name=session_data['sheet_name'],
-                            cell_updates=cell_updates
+                            range_name=range_name,
+                            value=cell_updates[2]
                         )
                         logger.info(f"Update operation result: {update_success}")
                     else:
