@@ -5,6 +5,7 @@ import pandas as pd
 from services.copy_service import CopyService
 from services.form_builder_service import FormBuilderService
 from typing import Dict, Any, Optional
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -54,9 +55,28 @@ class UIService:
     def verify_payment_and_submit(session_id: str, sheets_client) -> bool:
         """Verify payment and submit form if successful."""
         try:
-            if 'payment_sessions' not in st.session_state or session_id not in st.session_state.payment_sessions:
+            # Log all URL parameters for debugging
+            logger.info("="*80)
+            logger.info("PAYMENT CALLBACK PARAMETERS")
+            logger.info(f"All query parameters: {dict(st.query_params)}")
+            logger.info(f"Session ID from parameter: {session_id}")
+            logger.info(f"Payment sessions in state: {list(st.session_state.payment_sessions.keys()) if 'payment_sessions' in st.session_state else 'None'}")
+            logger.info("="*80)
+
+            # Verify we have necessary session data
+            if 'payment_sessions' not in st.session_state:
+                logger.error("No payment sessions found in session state")
+                st.error("Payment session data not found")
+                return False
+
+            if session_id not in st.session_state.payment_sessions:
+                logger.error(f"Session ID {session_id} not found in payment sessions")
                 st.error("Payment session not found")
                 return False
+
+            # Get the stored session data
+            stored_session = st.session_state.payment_sessions[session_id]
+            logger.info(f"Retrieved stored session data: {stored_session}")
                 
             # Initialize payment_sessions if not exists
             if 'payment_sessions' not in st.session_state:
@@ -422,15 +442,26 @@ class UIService:
                         # Store payment session with row information
                         if 'payment_sessions' not in st.session_state:
                             st.session_state.payment_sessions = {}
-                        st.session_state.payment_sessions[payment_data['session_id']] = {
+                            
+                        # Create session data with all necessary information
+                        session_data = {
                             'amount': payment_amount,
                             'form_data': form_data,
                             'spreadsheet_id': spreadsheet_id,
                             'sheet_name': sheet_name,
                             'row_number': next_row,
                             'username': st.session_state.get('username'),
-                            'selected_sheet': st.session_state.get('selected_sheet')
+                            'selected_sheet': st.session_state.get('selected_sheet'),
+                            'timestamp': datetime.now().isoformat()
                         }
+                        
+                        # Store in session state
+                        st.session_state.payment_sessions[payment_data['session_id']] = session_data
+                        logger.info("="*80)
+                        logger.info("STORING PAYMENT SESSION")
+                        logger.info(f"Session ID: {payment_data['session_id']}")
+                        logger.info(f"Session Data: {session_data}")
+                        logger.info("="*80)
                         return None
                 except ValueError:
                     logger.error(f"Invalid payment amount: {form_data['Price']}")

@@ -298,12 +298,47 @@ def main():
             if 'sheets_client' not in st.session_state:
                 st.session_state.sheets_client = GoogleSheetsClient()
 
-            success = st.session_state.ui_service.verify_payment_and_submit(
-                session_id, st.session_state.sheets_client)
-            if success:
-                st.success("✅ Payment verified successfully!")
-                time.sleep(2)
-                st.rerun()
+            try:
+                logger.info("=" * 80)
+                logger.info("PROCESSING PAYMENT CALLBACK")
+                logger.info(f"Session ID: {session_id}")
+                
+                # Get payment status from Stripe
+                payment_data = st.session_state.payment_service.get_payment_status(session_id)
+                logger.info(f"Payment data: {payment_data}")
+                
+                if 'error' not in payment_data:
+                    # Extract metadata from payment
+                    spreadsheet_id = payment_data.get('spreadsheet_id')
+                    row_number = payment_data.get('row_number')
+                    
+                    logger.info(f"Extracted metadata - Spreadsheet ID: {spreadsheet_id}, Row: {row_number}")
+                    
+                    if spreadsheet_id and row_number:
+                        # Update the spreadsheet
+                        sheet_range = f'A{row_number}:H{row_number}'
+                        try:
+                            st.session_state.sheets_client.update_cell(
+                                spreadsheet_id=spreadsheet_id,
+                                range_name=sheet_range,
+                                value=f"PAID_{session_id}"
+                            )
+                            st.success("✅ Payment verified and recorded successfully!")
+                            logger.info(f"Successfully updated spreadsheet for payment {session_id}")
+                            time.sleep(2)
+                            st.rerun()
+                        except Exception as e:
+                            logger.error(f"Failed to update spreadsheet: {str(e)}")
+                            st.error("Failed to update payment record")
+                    else:
+                        logger.error("Missing spreadsheet ID or row number in payment metadata")
+                        st.error("Missing payment information")
+                else:
+                    logger.error(f"Payment verification failed: {payment_data.get('error')}")
+                    st.error("Payment verification failed")
+            except Exception as e:
+                logger.error(f"Error processing payment callback: {str(e)}")
+                st.error(f"Error processing payment: {str(e)}")
 
     # Initialize login state if not exists
     if 'is_logged_in' not in st.session_state:
