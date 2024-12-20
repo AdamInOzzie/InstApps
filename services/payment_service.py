@@ -219,13 +219,42 @@ class PaymentService:
             # Get metadata along with payment status
             metadata = session.metadata or {}
             
+            # Log metadata details for debugging
+            logger.info("=" * 80)
+            logger.info("PAYMENT SESSION METADATA CHECK")
+            logger.info(f"Raw metadata: {metadata}")
+            logger.info(f"Spreadsheet ID: {metadata.get('spreadsheet_id', 'NOT FOUND')}")
+            logger.info(f"Row Number: {metadata.get('row_number', 'NOT FOUND')}")
+            logger.info(f"Form Data: {metadata.get('form_data', 'NOT FOUND')}")
+            logger.info("=" * 80)
+            
+            # Verify required metadata fields
+            if not metadata.get('spreadsheet_id'):
+                logger.error("Missing spreadsheet_id in session metadata")
+                return {'error': 'Missing spreadsheet ID in payment metadata'}
+                
+            if not metadata.get('row_number'):
+                logger.error("Missing row_number in session metadata")
+                return {'error': 'Missing row number in payment metadata'}
+            
+            try:
+                form_data = json.loads(metadata.get('form_data', '{}'))
+                logger.info(f"Parsed form data: {form_data}")
+            except json.JSONDecodeError as e:
+                logger.error(f"Failed to parse form_data from metadata: {str(e)}")
+                form_data = {}
+            
             return {
                 'status': 'succeeded' if payment_status == 'paid' else payment_status,
                 'amount': session.amount_total / 100,  # Convert cents to dollars
                 'currency': session.currency,
                 'payment_intent': session.payment_intent,
                 'metadata': metadata,
+                'spreadsheet_id': metadata.get('spreadsheet_id'),
+                'row_number': metadata.get('row_number'),
+                'form_data': form_data,
                 'created_at': metadata.get('created_at')
             }
         except stripe.error.StripeError as e:
+            logger.error(f"Stripe error retrieving session: {str(e)}")
             return {'error': str(e)}
