@@ -55,11 +55,19 @@ class UIService:
     def verify_payment_and_submit(session_id: str, sheets_client) -> bool:
         """Verify payment and submit form if successful."""
         try:
-            # Log all URL parameters for debugging
+            # Entry point logging
+            logger.info("="*80)
+            logger.info("PAYMENT CALLBACK ENTRY POINT")
+            logger.info(f"Timestamp: {datetime.now().isoformat()}")
+            logger.info(f"Session ID: {session_id}")
+            logger.info("="*80)
+
+            # Log all URL parameters and session state
             logger.info("="*80)
             logger.info("PAYMENT CALLBACK PARAMETERS")
             logger.info(f"All query parameters: {dict(st.query_params)}")
-            logger.info(f"Session ID from parameter: {session_id}")
+            logger.info(f"Raw session ID from parameter: {session_id}")
+            logger.info(f"Current URL path: {st.runtime.get_instance()._get_url_path()}")
             logger.info(f"Payment sessions in state: {list(st.session_state.payment_sessions.keys()) if 'payment_sessions' in st.session_state else 'None'}")
             logger.info("="*80)
 
@@ -91,15 +99,28 @@ class UIService:
 
             try:
                 # Get payment status from Stripe
+                logger.info("="*80)
+                logger.info("INITIALIZING STRIPE PAYMENT SERVICE")
+                logger.info("="*80)
+                
                 from services.payment_service import PaymentService
                 payment_service = PaymentService()
                 
                 logger.info("="*80)
                 logger.info("RETRIEVING STRIPE SESSION IN CALLBACK")
                 logger.info(f"Session ID: {session_id}")
+                logger.info("Attempting to retrieve payment status...")
                 
-                payment_status = payment_service.get_payment_status(session_id)
-                logger.info(f"Full payment status response: {json.dumps(payment_status, indent=2)}")
+                try:
+                    payment_status = payment_service.get_payment_status(session_id)
+                    logger.info("Successfully retrieved payment status")
+                    logger.info("Full payment status response:")
+                    logger.info("="*80)
+                    logger.info(json.dumps(payment_status, indent=2))
+                    logger.info("="*80)
+                except Exception as e:
+                    logger.error(f"Error retrieving Stripe session: {str(e)}")
+                    return False
                 
                 if not payment_status or payment_status.get('status') != 'succeeded':
                     logger.warning(f"Payment not successful. Full status: {json.dumps(payment_status, indent=2)}")
