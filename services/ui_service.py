@@ -93,17 +93,27 @@ class UIService:
                 # Get payment status from Stripe
                 from services.payment_service import PaymentService
                 payment_service = PaymentService()
+                
+                logger.info("="*80)
+                logger.info("RETRIEVING STRIPE SESSION IN CALLBACK")
+                logger.info(f"Session ID: {session_id}")
+                
                 payment_status = payment_service.get_payment_status(session_id)
+                logger.info(f"Full payment status response: {json.dumps(payment_status, indent=2)}")
                 
                 if not payment_status or payment_status.get('status') != 'succeeded':
-                    logger.warning(f"Payment not successful. Status: {payment_status}")
+                    logger.warning(f"Payment not successful. Full status: {json.dumps(payment_status, indent=2)}")
                     return False
 
-                # Extract metadata from the Stripe session
+                # Extract and log metadata from the Stripe session
                 metadata = payment_status.get('metadata', {})
                 logger.info("="*80)
-                logger.info("PAYMENT METADATA")
-                logger.info(f"Raw metadata: {metadata}")
+                logger.info("STRIPE CALLBACK METADATA")
+                logger.info(f"Raw metadata: {json.dumps(metadata, indent=2)}")
+                logger.info(f"Amount: {metadata.get('amount')} ({metadata.get('amount_cents')} cents)")
+                logger.info(f"Payment Status: {metadata.get('payment_status')}")
+                logger.info(f"Spreadsheet ID: {metadata.get('spreadsheet_id')}")
+                logger.info(f"Row Number: {metadata.get('row_number')}")
                 
                 # Parse the form_data JSON string from metadata
                 import json
