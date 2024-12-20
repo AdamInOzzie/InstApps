@@ -575,15 +575,41 @@ def main():
                     try:
                         # Verify the payment session with detailed logging
                         session = stripe.checkout.Session.retrieve(session_id)
+                        
+                        # Log comprehensive session details
                         logger.info("=" * 80)
-                        logger.info("STRIPE SESSION DATA")
+                        logger.info("STRIPE SESSION DATA VERIFICATION")
+                        logger.info("=" * 80)
+                        logger.info("Basic Session Info:")
                         logger.info(f"Session ID: {session_id}")
-                        logger.info(f"Payment status: {session.payment_status}")
-                        logger.info(f"Metadata: {session.metadata}")
-                        logger.info(f"Amount total: {session.amount_total}")
+                        logger.info(f"Payment Status: {session.payment_status}")
+                        logger.info(f"Amount Total: {session.amount_total}")
                         logger.info(f"Currency: {session.currency}")
-                        logger.info(f"Customer email: {session.customer_details.email if session.customer_details else 'No email'}")
-                        logger.info(f"Complete session object: {session}")
+                        
+                        logger.info("\nMetadata Details:")
+                        logger.info(f"Raw Metadata: {session.metadata}")
+                        for key, value in session.metadata.items():
+                            logger.info(f"  {key}: {value}")
+                        
+                        logger.info("\nCustomer Details:")
+                        if session.customer_details:
+                            logger.info(f"Email: {session.customer_details.email}")
+                            logger.info(f"Name: {session.customer_details.name if hasattr(session.customer_details, 'name') else 'No name'}")
+                        else:
+                            logger.info("No customer details available")
+                            
+                        logger.info("\nPayment Intent Details:")
+                        if session.payment_intent:
+                            logger.info(f"Payment Intent ID: {session.payment_intent}")
+                            try:
+                                payment_intent = stripe.PaymentIntent.retrieve(session.payment_intent)
+                                logger.info(f"Payment Intent Status: {payment_intent.status}")
+                                logger.info(f"Payment Method: {payment_intent.payment_method_types}")
+                            except Exception as e:
+                                logger.error(f"Error retrieving payment intent details: {str(e)}")
+                        
+                        logger.info("\nComplete Session Object:")
+                        logger.info(str(session))
                         logger.info("=" * 80)
 
                         if session.payment_status == "paid":
