@@ -136,13 +136,21 @@ class UIService:
                 logger.error("Sponsors sheet not found in spreadsheet")
                 return False
 
-            # Verify row exists
+            # Verify sheet access and row validity
             df = sheets_client.read_spreadsheet(spreadsheet_id, 'Sponsors!A:H')
-            if df is None or len(df) < row_number:
-                logger.error(f"Row {row_number} not found in Sponsors sheet")
+            if df is None:
+                logger.error("Failed to read Sponsors sheet")
                 return False
 
-            logger.info(f"Verified row {row_number} exists in sheet with {len(df)} rows")
+            logger.info(f"Sheet read successfully - Total rows: {len(df)}")
+            logger.info(f"Attempting to update row {row_number}")
+            
+            # Allow any row within reasonable range (e.g., first 1000 rows)
+            if row_number <= 0 or row_number > 1000:
+                logger.error(f"Row number {row_number} is out of valid range (1-1000)")
+                return False
+                
+            logger.info(f"Row {row_number} is within valid range, proceeding with update")
 
             # Prepare update with payment verification
             cell_updates = [row_number, 8, f"PAID_STRIPE_{session_id}"]
