@@ -3,7 +3,7 @@ import logging
 import stripe
 import json
 from typing import Dict, Any
-from datetime import datetime
+from datetime import datetime, date
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -147,6 +147,17 @@ class PaymentService:
             logger.info("Creating Stripe checkout session...")
             try:
                 # Create comprehensive metadata
+                # Convert any date objects in form_data to ISO format strings
+                processed_form_data = {}
+                if form_data:
+                    for key, value in form_data.items():
+                        if isinstance(value, datetime):
+                            processed_form_data[key] = value.isoformat()
+                        elif isinstance(value, date):
+                            processed_form_data[key] = value.isoformat()
+                        else:
+                            processed_form_data[key] = value
+
                 metadata = {
                     'amount': str(float(amount)),
                     'amount_cents': str(amount_cents),
@@ -156,7 +167,7 @@ class PaymentService:
                     'row_number': str(row_number),
                     'payment_status': 'pending',
                     'payment_type': 'form_submission',
-                    'form_data': json.dumps(form_data) if form_data else '{}'
+                    'form_data': json.dumps(processed_form_data) if processed_form_data else '{}'
                 }
                 
                 logger.info("="*80)
