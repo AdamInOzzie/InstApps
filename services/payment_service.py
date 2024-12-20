@@ -81,7 +81,7 @@ class PaymentService:
             logger.error(f"Failed to initialize PaymentService: {str(e)}")
             raise
 
-    def create_payment_intent(self, amount: float, spreadsheet_id: str = None, row_number: int = None, currency: str = 'usd', form_data: Dict[str, Any] = None) -> Dict[str, Any]:
+    def create_payment_intent(self, amount: float, spreadsheet_id: str = None, row_number: int = None, currency: str = 'usd') -> Dict[str, Any]:
         """
         Create a Stripe Checkout session for the specified amount
         
@@ -145,43 +145,16 @@ class PaymentService:
             # Create Stripe Checkout session
             # Create session with enhanced logging
             logger.info("Creating Stripe checkout session...")
-            try:
-                # Create comprehensive metadata
-                # Convert any date objects in form_data to ISO format strings
-                processed_form_data = {}
-                if form_data:
-                    for key, value in form_data.items():
-                        if isinstance(value, datetime):
-                            processed_form_data[key] = value.isoformat()
-                        elif isinstance(value, date):
-                            processed_form_data[key] = value.isoformat()
-                        else:
-                            processed_form_data[key] = value
-
-                metadata = {
-                    'amount': str(float(amount)),
-                    'amount_cents': str(amount_cents),
-                    'created_at': datetime.now().isoformat(),
-                    'currency': currency,
-                    'spreadsheet_id': str(spreadsheet_id),
-                    'row_number': str(row_number),
-                    'payment_status': 'pending',
-                    'payment_type': 'form_submission',
-                    'form_data': json.dumps(processed_form_data) if processed_form_data else '{}'
-                }
-                
-                logger.info("="*80)
-                logger.info("METADATA CREATION")
-                logger.info(f"Created metadata object:")
-                logger.info(json.dumps(metadata, indent=2))
-                logger.info("="*80)
-                
-            except Exception as e:
-                logger.error(f"Error creating metadata: {str(e)}")
-                return {
-                    'error': f'Error creating payment metadata: {str(e)}',
-                    'error_type': 'metadata_error'
-                }
+            metadata = {
+                'amount': str(float(amount)),
+                'amount_cents': str(amount_cents),
+                'created_at': datetime.now().isoformat(),
+                'currency': currency,
+                'spreadsheet_id': str(spreadsheet_id),
+                'row_number': str(row_number),
+                'payment_status': 'pending',
+                'payment_type': 'form_submission'
+            }
 
             # Log session creation details
             logger.info("=" * 80)

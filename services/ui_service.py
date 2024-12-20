@@ -465,8 +465,7 @@ class UIService:
                         payment_data = payment_service.create_payment_intent(
                             amount=payment_amount,
                             spreadsheet_id=spreadsheet_id,
-                            row_number=next_row,
-                            form_data=form_data
+                            row_number=next_row
                         )
                         
                         if 'error' in payment_data:
