@@ -303,6 +303,17 @@ def main():
                 logger.info("PROCESSING PAYMENT CALLBACK")
                 logger.info(f"Session ID: {session_id}")
                 
+                # Initialize PaymentService if needed
+                if 'payment_service' not in st.session_state:
+                    logger.info("Initializing PaymentService for callback processing")
+                    try:
+                        st.session_state.payment_service = PaymentService()
+                        logger.info("PaymentService initialized successfully")
+                    except Exception as e:
+                        logger.error(f"Failed to initialize PaymentService: {str(e)}")
+                        st.error("⚠️ Payment service initialization failed")
+                        return
+                
                 # Get payment status from Stripe
                 payment_data = st.session_state.payment_service.get_payment_status(session_id)
                 logger.info(f"Payment data: {payment_data}")
