@@ -6,6 +6,7 @@ from services.copy_service import CopyService
 from services.form_builder_service import FormBuilderService
 from typing import Dict, Any, Optional
 from datetime import datetime
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -178,58 +179,30 @@ class UIService:
                 logger.info("="*80)
 
                 # Update the Paid field in the spreadsheet directly
-                cell_updates = [session_data['row_number'], 8, f"STRIPE_{session_id}"]  # Column H is 8
-                logger.info(f"Updating Paid field - Row: {cell_updates[0]}, Column: {cell_updates[1]}, Value: {cell_updates[2]}")
-                logger.info(f"Full session data for verification: {session_data}")
-
                 try:
-                    from services.spreadsheet_service import SpreadsheetService
-                    spreadsheet_service = SpreadsheetService(sheets_client)
-                    logger.info("Initializing spreadsheet update...")
-                    logger.info(f"Spreadsheet ID: {session_data['spreadsheet_id']}")
-                    logger.info(f"Sheet Name: {session_data['sheet_name']}")
-                    
-                    # First verify the row exists
-                    df = sheets_client.read_spreadsheet(session_data['spreadsheet_id'], f"{session_data['sheet_name']}!A:H")
-                    if df is not None and len(df) >= session_data['row_number']:
-                        logger.info("Row verification successful")
-                        
-                        # Use SpreadsheetService's UpdateEntryCells method directly
-                        update_success = SpreadsheetService.UpdateEntryCells(
-                            spreadsheet_id=session_data['spreadsheet_id'],
-                            sheet_name=session_data['sheet_name'],
-                            cell_updates=cell_updates
-                        )
-                        
-                        logger.info(f"Update operation result: {update_success}")
-                        
-                        if update_success:
-                            logger.info(f"Successfully updated spreadsheet for session {session_id}")
-                            st.success("✅ Payment verified and entry updated successfully!")
-                            # Clean up session data
-                            if session_id in st.session_state.payment_sessions:
-                                del st.session_state.payment_sessions[session_id]
-                            st.rerun()
-                            return True
-                        logger.info(f"Update operation result: {update_success}")
-                        
-                        if update_success:
-                            logger.info(f"Successfully updated spreadsheet for session {session_id}")
-                            st.success("✅ Payment verified and entry updated successfully!")
-                            # Clean up session data
-                            if session_id in st.session_state.payment_sessions:
-                                del st.session_state.payment_sessions[session_id]
-                            st.rerun()
-                            return True
-                    else:
-                        logger.error(f"Row {session_data['row_number']} not found in sheet")
-                        return False
+                    # Update the Paid field in the spreadsheet directly
+                    cell_updates = [session_data['row_number'], 8, f"STRIPE_{session_id}"]  # Column H is 8
+                    logger.info(f"Updating Paid field - Row: {cell_updates[0]}, Column: {cell_updates[1]}, Value: {cell_updates[2]}")
+                    logger.info(f"Full session data for verification: {session_data}")
 
+                    # Import SpreadsheetService
+                    from services.spreadsheet_service import SpreadsheetService
+                    
+                    # Use SpreadsheetService's UpdateEntryCells method directly
+                    update_success = SpreadsheetService.UpdateEntryCells(
+                        spreadsheet_id=session_data['spreadsheet_id'],
+                        sheet_name=session_data['sheet_name'],
+                        cell_updates=cell_updates
+                    )
+                    
+                    logger.info(f"Update operation result: {update_success}")
+                    
                     if update_success:
                         logger.info(f"Successfully updated spreadsheet for session {session_id}")
                         st.success("✅ Payment verified and entry updated successfully!")
                         # Clean up session data
-                        del st.session_state.payment_sessions[session_id]
+                        if session_id in st.session_state.payment_sessions:
+                            del st.session_state.payment_sessions[session_id]
                         st.rerun()
                         return True
                     else:
