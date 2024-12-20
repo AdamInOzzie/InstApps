@@ -69,25 +69,32 @@ class UIService:
             logger.info(f"Payment Sessions: {list(st.session_state.payment_sessions.keys()) if 'payment_sessions' in st.session_state else 'None'}")
             logger.info("="*80)
 
-            # Get payment status from Stripe first
+            # Get payment status from Stripe
             from services.payment_service import PaymentService
             payment_service = PaymentService()
             payment_status = payment_service.get_payment_status(session_id)
             
             if payment_status.get('status') == 'succeeded':
-                # Extract metadata from the Stripe session
-                metadata = payment_status.get('metadata', {})
-                session_data = {
-                    'spreadsheet_id': metadata.get('spreadsheet_id'),
-                    'row_number': int(metadata.get('row_number', 0)),
-                    'amount': float(metadata.get('amount', 0)),
-                    'sheet_name': 'Sponsors'  # Default to Sponsors sheet
-                }
-            
-            # Verify payment with Stripe
-            from services.payment_service import PaymentService
-            payment_service = PaymentService()
-            payment_status = payment_service.get_payment_status(session_id)
+                try:
+                    # Extract metadata from the Stripe session
+                    metadata = payment_status.get('metadata', {})
+                    logger.info("="*80)
+                    logger.info("PAYMENT METADATA")
+                    logger.info(f"Raw metadata: {metadata}")
+                    
+                    # Parse the form_data JSON string from metadata
+                    import json
+                    form_data = json.loads(metadata.get('form_data', '{}'))
+                    logger.info(f"Parsed form data: {form_data}")
+                    
+                    session_data = {
+                        'spreadsheet_id': form_data.get('spreadsheet_id'),
+                        'row_number': int(form_data.get('row_number', 0)),
+                        'amount': float(metadata.get('amount', 0)),
+                        'sheet_name': 'Sponsors'  # Default to Sponsors sheet
+                    }
+                    logger.info(f"Session data created: {session_data}")
+                    logger.info("="*80)
             
             if payment_status.get('status') == 'succeeded':
                 # Initialize GoogleSheetsClient
