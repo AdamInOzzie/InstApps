@@ -95,11 +95,29 @@ class PaymentService:
             Dict containing session url and other payment details
         """
         try:
+            # Validate required parameters
+            if not spreadsheet_id:
+                logger.error("Missing spreadsheet_id in create_payment_intent")
+                return {'error': 'Missing spreadsheet ID for payment processing'}
+                
+            if not row_number:
+                logger.error("Missing row_number in create_payment_intent")
+                return {'error': 'Missing row number for payment processing'}
+            
             # Convert dollars to cents for Stripe
             amount_cents = int(amount * 100)
             
             # Get the application URL from environment or fallback to a local URL
             base_url = os.getenv('APP_URL', 'http://localhost:5000')
+            
+            # Log payment intent creation details
+            logger.info("=" * 80)
+            logger.info("CREATING PAYMENT INTENT")
+            logger.info(f"Spreadsheet ID: {spreadsheet_id}")
+            logger.info(f"Row Number: {row_number}")
+            logger.info(f"Amount: {amount}")
+            logger.info(f"Currency: {currency}")
+            logger.info("=" * 80)
             
             # Remove trailing slash if present
             base_url = base_url.rstrip('/')
@@ -148,11 +166,11 @@ class PaymentService:
                     'amount': str(amount),
                     'created_at': datetime.now().isoformat(),
                     'currency': currency,
-                    'spreadsheet_id': spreadsheet_id if spreadsheet_id else '',
-                    'row_number': str(row_number) if row_number else '',
+                    'spreadsheet_id': str(spreadsheet_id),  # Convert to string but don't allow empty
+                    'row_number': str(row_number),          # Convert to string but don't allow empty
                     'form_data': json.dumps({
-                        'spreadsheet_id': spreadsheet_id,
-                        'row_number': row_number,
+                        'spreadsheet_id': str(spreadsheet_id),
+                        'row_number': str(row_number),
                         'amount': amount,
                         'timestamp': datetime.now().isoformat()
                     })
