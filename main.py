@@ -681,6 +681,10 @@ def main():
                         step=0.5,
                         key='admin_payment_amount')
 
+                    # Add test data input fields
+                    test_row_number = st.number_input("Test Row Number", min_value=1, value=1)
+                    test_sheet_id = st.text_input("Test Sheet ID", value=st.session_state.get('selected_sheet', ''))
+                    
                     if st.button("Process Payment",
                                  key='admin_process_payment'):
                         try:
@@ -688,9 +692,14 @@ def main():
                             if 'payment_sessions' not in st.session_state:
                                 st.session_state.payment_sessions = {}
 
-                            # Get required data from session state
-                            current_row = st.session_state.get('current_row_number')
-                            selected_sheet = st.session_state.get('current_sheet_id', st.session_state.get('selected_sheet'))
+                            # Store test values in session state
+                            st.session_state.current_row_number = test_row_number
+                            st.session_state.current_sheet_id = test_sheet_id
+                            st.session_state.selected_sheet = test_sheet_id
+
+                            # Get required data from session state with explicit logging
+                            current_row = test_row_number
+                            selected_sheet = test_sheet_id
                             
                             # Log session state for debugging
                             logger.info("=" * 80)
