@@ -58,10 +58,16 @@ class UIService:
         try:
             # Entry point logging
             logger.info("="*80)
-            logger.info("PAYMENT CALLBACK ENTRY POINT")
-            logger.info(f"Timestamp: {datetime.now().isoformat()}")
-            logger.info(f"Session ID: {session_id}")
+            logger.info("CHECKING PAYMENT CALLBACK")
             logger.info("="*80)
+
+            # Log all URL parameters and session state
+            logger.info(f"All query parameters: {dict(st.query_params)}")
+            logger.info(f"Raw URL being accessed: {st.runtime.get_instance()._get_url_path()}")
+            logger.info("Session and Request Information")
+            logger.info(f"Session State Keys: {list(st.session_state.keys())}")
+            logger.info(f"Query parameters: {dict(st.query_params)}")
+            logger.info(f"Admin status: {UIService.is_admin()}, Healthcheck status: {'healthcheck' in st.query_params}")
 
             # Log all URL parameters and session state
             logger.info("="*80)

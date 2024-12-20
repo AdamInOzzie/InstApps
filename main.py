@@ -297,55 +297,21 @@ def main():
                 logger.info("PROCESSING PAYMENT CALLBACK")
                 logger.info(f"Session ID: {session_id}")
                 
-                # Initialize PaymentService if needed
-                if 'payment_service' not in st.session_state:
-                    logger.info("Initializing PaymentService for callback processing")
-                    try:
-                        st.session_state.payment_service = PaymentService()
-                        logger.info("PaymentService initialized successfully")
-                    except Exception as e:
-                        logger.error(f"Failed to initialize PaymentService: {str(e)}")
-                        st.error("⚠️ Payment service initialization failed")
-                        return
+                # Use UI service to handle payment verification and sheet update
+                if 'ui_service' not in st.session_state:
+                    st.session_state.ui_service = UIService()
                 
-                # Get payment status from Stripe
-                payment_data = st.session_state.payment_service.get_payment_status(session_id)
-                logger.info(f"Payment data: {payment_data}")
+                logger.info("Calling UI service to verify payment and update sheet")
+                verification_result = st.session_state.ui_service.verify_payment_and_submit(session_id, st.session_state.sheets_client)
                 
-                if 'error' not in payment_data:
-                    # Extract metadata from payment
-                    spreadsheet_id = payment_data.get('spreadsheet_id')
-                    row_number = payment_data.get('row_number')
-                    
-                    logger.info(f"Extracted metadata - Spreadsheet ID: {spreadsheet_id}, Row: {row_number}")
-                    
-                    if spreadsheet_id and row_number:
-                        # Update the spreadsheet
-                        sheet_range = f'A{row_number}:H{row_number}'
-                        try:
-                            values = [[f"PAID_{session_id}"]]
-                            body = {
-                                'values': values
-                            }
-                            st.session_state.sheets_client.sheets_service.spreadsheets().values().update(
-                                spreadsheetId=spreadsheet_id,
-                                range=sheet_range,
-                                valueInputOption='RAW',
-                                body=body
-                            ).execute()
-                            success_message = "✅ Payment verified and recorded successfully!"
-                            logger.info(f"Successfully updated spreadsheet for payment {session_id}")
-                            logger.info(success_message)
-                            st.success(success_message)
-                        except Exception as e:
-                            logger.error(f"Failed to update spreadsheet: {str(e)}")
-                            st.error("Failed to update payment record")
-                    else:
-                        logger.error("Missing spreadsheet ID or row number in payment metadata")
-                        st.error("Missing payment information")
+                if verification_result:
+                    success_message = "✅ Payment verified and recorded successfully!"
+                    logger.info(success_message)
+                    st.success(success_message)
                 else:
-                    logger.error(f"Payment verification failed: {payment_data.get('error')}")
-                    st.error("Payment verification failed")
+                    error_message = "Failed to verify payment or update record"
+                    logger.error(error_message)
+                    st.error(error_message)
             except Exception as e:
                 logger.error(f"Error processing payment callback: {str(e)}")
                 st.error(f"Error processing payment: {str(e)}")
