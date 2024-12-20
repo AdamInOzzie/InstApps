@@ -322,11 +322,16 @@ def main():
                         # Update the spreadsheet
                         sheet_range = f'A{row_number}:H{row_number}'
                         try:
-                            st.session_state.sheets_client.update_cell(
-                                spreadsheet_id=spreadsheet_id,
-                                range_name=sheet_range,
-                                value=f"PAID_{session_id}"
-                            )
+                            values = [[f"PAID_{session_id}"]]
+                            body = {
+                                'values': values
+                            }
+                            st.session_state.sheets_client.service.spreadsheets().values().update(
+                                spreadsheetId=spreadsheet_id,
+                                range=sheet_range,
+                                valueInputOption='RAW',
+                                body=body
+                            ).execute()
                             st.success("✅ Payment verified and recorded successfully!")
                             logger.info(f"Successfully updated spreadsheet for payment {session_id}")
                             time.sleep(2)
