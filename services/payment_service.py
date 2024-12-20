@@ -146,6 +146,34 @@ class PaymentService:
             # Create session with enhanced logging
             logger.info("Creating Stripe checkout session...")
             # Create session with metadata
+            # Log the data being stored in session
+            logger.info("=" * 80)
+            logger.info("CREATING STRIPE SESSION WITH METADATA")
+            logger.info(f"Spreadsheet ID: {spreadsheet_id}")
+            logger.info(f"Row Number: {row_number}")
+            logger.info(f"Amount: {amount}")
+            logger.info(f"Currency: {currency}")
+            logger.info("=" * 80)
+            
+            # Create metadata
+            metadata = {
+                'amount': str(amount),
+                'created_at': datetime.now().isoformat(),
+                'currency': currency,
+                'spreadsheet_id': str(spreadsheet_id),
+                'row_number': str(row_number),
+                'form_data': json.dumps({
+                    'spreadsheet_id': str(spreadsheet_id),
+                    'row_number': str(row_number),
+                    'amount': amount,
+                    'timestamp': datetime.now().isoformat()
+                })
+            }
+            
+            # Log the complete metadata
+            logger.info("Complete metadata being stored:")
+            logger.info(json.dumps(metadata, indent=2))
+            
             session = stripe.checkout.Session.create(
                 payment_method_types=['card'],
                 line_items=[{
@@ -162,19 +190,7 @@ class PaymentService:
                 mode='payment',
                 success_url=success_url,
                 cancel_url=cancel_url,
-                metadata={
-                    'amount': str(amount),
-                    'created_at': datetime.now().isoformat(),
-                    'currency': currency,
-                    'spreadsheet_id': str(spreadsheet_id),  # Convert to string but don't allow empty
-                    'row_number': str(row_number),          # Convert to string but don't allow empty
-                    'form_data': json.dumps({
-                        'spreadsheet_id': str(spreadsheet_id),
-                        'row_number': str(row_number),
-                        'amount': amount,
-                        'timestamp': datetime.now().isoformat()
-                    })
-                }
+                metadata=metadata
             )
             
             # Log session details
@@ -228,11 +244,24 @@ class PaymentService:
             Dict containing payment status and details
         """
         try:
-            logger.info(f"Retrieving payment status for session: {session_id}")
+            logger.info("=" * 80)
+            logger.info("RETRIEVING STRIPE SESSION DATA")
+            logger.info(f"Session ID: {session_id}")
+            
+            # Retrieve the session from Stripe
             session = stripe.checkout.Session.retrieve(session_id)
+            
+            # Log all session details
+            logger.info("=" * 80)
+            logger.info("STRIPE SESSION DETAILS")
+            logger.info(f"Payment Status: {session.payment_status}")
+            logger.info(f"Amount Total: {session.amount_total}")
+            logger.info(f"Currency: {session.currency}")
+            logger.info(f"Customer Details: {session.customer_details if hasattr(session, 'customer_details') else 'None'}")
+            logger.info(f"Metadata: {json.dumps(session.metadata, indent=2)}")
+            logger.info("=" * 80)
+            
             payment_status = session.payment_status
-            logger.info(f"Payment status retrieved: {payment_status}")
-            logger.info(f"Full session data: {session}")
             
             # Get metadata along with payment status
             metadata = session.metadata or {}
