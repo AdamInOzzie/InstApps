@@ -81,7 +81,7 @@ class PaymentService:
             logger.error(f"Failed to initialize PaymentService: {str(e)}")
             raise
 
-    def create_payment_intent(self, amount: float, spreadsheet_id: str = None, row_number: int = None, currency: str = 'usd') -> Dict[str, Any]:
+    def create_payment_intent(self, amount: float, spreadsheet_id: str = None, row_number: int = None, currency: str = 'usd', form_data: Dict[str, Any] = None) -> Dict[str, Any]:
         """
         Create a Stripe Checkout session for the specified amount
         
@@ -145,7 +145,34 @@ class PaymentService:
             # Create Stripe Checkout session
             # Create session with enhanced logging
             logger.info("Creating Stripe checkout session...")
-            # Create session with metadata
+            try:
+                # Create comprehensive metadata
+                metadata = {
+                    'amount': str(float(amount)),
+                    'amount_cents': str(amount_cents),
+                    'created_at': datetime.now().isoformat(),
+                    'currency': currency,
+                    'spreadsheet_id': str(spreadsheet_id),
+                    'row_number': str(row_number),
+                    'payment_status': 'pending',
+                    'payment_type': 'form_submission',
+                    'form_data': json.dumps(form_data) if form_data else '{}'
+                }
+                
+                logger.info("="*80)
+                logger.info("METADATA CREATION")
+                logger.info(f"Created metadata object:")
+                logger.info(json.dumps(metadata, indent=2))
+                logger.info("="*80)
+                
+            except Exception as e:
+                logger.error(f"Error creating metadata: {str(e)}")
+                return {
+                    'error': f'Error creating payment metadata: {str(e)}',
+                    'error_type': 'metadata_error'
+                }
+
+            # Log session creation details
             logger.info("=" * 80)
             logger.info("CREATING STRIPE SESSION")
             logger.info("=" * 80)

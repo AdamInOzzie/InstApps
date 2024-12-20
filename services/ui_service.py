@@ -452,10 +452,21 @@ class UIService:
                         # Create payment intent using PaymentService with required parameters
                         from services.payment_service import PaymentService
                         payment_service = PaymentService()
+                        
+                        # Log payment intent creation
+                        logger.info("="*80)
+                        logger.info("CREATING PAYMENT INTENT")
+                        logger.info(f"Amount: ${payment_amount:.2f}")
+                        logger.info(f"Spreadsheet ID: {spreadsheet_id}")
+                        logger.info(f"Row Number: {next_row}")
+                        logger.info(f"Form Data: {json.dumps(form_data, indent=2)}")
+                        logger.info("="*80)
+                        
                         payment_data = payment_service.create_payment_intent(
                             amount=payment_amount,
                             spreadsheet_id=spreadsheet_id,
-                            row_number=next_row
+                            row_number=next_row,
+                            form_data=form_data
                         )
                         
                         if 'error' in payment_data:
