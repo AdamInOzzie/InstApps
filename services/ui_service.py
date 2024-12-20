@@ -110,6 +110,7 @@ class UIService:
                 logger.info("="*80)
                 
                 from services.payment_service import PaymentService
+                from services.spreadsheet_service import SpreadsheetService
                 payment_service = PaymentService()
                 
                 logger.info("="*80)
@@ -124,6 +125,29 @@ class UIService:
                     logger.info("="*80)
                     logger.info(json.dumps(payment_status, indent=2))
                     logger.info("="*80)
+
+                    # Extract metadata for sheet update
+                    metadata = payment_status.get('metadata', {})
+                    spreadsheet_id = metadata.get('spreadsheet_id')
+                    row_number = int(metadata.get('row_number', 0))
+
+                    if spreadsheet_id and row_number:
+                        logger.info(f"Updating sheet {spreadsheet_id} at row {row_number}")
+                        cell_updates = [row_number, 8, f"PAID_STRIPE_{session_id}"]
+                        
+                        update_success = SpreadsheetService.UpdateEntryCells(
+                            spreadsheet_id=spreadsheet_id,
+                            sheet_name='Sponsors',  # Default to Sponsors sheet
+                            cell_updates=cell_updates
+                        )
+                        
+                        if update_success:
+                            logger.info("Successfully updated payment status in sheet")
+                            return True
+                    else:
+                        logger.error("Missing required metadata for sheet update")
+                        return False
+                        
                 except Exception as e:
                     logger.error(f"Error retrieving Stripe session: {str(e)}")
                     return False
