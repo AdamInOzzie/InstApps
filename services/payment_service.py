@@ -128,9 +128,9 @@ class PaymentService:
             # Log the base URL being used
             logger.info(f"Base URL for Stripe redirects: {base_url}")
             
-            # Create success and cancel URLs with query parameters
-            success_url = f"{base_url}/?payment=success&session_id={{CHECKOUT_SESSION_ID}}"
-            cancel_url = f"{base_url}/?payment=cancelled"
+            # Create success and cancel URLs with properly formatted query parameters
+            success_url = f"{base_url}?payment=success&session_id={{CHECKOUT_SESSION_ID}}"
+            cancel_url = f"{base_url}?payment=cancelled"
             
             # Enhanced logging for URL construction and parameters
             logger.info("=" * 80)
