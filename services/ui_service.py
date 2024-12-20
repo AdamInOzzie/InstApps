@@ -61,13 +61,10 @@ class UIService:
             logger.info("CHECKING PAYMENT CALLBACK")
             logger.info("="*80)
 
-            # Log all URL parameters and session state
-            logger.info(f"All query parameters: {dict(st.query_params)}")
-            logger.info(f"Raw URL being accessed: {st.runtime.get_instance()._get_url_path()}")
-            logger.info("Session and Request Information")
-            logger.info(f"Session State Keys: {list(st.session_state.keys())}")
-            logger.info(f"Query parameters: {dict(st.query_params)}")
-            logger.info(f"Admin status: {UIService.is_admin()}, Healthcheck status: {'healthcheck' in st.query_params}")
+            # Log payment verification attempt
+            logger.info(f"Starting payment verification for session: {session_id}")
+            logger.info(f"Current query parameters: {dict(st.query_params)}")
+            logger.info(f"Available session state keys: {list(st.session_state.keys())}")
 
             # Log all URL parameters and session state
             logger.info("="*80)
@@ -78,16 +75,24 @@ class UIService:
             logger.info(f"Payment sessions in state: {list(st.session_state.payment_sessions.keys()) if 'payment_sessions' in st.session_state else 'None'}")
             logger.info("="*80)
 
-            # Verify we have necessary session data
-            if 'payment_sessions' not in st.session_state:
-                logger.error("No payment sessions found in session state")
-                st.error("Payment session data not found")
-                return False
+            # Initialize payment service and verify payment status
+            try:
+                from services.payment_service import PaymentService
+                payment_service = PaymentService()
+                
+                # Get payment status from Stripe
+                payment_status = payment_service.get_payment_status(session_id)
+                logger.info("Payment status retrieved:")
+                logger.info(json.dumps(payment_status, indent=2))
 
-            if session_id not in st.session_state.payment_sessions:
-                logger.error(f"Session ID {session_id} not found in payment sessions")
-                st.error("Payment session not found")
-                return False
+                # Extract metadata for sheet update
+                metadata = payment_status.get('metadata', {})
+                spreadsheet_id = metadata.get('spreadsheet_id')
+                row_number = int(metadata.get('row_number', 0))
+
+                if not spreadsheet_id or not row_number:
+                    logger.error("Missing required metadata")
+                    return False
 
             # Initialize payment_sessions if not exists
             if 'payment_sessions' not in st.session_state:
