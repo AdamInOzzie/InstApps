@@ -287,14 +287,7 @@ def main():
             logger.info("=" * 80)
             logger.info("=" * 80)
 
-            # Initialize services before verification
-            if 'sheets_client' not in st.session_state:
-                st.session_state.sheets_client = GoogleSheetsClient()
-
-            if 'payment_sessions' not in st.session_state:
-                st.session_state.payment_sessions = {}
-
-            # Initialize sheets client if needed
+            # Initialize essential services for payment verification
             if 'sheets_client' not in st.session_state:
                 st.session_state.sheets_client = GoogleSheetsClient()
 

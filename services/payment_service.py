@@ -155,19 +155,15 @@ class PaymentService:
             logger.info(f"Currency: {currency}")
             logger.info("=" * 80)
             
-            # Create metadata
+            # Create comprehensive metadata with all necessary information
             metadata = {
                 'amount': str(amount),
                 'created_at': datetime.now().isoformat(),
                 'currency': currency,
                 'spreadsheet_id': str(spreadsheet_id),
                 'row_number': str(row_number),
-                'form_data': json.dumps({
-                    'spreadsheet_id': str(spreadsheet_id),
-                    'row_number': str(row_number),
-                    'amount': amount,
-                    'timestamp': datetime.now().isoformat()
-                })
+                'payment_status': 'pending',
+                'payment_type': 'form_submission'
             }
             
             # Log the complete metadata
