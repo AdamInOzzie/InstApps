@@ -332,10 +332,10 @@ def main():
                                 valueInputOption='RAW',
                                 body=body
                             ).execute()
-                            st.success("✅ Payment verified and recorded successfully!")
+                            success_message = "✅ Payment verified and recorded successfully!"
                             logger.info(f"Successfully updated spreadsheet for payment {session_id}")
-                            time.sleep(2)
-                            st.rerun()
+                            logger.info(success_message)
+                            st.success(success_message)
                         except Exception as e:
                             logger.error(f"Failed to update spreadsheet: {str(e)}")
                             st.error("Failed to update payment record")
