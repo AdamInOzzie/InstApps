@@ -83,13 +83,18 @@ class UIService:
                 st.error("Payment session not found")
                 return False
 
-            # Get the stored session data
-            stored_session = st.session_state.payment_sessions[session_id]
-            logger.info(f"Retrieved stored session data: {stored_session}")
-                
             # Initialize payment_sessions if not exists
             if 'payment_sessions' not in st.session_state:
                 st.session_state.payment_sessions = {}
+                logger.info("Initialized empty payment_sessions in session state")
+            
+            # Get the stored session data if it exists
+            stored_session = st.session_state.payment_sessions.get(session_id)
+            logger.info(f"Retrieved stored session data: {stored_session}")
+            
+            # If no stored session, try to proceed with metadata from callback
+            if not stored_session:
+                logger.info("No stored session found, will use metadata from callback")
 
             # Log session data details
             logger.info("="*80)
@@ -231,19 +236,35 @@ class UIService:
                         logger.info("="*80)
                         
                         # Use SpreadsheetService's UpdateEntryCells method
-                        logger.info("Calling SpreadsheetService.UpdateEntryCells...")
+                        logger.info("="*80)
+                        logger.info("UPDATING GOOGLE SHEET")
+                        logger.info("="*80)
+                        
                         try:
                             # Log the exact parameters being passed
                             logger.info("UpdateEntryCells Parameters:")
                             logger.info(f"spreadsheet_id: {session_data['spreadsheet_id']}")
                             logger.info(f"sheet_name: {session_data['sheet_name']}")
                             logger.info(f"cell_updates: {cell_updates}")
+                            logger.info(f"Row number (pre-conversion): {session_data['row_number']}")
+                            logger.info(f"Row number (post-conversion): {row_num}")
                             
+                            # Double-check the spreadsheet exists and is accessible
+                            sheet_info = sheets_client.get_spreadsheet_metadata(session_data['spreadsheet_id'])
+                            if not sheet_info:
+                                logger.error("Could not access spreadsheet - metadata lookup failed")
+                                return False
+                                
+                            logger.info(f"Successfully verified spreadsheet access: {sheet_info.get('spreadsheetId')}")
+                            
+                            # Attempt the update
                             update_success = SpreadsheetService.UpdateEntryCells(
                                 spreadsheet_id=session_data['spreadsheet_id'],
                                 sheet_name=session_data['sheet_name'],
                                 cell_updates=cell_updates
                             )
+                            
+                            logger.info(f"Update attempt complete - Success: {update_success}")
                             
                             if not update_success:
                                 logger.error("UpdateEntryCells returned False but didn't raise an exception")

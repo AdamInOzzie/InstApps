@@ -1,0 +1,160 @@
+erviceaccount.com
+INFO:__main__:Project ID: flash-etching-442206-j6
+INFO:__main__:Successfully loaded and validated service account JSON
+2024-12-20 03:44:07.127 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.127 Session state does not function when running a script without `streamlit run`
+2024-12-20 03:44:07.127 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.127 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.127 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.127 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.127 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.127 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.127 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.127 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.127 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.127 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.127 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.127 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.128 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.128 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.196 
+  Warning: to view this Streamlit app on a browser, run it with the following
+  command:
+
+    streamlit run main.py [ARGUMENTS]
+2024-12-20 03:44:07.197 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.197 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+INFO:__main__:Initializing Google Sheets client
+INFO:utils.google_sheets:Successfully authenticated with service account
+INFO:googleapiclient.discovery_cache:file_cache is only supported with oauth2client<4.0.0
+INFO:googleapiclient.discovery_cache:file_cache is only supported with oauth2client<4.0.0
+INFO:utils.google_sheets:Successfully connected to Google Sheets and Drive APIs
+2024-12-20 03:44:07.203 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.203 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.203 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.204 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.204 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.204 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.204 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.204 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.204 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.204 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.204 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.204 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+INFO:__main__:================================================================================
+INFO:__main__:CHECKING PAYMENT CALLBACK
+2024-12-20 03:44:07.204 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.204 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+INFO:__main__:All query parameters: {}
+INFO:__main__:Raw URL being accessed: {}
+INFO:__main__:Session and Request Information
+2024-12-20 03:44:07.204 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.204 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+INFO:__main__:Session State Keys: ['sheets_client', 'query_params', 'ui_service', 'spreadsheet_service', 'start_time', 'form_builder_service', 'form_service']
+2024-12-20 03:44:07.205 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.205 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.205 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.205 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.205 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.205 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.205 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.205 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.205 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.205 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.205 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.205 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.205 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.205 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.205 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.205 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.206 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.206 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.206 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.206 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.206 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+INFO:__main__:Query parameters: {}
+2024-12-20 03:44:07.206 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.206 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+INFO:__main__:Admin status: False, Healthcheck status: False
+2024-12-20 03:44:07.206 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.206 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.206 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.206 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.206 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.206 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.206 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.206 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.206 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.206 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.206 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.206 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.207 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.207 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.207 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.207 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.207 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.207 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.207 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.207 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.707 Thread 'Thread-1': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.707 Thread 'Thread-1': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+INFO:utils.google_sheets:Successfully listed 5 spreadsheets
+INFO:services.spreadsheet_service:Successfully loaded 5 spreadsheets
+2024-12-20 03:44:07.829 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.829 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.829 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.829 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.829 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.829 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.829 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.829 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.829 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.829 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.830 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.830 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.830 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.830 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.830 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.830 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.830 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.830 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.830 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.830 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.830 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.830 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:07.830 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+INFO:utils.google_sheets:Successfully retrieved metadata for spreadsheet 10oGsPnfLO7-bpyn18CJhPI1iNeksGacCSGwNLXGbidc
+INFO:services.spreadsheet_service:Found 4 sheets in spreadsheet
+2024-12-20 03:44:08.203 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:08.203 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:08.203 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:08.203 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:08.203 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:08.203 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:08.203 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:08.203 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:08.203 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:08.203 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:08.203 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:08.203 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:08.204 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:08.204 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:08.204 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:08.204 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+INFO:utils.google_sheets:Successfully retrieved metadata for spreadsheet 10oGsPnfLO7-bpyn18CJhPI1iNeksGacCSGwNLXGbidc
+INFO:services.spreadsheet_service:Found 4 sheets in spreadsheet
+INFO:__main__:Available sheets: ['Volunteers', 'USERS', 'Sponsors', 'Weeks']
+INFO:__main__:Has Volunteers sheet: True
+INFO:__main__:Has USERS sheet: True
+2024-12-20 03:44:08.325 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+INFO:__main__:Current username: None
+2024-12-20 03:44:08.325 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+INFO:__main__:Is logged in: False
+2024-12-20 03:44:08.325 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:08.325 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:08.325 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:08.325 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:08.325 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:08.325 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+2024-12-20 03:44:08.325 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+ 
