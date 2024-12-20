@@ -337,10 +337,22 @@ class UIService:
                     qty = float(form_data['QTY'])
                     payment_amount = price * qty
                     if payment_amount > 0:
-                        # Create payment intent using PaymentService
+                        logger.info("=" * 80)
+                        logger.info("INITIATING PAYMENT PROCESS")
+                        logger.info(f"Spreadsheet ID: {spreadsheet_id}")
+                        logger.info(f"Sheet Name: {sheet_name}")
+                        logger.info(f"Row Number: {next_row}")
+                        logger.info(f"Payment Amount: {payment_amount}")
+                        logger.info("=" * 80)
+
+                        # Create payment intent using PaymentService with required parameters
                         from services.payment_service import PaymentService
                         payment_service = PaymentService()
-                        payment_data = payment_service.create_payment_intent(payment_amount)
+                        payment_data = payment_service.create_payment_intent(
+                            amount=payment_amount,
+                            spreadsheet_id=spreadsheet_id,
+                            row_number=next_row
+                        )
                         
                         if 'error' in payment_data:
                             st.error(f"Payment Error: {payment_data['error']}")
