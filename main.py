@@ -326,7 +326,7 @@ def main():
                             body = {
                                 'values': values
                             }
-                            st.session_state.sheets_client.service.spreadsheets().values().update(
+                            st.session_state.sheets_client.sheets_service.spreadsheets().values().update(
                                 spreadsheetId=spreadsheet_id,
                                 range=sheet_range,
                                 valueInputOption='RAW',
