@@ -213,7 +213,16 @@ class UIService:
                         logger.info(f"Row verification successful - Sheet has {len(df)} rows")
                         
                         # Prepare cell updates for the Paid field (Column H)
-                        cell_updates = [session_data['row_number'], 8, f"STRIPE_{session_id}"]
+                        # Convert row number to integer and ensure it's valid
+                        row_num = int(session_data['row_number'])
+                        logger.info(f"Converting row number {session_data['row_number']} to integer: {row_num}")
+                        
+                        # Prepare the cell updates array with the correct format
+                        cell_updates = [row_num, 8, f"PAID_STRIPE_{session_id}"]
+                        logger.info(f"Prepared cell updates array: {cell_updates}")
+                        
+                        # Log the exact update we're about to perform
+                        logger.info(f"Will update sheet '{session_data['sheet_name']}' at row {row_num}, column H with value 'PAID_STRIPE_{session_id}'")
                         logger.info("="*80)
                         logger.info("CELL UPDATE DETAILS")
                         logger.info(f"Row: {cell_updates[0]}")
@@ -223,11 +232,29 @@ class UIService:
                         
                         # Use SpreadsheetService's UpdateEntryCells method
                         logger.info("Calling SpreadsheetService.UpdateEntryCells...")
-                        update_success = SpreadsheetService.UpdateEntryCells(
-                            spreadsheet_id=session_data['spreadsheet_id'],
-                            sheet_name=session_data['sheet_name'],
-                            cell_updates=cell_updates
-                        )
+                        try:
+                            # Log the exact parameters being passed
+                            logger.info("UpdateEntryCells Parameters:")
+                            logger.info(f"spreadsheet_id: {session_data['spreadsheet_id']}")
+                            logger.info(f"sheet_name: {session_data['sheet_name']}")
+                            logger.info(f"cell_updates: {cell_updates}")
+                            
+                            update_success = SpreadsheetService.UpdateEntryCells(
+                                spreadsheet_id=session_data['spreadsheet_id'],
+                                sheet_name=session_data['sheet_name'],
+                                cell_updates=cell_updates
+                            )
+                            
+                            if not update_success:
+                                logger.error("UpdateEntryCells returned False but didn't raise an exception")
+                                st.error("Failed to update the payment status in the spreadsheet")
+                                return False
+                                
+                        except Exception as update_error:
+                            logger.error(f"Error in UpdateEntryCells: {str(update_error)}")
+                            logger.error(f"Error type: {type(update_error).__name__}")
+                            st.error(f"Failed to update payment status: {str(update_error)}")
+                            return False
                         
                         logger.info("="*80)
                         logger.info("UPDATE OPERATION RESULT")
