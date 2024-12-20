@@ -529,12 +529,18 @@ def main():
 
                 while retry_count < max_retries:
                     try:
-                        # Verify the payment session
+                        # Verify the payment session with detailed logging
                         session = stripe.checkout.Session.retrieve(session_id)
-                        logger.info(
-                            f"Successfully retrieved session {session_id}")
-                        logger.info(
-                            f"Payment status: {session.payment_status}")
+                        logger.info("=" * 80)
+                        logger.info("STRIPE SESSION DATA")
+                        logger.info(f"Session ID: {session_id}")
+                        logger.info(f"Payment status: {session.payment_status}")
+                        logger.info(f"Metadata: {session.metadata}")
+                        logger.info(f"Amount total: {session.amount_total}")
+                        logger.info(f"Currency: {session.currency}")
+                        logger.info(f"Customer email: {session.customer_details.email if session.customer_details else 'No email'}")
+                        logger.info(f"Complete session object: {session}")
+                        logger.info("=" * 80)
 
                         if session.payment_status == "paid":
                             st.success(
