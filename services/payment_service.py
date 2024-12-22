@@ -165,7 +165,8 @@ class PaymentService:
                 'spreadsheet_id': str(spreadsheet_id),
                 'row_number': str(row_number),
                 'payment_status': 'pending',
-                'payment_type': 'form_submission'
+                'payment_type': 'form_submission',
+                'sheet_name': 'Sponsored Box Weeks'  # Add sheet name
             }
             
             # Log the metadata being stored
