@@ -2,6 +2,7 @@
 import logging
 import os
 import json
+from datetime import datetime, date
 import streamlit as st
 import pandas as pd
 from services.copy_service import CopyService
@@ -399,13 +400,21 @@ class UIService:
         form_data: Dict[str, Any]
     ) -> Optional[Dict[str, Any]]:
         """Handle form submission with payment processing if required."""
-        logger.info("=" * 80)
-        logger.info("FORM SUBMISSION HANDLER")
-        logger.info("=" * 80)
-        logger.info(f"Processing submission for sheet: {sheet_name}")
-        logger.info(f"Form data received: {json.dumps(form_data, default=str, indent=2)}")
-
         try:
+            # Convert form data to serializable format
+            serializable_form_data = {}
+            for key, value in form_data.items():
+                if isinstance(value, (datetime, date)):
+                    serializable_form_data[key] = value.isoformat()
+                else:
+                    serializable_form_data[key] = str(value)
+
+            logger.info("=" * 80)
+            logger.info("FORM SUBMISSION HANDLER")
+            logger.info("=" * 80)
+            logger.info(f"Processing submission for sheet: {sheet_name}")
+            logger.info(f"Form data received: {json.dumps(serializable_form_data, indent=2)}")
+
             from services.spreadsheet_service import SpreadsheetService
 
             # First, append the entry
