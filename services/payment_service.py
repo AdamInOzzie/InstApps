@@ -174,11 +174,11 @@ class PaymentService:
             
             # Log the metadata being stored
             logger.info("Creating Stripe session with metadata:")
-            logger.info(json.dumps(metadata, indent=2))
+            logger.info(json.dumps(session_data, indent=2))
             
             # Log the complete metadata
             logger.info("Complete metadata being stored:")
-            logger.info(json.dumps(metadata, indent=2))
+            logger.info(json.dumps(session_data, indent=2))
             
             session = stripe.checkout.Session.create(
                 payment_method_types=['card'],
@@ -196,7 +196,7 @@ class PaymentService:
                 mode='payment',
                 success_url=success_url,
                 cancel_url=cancel_url,
-                metadata=metadata
+                metadata=session_data
             )
             
             # Log session details
