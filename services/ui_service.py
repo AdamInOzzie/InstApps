@@ -390,16 +390,8 @@ class UIService:
                 if isinstance(result, dict) and 'payment_url' in result:
                     logger.info("Redirecting to Stripe payment")
                     payment_url = result['payment_url']
-                    # Use JavaScript to redirect immediately after successful form submission
-                    st.markdown(
-                        f"""
-                        <script>
-                            window.location.href = "{payment_url}";
-                        </script>
-                        """,
-                        unsafe_allow_html=True
-                    )
-                    st.info("Processing payment...")
+                    st.info("Redirecting to payment page...")
+                    st.switch_page(payment_url)
                     return None
 
                 logger.info(f"Form submission result: {result}")
