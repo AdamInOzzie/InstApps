@@ -81,7 +81,7 @@ class PaymentService:
             logger.error(f"Failed to initialize PaymentService: {str(e)}")
             raise
 
-    def create_payment_intent(self, amount: float, spreadsheet_id: str = None, row_number: int = None, currency: str = 'usd') -> Dict[str, Any]:
+    def create_payment_intent(self, amount: float, spreadsheet_id: str = None, row_number: int = None, sheet_name: str = None, currency: str = 'usd') -> Dict[str, Any]:
         """
         Create a Stripe Checkout session for the specified amount
         
@@ -164,6 +164,7 @@ class PaymentService:
                 'currency': currency,
                 'spreadsheet_id': str(spreadsheet_id),
                 'row_number': str(row_number),
+                'sheet_name': str(sheet_name),
                 'payment_status': 'pending',
                 'payment_type': 'form_submission'
             }
