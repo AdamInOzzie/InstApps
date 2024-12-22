@@ -475,10 +475,17 @@ class UIService:
                             st.error(f"Payment Error: {payment_data['error']}")
                             return None
 
-                        # Display payment link
+                        # Use JavaScript to redirect to Stripe
                         st.info("💳 Payment Required")
                         st.write(f"Amount: ${payment_amount:.2f}")
-                        st.link_button("Complete Payment", payment_data['session_url'])
+                        st.markdown(
+                            f"""
+                            <script>
+                                window.location.href = "{payment_data['session_url']}";
+                            </script>
+                            """, 
+                            unsafe_allow_html=True
+                        )
 
                         # Store payment session with row information
                         if 'payment_sessions' not in st.session_state:
