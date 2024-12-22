@@ -391,7 +391,8 @@ class UIService:
                     logger.info("Redirecting to Stripe payment")
                     payment_url = result['payment_url']
                     st.info("Redirecting to payment page...")
-                    st.switch_page(payment_url)
+                    html_redirect = f'<html><head><meta http-equiv="refresh" content="0; URL={payment_url}"></head></html>'
+                    st.markdown(html_redirect, unsafe_allow_html=True)
                     return None
 
                 logger.info(f"Form submission result: {result}")
