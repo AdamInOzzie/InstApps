@@ -187,20 +187,9 @@ class UIService:
                         logger.info(f"Column {chr(65+i)}: '{header}'")
                     logger.info("=" * 80)
                     
-                    # Look for exact match of "Paid"
-                    paid_column_index = None
-                    for i, col in enumerate(headers):
-                        col_str = str(col).strip()
-                        logger.info(f"Checking column {i+1} ({chr(65+i)}): '{col_str}'")
-                        
-                        if col_str == "Paid":
-                            paid_column_index = i + 1
-                            logger.info(f"Found exact match for 'Paid' column at index {paid_column_index} (column {chr(64+paid_column_index)})")
-                            break
-                    
-                    if paid_column_index is None:
-                        paid_column_index = 8  # Default to column H
-                        logger.warning("No exact match for 'Paid' column found, defaulting to column H (index 8)")
+                    # Force column I (index 9) for 'Paid' status
+                    paid_column_index = 9  # Column I
+                    logger.info(f"Using fixed column I (index 9) for Paid status")
                 else:
                     paid_column_index = 8
                     logger.error("Failed to read headers, defaulting to column H (index 8)")
