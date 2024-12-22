@@ -177,35 +177,33 @@ class UIService:
                 sheet_data = sheets_client.read_spreadsheet(spreadsheet_id, header_range)
                 
                 if sheet_data is not None and not sheet_data.empty:
-                    # Get raw values from DataFrame
+                    # Get the first row values directly
+                    headers = sheet_data.iloc[0].tolist()
+                    
                     logger.info("=" * 80)
                     logger.info("HEADER DETECTION DETAILS")
                     logger.info(f"Range queried: {header_range}")
-                    logger.info(f"DataFrame shape: {sheet_data.shape}")
-                    logger.info(f"DataFrame columns (direct): {sheet_data.columns}")
+                    logger.info(f"Raw headers found: {headers}")
                     
-                    # Convert to list and examine each header carefully
-                    headers = [str(col).strip() for col in sheet_data.columns]
+                    # Clean and examine each header
+                    cleaned_headers = [str(h).strip() if pd.notna(h) else '' for h in headers]
                     logger.info("Examining each header:")
-                    for i, header in enumerate(headers):
+                    for i, header in enumerate(cleaned_headers):
                         logger.info(f"Column {chr(65+i)}: '{header}' (type: {type(header)}, length: {len(header)})")
                         if header == "Paid":
                             logger.info(f"Found exact match for 'Paid' at column {chr(65+i)}")
-                            logger.info(f"ASCII values: {[ord(c) for c in header]}")
                     logger.info("=" * 80)
                     
-                    # Search for 'Paid' column in headers
+                    # Search for 'Paid' column in cleaned headers
                     paid_column_index = None
-                    for i, col in enumerate(headers):
-                        col_str = str(col).strip()
-                        logger.info(f"Analyzing column {chr(65+i)}: '{col_str}'")
-                        if col_str == "Paid":
+                    for i, header in enumerate(cleaned_headers):
+                        if header == "Paid":
                             paid_column_index = i + 1  # Add 1 because spreadsheet columns start at 1
                             logger.info(f"Found 'Paid' column at position {paid_column_index} (column {chr(64+paid_column_index)})")
                             break
                     
                     if paid_column_index is None:
-                        error_msg = "Could not find 'Paid' column in headers. Available headers: " + ", ".join(headers)
+                        error_msg = "Could not find 'Paid' column in headers. Available headers: " + ", ".join(cleaned_headers)
                         logger.error(error_msg)
                         st.error(error_msg)
                         return False
