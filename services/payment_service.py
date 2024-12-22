@@ -157,7 +157,8 @@ class PaymentService:
             
             # Create comprehensive metadata with all necessary information
             # Create metadata with proper amount formatting and required fields
-            metadata = {
+            # Get current session data from the metadata parameter
+            session_data = {
                 'amount': str(float(amount)),  # Ensure consistent float formatting
                 'amount_cents': str(int(amount * 100)),  # Store cents amount for verification
                 'created_at': datetime.now().isoformat(),
@@ -165,7 +166,10 @@ class PaymentService:
                 'spreadsheet_id': str(spreadsheet_id),
                 'row_number': str(row_number),
                 'payment_status': 'pending',
-                'payment_type': 'form_submission'
+                'payment_type': 'form_submission',
+                'username': os.environ.get('CURRENT_USERNAME', ''),  # Add user identity
+                'selected_sheet': os.environ.get('SELECTED_SHEET', ''),  # Add sheet context
+                'current_sheet_tab': os.environ.get('CURRENT_SHEET_TAB', '')  # Add tab context
             }
             
             # Log the metadata being stored

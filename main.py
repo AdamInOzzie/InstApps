@@ -297,6 +297,18 @@ def main():
                 logger.info("PROCESSING PAYMENT CALLBACK")
                 logger.info(f"Session ID: {session_id}")
                 
+                # Retrieve session from Stripe to get metadata
+                stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
+                stripe_session = stripe.checkout.Session.retrieve(session_id)
+                metadata = stripe_session.metadata
+
+                # Restore session state from metadata
+                if metadata:
+                    st.session_state.is_logged_in = True
+                    st.session_state.username = metadata.get('username', '')
+                    st.session_state.selected_sheet = metadata.get('selected_sheet', '')
+                    st.session_state.current_sheet_tab = metadata.get('current_sheet_tab', '')
+                
                 # Use UI service to handle payment verification and sheet update
                 if 'ui_service' not in st.session_state:
                     st.session_state.ui_service = UIService()
@@ -308,6 +320,9 @@ def main():
                     success_message = "✅ Payment verified and recorded successfully!"
                     logger.info(success_message)
                     st.success(success_message)
+                    
+                    # Add welcome back message with context
+                    st.info(f"Welcome back {st.session_state.username}! Your payment has been processed.")
                 else:
                     error_message = "Failed to verify payment or update record"
                     logger.error(error_message)
