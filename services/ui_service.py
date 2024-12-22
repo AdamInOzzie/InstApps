@@ -207,7 +207,7 @@ class UIService:
             payment_status = f"PAID_STRIPE_{session_id}"
             
             # Verify current value before update
-            current_data = sheets_client.read_spreadsheet(spreadsheet_id, f'Sponsors!{chr(64 + paid_column_index)}{row_number}')
+            current_data = sheets_client.read_spreadsheet(spreadsheet_id, f'{sheet_name}!{chr(64 + paid_column_index)}{row_number}')
             if current_data is not None and not current_data.empty:
                 logger.info(f"Current value in cell {chr(64 + paid_column_index)}{row_number}: {current_data.iloc[0, 0] if not current_data.empty else 'Empty'}")
             
@@ -224,7 +224,7 @@ class UIService:
             logger.info("="*80)
 
             # Verify current value before update
-            current_data = sheets_client.read_spreadsheet(spreadsheet_id, f'Sponsors!{chr(64 + paid_column_index)}{row_number}')
+            current_data = sheets_client.read_spreadsheet(spreadsheet_id, f'{sheet_name}!{chr(64 + paid_column_index)}{row_number}')
             if current_data is not None and not current_data.empty:
                 logger.info(f"Current value in cell: {current_data.iloc[0, 0] if not current_data.empty else 'Empty'}")
 
