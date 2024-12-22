@@ -101,7 +101,7 @@ class UIService:
             metadata = payment_status.get('metadata', {})
             spreadsheet_id = metadata.get('spreadsheet_id')
             row_number = metadata.get('row_number')
-            sheet_name = metadata.get('sheet_name', 'Sponsors')  # Default to 'Sponsors' for backward compatibility
+            sheet_name = metadata.get('sheet_name')  
 
             # Log metadata details
             logger.info("="*80)
@@ -133,8 +133,8 @@ class UIService:
             available_sheets = [sheet['properties']['title'] for sheet in sheet_metadata.get('sheets', [])]
             logger.info(f"Available sheets: {available_sheets}")
 
-            if 'Sponsors' not in available_sheets:
-                logger.error("Sponsors sheet not found in spreadsheet")
+            if sheet_name not in available_sheets:
+                logger.error(f"{sheet_name} sheet not found in spreadsheet")
                 return False
 
             # Verify sheet access and row validity
