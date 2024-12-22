@@ -171,15 +171,21 @@ class UIService:
                     logger.error("Sponsors sheet not found in spreadsheet")
                     return False
 
-                # Read headers to find exact "Paid" column with more specific range
+                # Read headers to find exact "Paid" column with correct range
                 logger.info("Attempting to read sheet headers...")
-                header_range = 'Sponsors!A1:H1'  # More specific range including known columns
+                header_range = 'Sponsors!A1:I1'  # Updated range to include 'Paid' column
                 sheet_data = sheets_client.read_spreadsheet(spreadsheet_id, header_range)
                 
                 if sheet_data is not None and not sheet_data.empty:
                     headers = sheet_data.columns.tolist()
-                    logger.info(f"Successfully read headers from range {header_range}")
-                    logger.info(f"Found headers: {headers}")
+                    logger.info("=" * 80)
+                    logger.info("HEADER DETECTION DETAILS")
+                    logger.info(f"Range queried: {header_range}")
+                    logger.info(f"Headers found: {headers}")
+                    logger.info("Raw header values:")
+                    for i, header in enumerate(headers):
+                        logger.info(f"Column {chr(65+i)}: '{header}'")
+                    logger.info("=" * 80)
                     
                     # Look for exact match of "Paid"
                     paid_column_index = None
