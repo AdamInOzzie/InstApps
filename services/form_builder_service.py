@@ -373,10 +373,6 @@ class FormBuilderService:
                 logger.error(f"Error rendering field {field_name}: {str(e)}")
                 st.error(f"Error rendering field {field_name}")
                 
-        button_id = sheet_name.rstrip('s')
-        if st.button(f"Submit {button_id}", type="primary", key=f"submit_{button_id}_form"):
-            # Add your submit logic here
-            pass
         return form_data
 
     def append_form_data(self, spreadsheet_id: str, sheet_name: str, form_data: Dict[str, Any], sheets_client) -> bool:
