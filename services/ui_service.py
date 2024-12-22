@@ -168,7 +168,7 @@ class UIService:
             logger.info("HEADER DETECTION")
             logger.info(f"Raw header data: {header_data}")
             
-            # Get the header values from the first row
+            # Get and examine the header values
             try:
                 if not header_data or 'values' not in header_data or not header_data['values']:
                     logger.error("No header data found")
@@ -177,16 +177,30 @@ class UIService:
                 headers = header_data['values'][0]  # Get first row
                 logger.info(f"Header row values: {headers}")
                 
-                # Search for 'Paid' in the headers
+                # Examine each header value
+                logger.info("Examining headers:")
+                for i, header in enumerate(headers):
+                    header_str = str(header).strip()
+                    logger.info(f"Column {chr(65+i)}: '{header_str}'")
+                
+                # Search for 'Paid' in the headers with detailed logging
                 paid_column_name = 'Paid'
-                try:
-                    # Find index of 'Paid' column (0-based)
-                    paid_column_index = headers.index(paid_column_name) + 1  # Add 1 for 1-based spreadsheet columns
-                    logger.info(f"Found '{paid_column_name}' at index {paid_column_index-1} (column {chr(64+paid_column_index)})")
-                    logger.info(f"Will update column {chr(64+paid_column_index)} with payment status")
-                except ValueError:
-                    logger.error(f"Could not find '{paid_column_name}' column in headers: {headers}")
+                paid_column_index = None
+                
+                # Examine each header for exact match
+                for i, header in enumerate(headers):
+                    header_str = str(header).strip()
+                    logger.info(f"Checking column {chr(65+i)}: '{header_str}' against '{paid_column_name}'")
+                    if header_str == paid_column_name:
+                        paid_column_index = i + 1  # Add 1 for 1-based spreadsheet columns
+                        logger.info(f"Found exact match for '{paid_column_name}' at column {chr(64+paid_column_index)}")
+                        break
+                
+                if paid_column_index is None:
+                    logger.error(f"Could not find exact match for '{paid_column_name}' column in headers: {headers}")
                     return False
+                    
+                logger.info(f"Will update column {chr(64+paid_column_index)} with payment status")
             except Exception as e:
                 logger.error(f"Error finding Paid column: {str(e)}")
                 return False
