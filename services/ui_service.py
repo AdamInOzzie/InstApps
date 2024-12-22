@@ -374,8 +374,9 @@ class UIService:
             if 'current_form_data' not in st.session_state:
                 st.session_state.current_form_data = form_data
 
-            # Add submit button with proper error handling
-            if st.button("Submit Entry", type="primary"):
+            # Create unique button ID by removing trailing 's' from sheet name if it exists
+            button_id = sheet_name.rstrip('s')
+            if st.button("Submit Entry", type="primary", key=f"submit_{button_id}"):
                 logger.info("Submit button clicked - Processing form submission")
                 
                 # Handle form submission and store result
