@@ -166,7 +166,7 @@ class PaymentService:
                 'row_number': str(row_number),
                 'payment_status': 'pending',
                 'payment_type': 'form_submission',
-                'sheet_name': 'Sponsored Box Weeks'  # Add sheet name
+                'sheet_name': sheet_name  # Use dynamic sheet name
             }
             
             # Log the metadata being stored

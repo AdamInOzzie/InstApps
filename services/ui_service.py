@@ -486,7 +486,8 @@ class UIService:
                         payment_data = payment_service.create_payment_intent(
                             amount=payment_amount,
                             spreadsheet_id=spreadsheet_id,
-                            row_number=next_row
+                            row_number=next_row,
+                            sheet_name=sheet_name #Added sheet_name here
                         )
 
                         if 'error' in payment_data:
@@ -648,7 +649,6 @@ class UIService:
                         "Target Row": target_row
                     })
 
-                    source_range = f"{selected_sheet_name}!A2:Z2"
                     st.write("About to execute copy_entry with these parameters")
 
                     success = copy_service.copy_entry(
