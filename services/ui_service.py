@@ -374,9 +374,8 @@ class UIService:
             if 'current_form_data' not in st.session_state:
                 st.session_state.current_form_data = form_data
 
-            # Create unique button ID and label using sheet name without trailing 's'
-            button_id = sheet_name.rstrip('s')
-            if st.button(f"Submit {button_id}", type="primary", key=f"submit_{button_id}"):
+            # Add submit button with proper error handling
+            if st.button("Submit Entry", type="primary"):
                 logger.info("Submit button clicked - Processing form submission")
                 
                 # Handle form submission and store result
@@ -391,8 +390,16 @@ class UIService:
                 if isinstance(result, dict) and 'payment_url' in result:
                     logger.info("Redirecting to Stripe payment")
                     payment_url = result['payment_url']
-                    st.info("Please click the button below to complete payment.")
-                    st.link_button("Complete Payment", payment_url, type="primary")
+                    # Use JavaScript to redirect immediately after successful form submission
+                    st.markdown(
+                        f"""
+                        <script>
+                            window.location.href = "{payment_url}";
+                        </script>
+                        """,
+                        unsafe_allow_html=True
+                    )
+                    st.info("Processing payment...")
                     return None
 
                 logger.info(f"Form submission result: {result}")
@@ -611,7 +618,7 @@ class UIService:
                 sheet_names = [sheet['properties']['title'] for sheet in metadata.get('sheets', [])]
 
                 # Create sheet selector
-                selected_sheet_name = st.selectbox(
+                selected_sheet = st.selectbox(
                     "Select Sheet",
                     options=sheet_names,
                     index=sheet_names.index("Volunteers") if "Volunteers" in sheet_names else 0,
@@ -631,33 +638,29 @@ class UIService:
                 help="Select the row number where you want to copy the data"
             )
 
-            show_options = st.checkbox(
-                f"Show {selected_sheet_name}", value=False,
-                key='show_options_checkbox')
-
             if st.button("Copy to Selected Row", type="primary", key="test_copy_button"):
                 try:
                     # Display parameters on screen
                     st.info("Copy Operation Parameters:")
                     st.write({
                         "Spreadsheet ID": spreadsheet_id,
-                        "Sheet Name": selected_sheet_name,
-                        "Source Range": f"{selected_sheet_name}!A2:Z2",
+                        "Sheet Name": selected_sheet,
+                        "Source Range": f"{selected_sheet}!A2:Z2",
                         "Target Row": target_row
                     })
 
-                    source_range = f"{selected_sheet_name}!A2:Z2"
+                    source_range = f"{selected_sheet}!A2:Z2"
                     st.write("About to execute copy_entry with these parameters")
 
                     success = copy_service.copy_entry(
                         spreadsheet_id=spreadsheet_id,
-                        sheet_name=selected_sheet_name,
+                        sheet_name=selected_sheet,
                         source_range=source_range,
                         target_row=target_row
                     )
 
                     if success:
-                        st.success(f"✅ Successfully copied to row {target_row} in {selected_sheet_name}!")
+                        st.success(f"✅ Successfully copied to row {target_row} in {selected_sheet}!")
                     else:
                         st.error("Failed to copy entry")
                 except Exception as e:
