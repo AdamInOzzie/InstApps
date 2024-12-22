@@ -177,14 +177,21 @@ class UIService:
                 sheet_data = sheets_client.read_spreadsheet(spreadsheet_id, header_range)
                 
                 if sheet_data is not None and not sheet_data.empty:
-                    headers = sheet_data.columns.tolist()
+                    # Get raw values from DataFrame
                     logger.info("=" * 80)
                     logger.info("HEADER DETECTION DETAILS")
                     logger.info(f"Range queried: {header_range}")
-                    logger.info(f"Headers found: {headers}")
-                    logger.info("Raw header values:")
+                    logger.info(f"DataFrame shape: {sheet_data.shape}")
+                    logger.info(f"DataFrame columns (direct): {sheet_data.columns}")
+                    
+                    # Convert to list and examine each header carefully
+                    headers = [str(col).strip() for col in sheet_data.columns]
+                    logger.info("Examining each header:")
                     for i, header in enumerate(headers):
-                        logger.info(f"Column {chr(65+i)}: '{header}'")
+                        logger.info(f"Column {chr(65+i)}: '{header}' (type: {type(header)}, length: {len(header)})")
+                        if header == "Paid":
+                            logger.info(f"Found exact match for 'Paid' at column {chr(65+i)}")
+                            logger.info(f"ASCII values: {[ord(c) for c in header]}")
                     logger.info("=" * 80)
                     
                     # Search for 'Paid' column in headers
