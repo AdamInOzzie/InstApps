@@ -370,15 +370,35 @@ class UIService:
             for field_name, value in form_data.items():
                 logger.info(f"Field: {field_name} = {value} (type: {type(value)})")
 
+            # Store current form data in session state
+            if 'current_form_data' not in st.session_state:
+                st.session_state.current_form_data = form_data
+
             # Add submit button with proper error handling
             if st.button("Submit Entry", type="primary"):
                 logger.info("Submit button clicked - Processing form submission")
+                
+                # Handle form submission and store result
                 result = UIService._handle_form_submission(
                     spreadsheet_id=spreadsheet_id,
                     sheet_name=sheet_name,
                     sheets_client=sheets_client,
                     form_data=form_data
                 )
+                
+                # Check for payment redirection
+                if isinstance(result, dict) and 'payment_url' in result:
+                    logger.info("Redirecting to Stripe payment")
+                    st.markdown(
+                        f"""
+                        <script>
+                            window.location.href = "{result['payment_url']}";
+                        </script>
+                        """,
+                        unsafe_allow_html=True
+                    )
+                    return None
+
                 logger.info(f"Form submission result: {result}")
                 return result
 
@@ -475,21 +495,31 @@ class UIService:
                             st.error(f"Payment Error: {payment_data['error']}")
                             return None
 
-                        # Use JavaScript to redirect to Stripe
-                        st.info("💳 Payment Required")
-                        st.write(f"Amount: ${payment_amount:.2f}")
-                        st.markdown(
-                            f"""
-                            <script>
-                                window.location.href = "{payment_data['session_url']}";
-                            </script>
-                            """, 
-                            unsafe_allow_html=True
-                        )
-
                         # Store payment session with row information
                         if 'payment_sessions' not in st.session_state:
                             st.session_state.payment_sessions = {}
+                            
+                        # Store session data and prepare payment URL
+                        session_data = {
+                            'amount': payment_amount,
+                            'form_data': form_data,
+                            'spreadsheet_id': spreadsheet_id,
+                            'sheet_name': sheet_name,
+                            'row_number': next_row,
+                            'username': st.session_state.get('username'),
+                            'selected_sheet': st.session_state.get('selected_sheet'),
+                            'timestamp': datetime.now().isoformat()
+                        }
+
+                        # Store in session state
+                        st.session_state.payment_sessions[payment_data['session_id']] = session_data
+                        
+                        # Return payment URL for redirection
+                        return {
+                            'payment_url': payment_data['session_url'],
+                            'session_id': payment_data['session_id'],
+                            'amount': payment_amount
+                        }
 
                         # Create session data with all necessary information
                         session_data = {
