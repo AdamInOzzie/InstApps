@@ -1116,8 +1116,8 @@ def main():
             selected_sheet_name = st.session_state.get('append_sheet_selector',
                                                        '')
             show_options = st.checkbox(
-                f"Show data", value=False,
-                key='show_options_checkbox')  #Updated checkbox label
+                f"Show {selected_sheet_name}", value=False,
+                key='show_options_checkbox')
             if show_options:
                 # Get list of available sheets excluding special sheets
                 available_sheets = [
