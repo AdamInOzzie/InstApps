@@ -166,13 +166,13 @@ class UIService:
             logger.info(f"DataFrame headers: {df_headers}")
             
             try:
-                if df_headers is None or df_headers.empty:
-                    logger.error("No header data found")
+                if df_headers is None:
+                    logger.error("Failed to read header data")
                     return False
                 
-                # Get the headers from the first row
-                headers = list(df_headers.iloc[0])
-                logger.info(f"Header row values: {headers}")
+                # Get the column names directly from DataFrame
+                headers = list(df_headers.columns)
+                logger.info(f"Column headers: {headers}")
                 
                 # Examine each header value
                 logger.info("Examining headers:")
