@@ -401,22 +401,23 @@ class UIService:
     ) -> Optional[Dict[str, Any]]:
         """Handle form submission with payment processing if required."""
         try:
-            # Convert form data to serializable format and store it
-            serializable_form_data = {}
+            # Strictly convert all form data to strings
+            processed_form_data = {}
             for key, value in form_data.items():
-                if isinstance(value, (datetime, date)):
-                    serializable_form_data[key] = value.isoformat()
+                if value is None:
+                    processed_form_data[key] = ""
+                elif isinstance(value, (datetime, date)):
+                    processed_form_data[key] = value.isoformat()
+                elif isinstance(value, (dict, list, tuple)):
+                    processed_form_data[key] = json.dumps(value)
                 else:
-                    serializable_form_data[key] = str(value)
-
-            # Convert form data to strings for spreadsheet update
-            stringified_form_data = {k: str(v) for k, v in serializable_form_data.items()}
+                    processed_form_data[key] = str(value)
 
             logger.info("=" * 80)
             logger.info("FORM SUBMISSION HANDLER")
             logger.info("=" * 80)
             logger.info(f"Processing submission for sheet: {sheet_name}")
-            logger.info(f"Form data received: {json.dumps(stringified_form_data, indent=2)}")
+            logger.info(f"Form data received: {json.dumps(processed_form_data, indent=2)}")
 
             from services.spreadsheet_service import SpreadsheetService
 
@@ -444,12 +445,11 @@ class UIService:
             df = sheets_client.read_spreadsheet(spreadsheet_id, f"{sheet_name}!A1:Z1000")
             form_fields, _ = FormBuilderService().get_form_fields(df, spreadsheet_id, sheet_name)
 
-            # Use stringified form data for cell updates
-            for field_name, value in stringified_form_data.items():
+            # Use processed form data for cell updates
+            for field_name, value in processed_form_data.items():
                 field_info = next((f for f in form_fields if f['name'] == field_name), None)
                 if field_info:
                     column_index = field_info['column_index'] + 1
-                    # Ensure value is a string
                     cell_updates.extend([next_row, column_index, value])
 
             update_success = SpreadsheetService.UpdateEntryCells(
