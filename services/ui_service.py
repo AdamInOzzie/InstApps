@@ -1,6 +1,7 @@
 """Service for handling UI components and displays."""
 import logging
 import os
+import json
 import streamlit as st
 import pandas as pd
 from services.copy_service import CopyService
@@ -402,7 +403,7 @@ class UIService:
         logger.info("FORM SUBMISSION HANDLER")
         logger.info("=" * 80)
         logger.info(f"Processing submission for sheet: {sheet_name}")
-        logger.info(f"Form data received: {form_data}")
+        logger.info(f"Form data received: {json.dumps(form_data, default=str, indent=2)}")
 
         try:
             from services.spreadsheet_service import SpreadsheetService
