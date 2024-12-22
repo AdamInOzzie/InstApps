@@ -165,7 +165,10 @@ class UIService:
             
             logger.info("=" * 80)
             logger.info("HEADER DETECTION")
-            logger.info(f"DataFrame headers: {df_headers}")
+            logger.info(f"DataFrame headers raw: {df_headers}")
+            logger.info(f"DataFrame columns: {df_headers.columns.tolist() if df_headers is not None else 'None'}")
+            logger.info(f"DataFrame first row: {df_headers.iloc[0].tolist() if df_headers is not None and not df_headers.empty else 'None'}")
+            logger.info("=" * 80)
             
             try:
                 if df_headers is None:
