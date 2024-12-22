@@ -221,35 +221,12 @@ class SpreadsheetService:
             if not cell_updates or len(cell_updates) % 3 != 0:
                 logger.error("Invalid cell_updates format")
                 return False
-            
-            # Pre-process all values to ensure they are strings
-            processed_updates = []
+                
+            # Group updates into batches of 3 (row, col, value)
+            updates = []
             for i in range(0, len(cell_updates), 3):
                 try:
-                    row, col, value = cell_updates[i], cell_updates[i+1], cell_updates[i+2]
-                    
-                    # Convert value to string, handling all possible types
-                    if value is None:
-                        str_value = ""
-                    elif isinstance(value, (dict, list, tuple)):
-                        str_value = json.dumps(value)
-                    else:
-                        str_value = str(value)
-                    
-                    processed_updates.extend([row, col, str_value])
-                except Exception as e:
-                    logger.error(f"Error pre-processing update at index {i}: {str(e)}")
-                    continue
-            
-            if not processed_updates:
-                logger.error("No valid updates after pre-processing")
-                return False
-                
-            # Use pre-processed updates for the rest of the method
-            updates = []
-            for i in range(0, len(processed_updates), 3):
-                try:
-                    row, col, value = processed_updates[i:i+3]
+                    row, col, value = cell_updates[i:i+3]
                     
                     # Validate row and column numbers
                     if not isinstance(row, int) or not isinstance(col, int):
@@ -258,16 +235,6 @@ class SpreadsheetService:
                     if row < 1 or col < 1:
                         logger.error(f"Row ({row}) and column ({col}) must be positive")
                         continue
-                    
-                    # Ensure value is converted to string
-                    if isinstance(value, dict):
-                        value = str(value)
-                    elif isinstance(value, (list, tuple)):
-                        value = str(value)
-                    elif value is None:
-                        value = ""
-                    else:
-                        value = str(value)
                         
                     # Convert column number to letter(s)
                     col_letter = ""

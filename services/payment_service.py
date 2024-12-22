@@ -157,8 +157,7 @@ class PaymentService:
             
             # Create comprehensive metadata with all necessary information
             # Create metadata with proper amount formatting and required fields
-            # Get current session data from the metadata parameter
-            session_data = {
+            metadata = {
                 'amount': str(float(amount)),  # Ensure consistent float formatting
                 'amount_cents': str(int(amount * 100)),  # Store cents amount for verification
                 'created_at': datetime.now().isoformat(),
@@ -166,19 +165,16 @@ class PaymentService:
                 'spreadsheet_id': str(spreadsheet_id),
                 'row_number': str(row_number),
                 'payment_status': 'pending',
-                'payment_type': 'form_submission',
-                'username': os.environ.get('CURRENT_USERNAME', ''),  # Add user identity
-                'selected_sheet': os.environ.get('SELECTED_SHEET', ''),  # Add sheet context
-                'current_sheet_tab': os.environ.get('CURRENT_SHEET_TAB', '')  # Add tab context
+                'payment_type': 'form_submission'
             }
             
             # Log the metadata being stored
             logger.info("Creating Stripe session with metadata:")
-            logger.info(json.dumps(session_data, indent=2))
+            logger.info(json.dumps(metadata, indent=2))
             
             # Log the complete metadata
             logger.info("Complete metadata being stored:")
-            logger.info(json.dumps(session_data, indent=2))
+            logger.info(json.dumps(metadata, indent=2))
             
             session = stripe.checkout.Session.create(
                 payment_method_types=['card'],
@@ -196,7 +192,7 @@ class PaymentService:
                 mode='payment',
                 success_url=success_url,
                 cancel_url=cancel_url,
-                metadata=session_data
+                metadata=metadata
             )
             
             # Log session details

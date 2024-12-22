@@ -1,8 +1,5 @@
 """Service for handling UI components and displays."""
 import logging
-import os
-import json
-from datetime import datetime, date
 import streamlit as st
 import pandas as pd
 from services.copy_service import CopyService
@@ -64,8 +61,8 @@ class UIService:
             logger.info("PAYMENT VERIFICATION STARTED")
             logger.info("="*80)
             logger.info(f"Processing session ID: {session_id}")
-            logger.info(f"Query parameters: {json.dumps(dict(st.query_params), default=str)}")
-            logger.info(f"Session state keys: {json.dumps(list(st.session_state.keys()), default=str)}")
+            logger.info(f"Query parameters: {dict(st.query_params)}")
+            logger.info(f"Session state keys: {list(st.session_state.keys())}")
             logger.info("="*80)
 
             # Initialize payment service and verify payment status
@@ -87,7 +84,7 @@ class UIService:
             # Log complete payment status for debugging
             logger.info("="*80)
             logger.info("PAYMENT STATUS DETAILS")
-            logger.info(f"Full payment status: {json.dumps(payment_status, default=str, indent=2)}")
+            logger.info(f"Full payment status: {json.dumps(payment_status, indent=2)}")
             logger.info("="*80)
 
             logger.info("="*80)
@@ -108,7 +105,7 @@ class UIService:
             # Log metadata details
             logger.info("="*80)
             logger.info("STRIPE CALLBACK METADATA")
-            logger.info(f"Raw metadata: {json.dumps(metadata, default=str, indent=2)}")
+            logger.info(f"Raw metadata: {json.dumps(metadata, indent=2)}")
             logger.info(f"Spreadsheet ID: {spreadsheet_id}")
             logger.info(f"Row Number: {row_number}")
             logger.info("="*80)
@@ -400,25 +397,13 @@ class UIService:
         form_data: Dict[str, Any]
     ) -> Optional[Dict[str, Any]]:
         """Handle form submission with payment processing if required."""
+        logger.info("=" * 80)
+        logger.info("FORM SUBMISSION HANDLER")
+        logger.info("=" * 80)
+        logger.info(f"Processing submission for sheet: {sheet_name}")
+        logger.info(f"Form data received: {form_data}")
+
         try:
-            # Strictly convert all form data to strings
-            processed_form_data = {}
-            for key, value in form_data.items():
-                if value is None:
-                    processed_form_data[key] = ""
-                elif isinstance(value, (datetime, date)):
-                    processed_form_data[key] = value.isoformat()
-                elif isinstance(value, (dict, list, tuple)):
-                    processed_form_data[key] = json.dumps(value)
-                else:
-                    processed_form_data[key] = str(value)
-
-            logger.info("=" * 80)
-            logger.info("FORM SUBMISSION HANDLER")
-            logger.info("=" * 80)
-            logger.info(f"Processing submission for sheet: {sheet_name}")
-            logger.info(f"Form data received: {json.dumps(processed_form_data, indent=2)}")
-
             from services.spreadsheet_service import SpreadsheetService
 
             # First, append the entry
@@ -445,12 +430,11 @@ class UIService:
             df = sheets_client.read_spreadsheet(spreadsheet_id, f"{sheet_name}!A1:Z1000")
             form_fields, _ = FormBuilderService().get_form_fields(df, spreadsheet_id, sheet_name)
 
-            # Use processed form data for cell updates
-            for field_name, value in processed_form_data.items():
+            for field_name, value in form_data.items():
                 field_info = next((f for f in form_fields if f['name'] == field_name), None)
                 if field_info:
                     column_index = field_info['column_index'] + 1
-                    cell_updates.extend([next_row, column_index, value])
+                    cell_updates.extend([next_row, column_index, str(value)])
 
             update_success = SpreadsheetService.UpdateEntryCells(
                 spreadsheet_id=spreadsheet_id,
@@ -491,61 +475,33 @@ class UIService:
                             st.error(f"Payment Error: {payment_data['error']}")
                             return None
 
-                        # Save current application state to environment for Stripe metadata
-                        os.environ['CURRENT_USERNAME'] = st.session_state.get('username', '')
-                        os.environ['SELECTED_SHEET'] = st.session_state.get('selected_sheet', '')
-                        os.environ['CURRENT_SHEET_TAB'] = sheet_name
-
-                        # Display payment information and redirect button
+                        # Display payment link
                         st.info("💳 Payment Required")
                         st.write(f"Amount: ${payment_amount:.2f}")
-                        
-                        # Use JavaScript to redirect in current window
-                        js_code = f"""
-                        <script>
-                            function redirectToPayment() {{
-                                window.location.href = "{payment_data['session_url']}";
-                            }}
-                        </script>
-                        <button 
-                            onclick="redirectToPayment()" 
-                            style="
-                                background-color: #4CAF50; 
-                                color: white; 
-                                padding: 12px 20px; 
-                                border: none; 
-                                border-radius: 4px; 
-                                cursor: pointer;
-                            "
-                        >
-                            Complete Payment
-                        </button>
-                        """
-                        st.markdown(js_code, unsafe_allow_html=True)
-                        
-                        # Log the payment flow initiation
-                        logger.info("="*80)
-                        logger.info("PAYMENT FLOW INITIATED")
-                        logger.info(f"Username: {os.environ.get('CURRENT_USERNAME')}")
-                        logger.info(f"Selected Sheet: {os.environ.get('SELECTED_SHEET')}")
-                        logger.info(f"Current Tab: {os.environ.get('CURRENT_SHEET_TAB')}")
-                        logger.info(f"Amount: ${payment_amount:.2f}")
-                        logger.info(f"Session URL: {payment_data['session_url']}")
-                        logger.info("="*80)
-                        # Store metadata for logging
-                        metadata_log = {
-                            'session_id': payment_data['session_id'],
-                            'username': os.environ.get('CURRENT_USERNAME', ''),
-                            'selected_sheet': os.environ.get('SELECTED_SHEET', ''),
-                            'current_tab': os.environ.get('CURRENT_SHEET_TAB', ''),
-                            'amount': f"${payment_amount:.2f}",
+                        st.link_button("Complete Payment", payment_data['session_url'])
+
+                        # Store payment session with row information
+                        if 'payment_sessions' not in st.session_state:
+                            st.session_state.payment_sessions = {}
+
+                        # Create session data with all necessary information
+                        session_data = {
+                            'amount': payment_amount,
+                            'form_data': form_data,
+                            'spreadsheet_id': spreadsheet_id,
+                            'sheet_name': sheet_name,
+                            'row_number': next_row,
+                            'username': st.session_state.get('username'),
+                            'selected_sheet': st.session_state.get('selected_sheet'),
                             'timestamp': datetime.now().isoformat()
                         }
-                        
+
+                        # Store in session state
+                        st.session_state.payment_sessions[payment_data['session_id']] = session_data
                         logger.info("="*80)
                         logger.info("STORING PAYMENT SESSION")
                         logger.info(f"Session ID: {payment_data['session_id']}")
-                        logger.info(f"Session Data: {json.dumps(metadata_log, indent=2)}")
+                        logger.info(f"Session Data: {session_data}")
                         logger.info("="*80)
                         return None
                 except ValueError:
