@@ -1,5 +1,6 @@
 """Service for handling UI components and displays."""
 import logging
+import os
 import streamlit as st
 import pandas as pd
 from services.copy_service import CopyService
