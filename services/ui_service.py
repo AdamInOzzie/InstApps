@@ -152,13 +152,33 @@ class UIService:
                 
             logger.info(f"Row {row_number} is within valid range, proceeding with update")
 
-            # Use column I (index 9) for Paid status - we can see this directly in the DataFrame structure
+            # Read headers to detect Paid column position
             logger.info("=" * 80)
-            logger.info("USING PAID COLUMN")
-            logger.info("Column I (index 9) is the Paid column as seen in DataFrame structure")
+            logger.info("DETECTING PAID COLUMN")
             logger.info("=" * 80)
 
-            paid_column_index = 9  # Column I
+            # Get column names from DataFrame
+            header_range = 'Sponsors!A1:Z1'
+            sheet_data = sheets_client.read_spreadsheet(spreadsheet_id, header_range)
+            
+            if sheet_data is None or sheet_data.empty:
+                logger.error("Failed to read sheet headers")
+                return False
+
+            # Find the Paid column index
+            try:
+                paid_column_name = 'Paid'
+                if paid_column_name not in sheet_data.columns:
+                    logger.error(f"Could not find '{paid_column_name}' column in headers: {list(sheet_data.columns)}")
+                    return False
+                    
+                # Get 1-based column index for spreadsheet (add 1 to 0-based DataFrame index)
+                paid_column_index = sheet_data.columns.get_loc(paid_column_name) + 1
+                logger.info(f"Found '{paid_column_name}' at column index {paid_column_index} (column {chr(64+paid_column_index)})")
+            except Exception as e:
+                logger.error(f"Error finding Paid column: {str(e)}")
+                return False
+
             payment_status = f"PAID_STRIPE_{session_id}"
             
             # Verify current value before update
