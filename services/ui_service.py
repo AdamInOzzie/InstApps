@@ -231,7 +231,7 @@ class UIService:
             try:
                 update_success = SpreadsheetService.UpdateEntryCells(
                     spreadsheet_id=spreadsheet_id,
-                    sheet_name='Sponsors',
+                    sheet_name=sheet_name,
                     cell_updates=cell_updates
                 )
                 logger.info(f"Sheet update result: {update_success}")
