@@ -157,24 +157,21 @@ class UIService:
             logger.info("DETECTING PAID COLUMN")
             logger.info("=" * 80)
 
-            # Read the first row directly to get headers
+            # Read headers to detect Paid column position
             header_range = 'Sponsors!A1:Z1'
-            header_data = sheets_client.service.spreadsheets().values().get(
-                spreadsheetId=spreadsheet_id,
-                range=header_range
-            ).execute()
+            df_headers = sheets_client.read_spreadsheet(spreadsheet_id, header_range)
             
             logger.info("=" * 80)
             logger.info("HEADER DETECTION")
-            logger.info(f"Raw header data: {header_data}")
+            logger.info(f"DataFrame headers: {df_headers}")
             
-            # Get and examine the header values
             try:
-                if not header_data or 'values' not in header_data or not header_data['values']:
+                if df_headers is None or df_headers.empty:
                     logger.error("No header data found")
                     return False
-                    
-                headers = header_data['values'][0]  # Get first row
+                
+                # Get the headers from the first row
+                headers = list(df_headers.iloc[0])
                 logger.info(f"Header row values: {headers}")
                 
                 # Examine each header value
