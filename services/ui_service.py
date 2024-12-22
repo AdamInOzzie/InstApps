@@ -176,39 +176,49 @@ class UIService:
                 header_range = 'Sponsors!A1:Z1'  # Read all possible columns to ensure we find 'Paid'
                 sheet_data = sheets_client.read_spreadsheet(spreadsheet_id, header_range)
                 
+                logger.info("=" * 80)
+                logger.info("RAW SHEET DATA")
+                logger.info(f"DataFrame info: {sheet_data.info()}")
+                logger.info(f"DataFrame head: {sheet_data.head()}")
+                logger.info("=" * 80)
+                
                 if sheet_data is not None and not sheet_data.empty:
-                    # Get the first row values directly
-                    headers = sheet_data.iloc[0].tolist()
-                    
-                    logger.info("=" * 80)
-                    logger.info("HEADER DETECTION DETAILS")
-                    logger.info(f"Range queried: {header_range}")
-                    logger.info(f"Raw headers found: {headers}")
-                    
-                    # Clean and examine each header
-                    cleaned_headers = [str(h).strip() if pd.notna(h) else '' for h in headers]
-                    logger.info("Examining each header:")
-                    for i, header in enumerate(cleaned_headers):
-                        logger.info(f"Column {chr(65+i)}: '{header}' (type: {type(header)}, length: {len(header)})")
-                        if header == "Paid":
-                            logger.info(f"Found exact match for 'Paid' at column {chr(65+i)}")
-                    logger.info("=" * 80)
+                    try:
+                        # Read only the first row to get headers
+                        headers_row = sheet_data.values[0]
+                        logger.info("=" * 80)
+                        logger.info("HEADER DETECTION DETAILS")
+                        logger.info(f"Range queried: {header_range}")
+                        logger.info(f"Raw headers row: {headers_row}")
+                        
+                        # Clean and examine each header
+                        cleaned_headers = [str(h).strip() if pd.notna(h) else '' for h in headers_row]
+                        logger.info("Examining each header:")
+                        for i, header in enumerate(cleaned_headers):
+                            logger.info(f"Column {chr(65+i)}: '{header}' (type: {type(header)}, length: {len(header)})")
+                            if header == "Paid":
+                                logger.info(f"Found exact match for 'Paid' at column {chr(65+i)}")
+                        logger.info("=" * 80)
                     
                     # Search for 'Paid' column in cleaned headers
-                    paid_column_index = None
-                    for i, header in enumerate(cleaned_headers):
-                        if header == "Paid":
-                            paid_column_index = i + 1  # Add 1 because spreadsheet columns start at 1
-                            logger.info(f"Found 'Paid' column at position {paid_column_index} (column {chr(64+paid_column_index)})")
-                            break
-                    
-                    if paid_column_index is None:
-                        error_msg = "Could not find 'Paid' column in headers. Available headers: " + ", ".join(cleaned_headers)
-                        logger.error(error_msg)
-                        st.error(error_msg)
-                        return False
+                        paid_column_index = None
+                        for i, header in enumerate(cleaned_headers):
+                            if header == "Paid":
+                                paid_column_index = i + 1  # Add 1 because spreadsheet columns start at 1
+                                logger.info(f"Found 'Paid' column at position {paid_column_index} (column {chr(64+paid_column_index)})")
+                                break
                         
-                    logger.info(f"Will use column index {paid_column_index} ({chr(64+paid_column_index)}) for payment status updates")
+                        if paid_column_index is None:
+                            error_msg = "Could not find 'Paid' column in headers. Available headers: " + ", ".join(cleaned_headers)
+                            logger.error(error_msg)
+                            st.error(error_msg)
+                            return False
+                            
+                        logger.info(f"Will use column index {paid_column_index} ({chr(64+paid_column_index)}) for payment status updates")
+                    except Exception as e:
+                        logger.error(f"Error processing headers: {str(e)}")
+                        st.error("Error processing sheet headers")
+                        return False
                 else:
                     error_msg = "Failed to read sheet headers"
                     logger.error(error_msg)
