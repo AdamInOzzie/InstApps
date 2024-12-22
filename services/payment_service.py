@@ -169,6 +169,10 @@ class PaymentService:
                 'sheet_name': sheet_name  # Use dynamic sheet name
             }
             
+            # Merge additional metadata if provided
+            if meta_data:
+                metadata.update(meta_data)
+            
             # Log the metadata being stored
             logger.info("Creating Stripe session with metadata:")
             logger.info(json.dumps(metadata, indent=2))

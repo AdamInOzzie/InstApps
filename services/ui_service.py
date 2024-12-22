@@ -483,12 +483,17 @@ class UIService:
                         # Create payment intent using PaymentService with required parameters
                         from services.payment_service import PaymentService
                         payment_service = PaymentService()
+                        meta_data = {
+                            'sheet_name': sheet_name,
+                            'spreadsheet_id': spreadsheet_id,
+                            'row_number': str(next_row)
+                        }
                         payment_data = payment_service.create_payment_intent(
                             amount=payment_amount,
                             spreadsheet_id=spreadsheet_id,
                             row_number=next_row,
                             sheet_name=sheet_name,
-                            meta_data={'sheet_name': sheet_name}  # Ensure sheet_name is in metadata
+                            meta_data=meta_data
                         )
 
                         if 'error' in payment_data:
