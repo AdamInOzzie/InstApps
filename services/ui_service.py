@@ -517,10 +517,20 @@ class UIService:
                         logger.info(f"Amount: ${payment_amount:.2f}")
                         logger.info(f"Session URL: {payment_data['session_url']}")
                         logger.info("="*80)
+                        # Store metadata for logging
+                        metadata_log = {
+                            'session_id': payment_data['session_id'],
+                            'username': os.environ.get('CURRENT_USERNAME', ''),
+                            'selected_sheet': os.environ.get('SELECTED_SHEET', ''),
+                            'current_tab': os.environ.get('CURRENT_SHEET_TAB', ''),
+                            'amount': f"${payment_amount:.2f}",
+                            'timestamp': datetime.now().isoformat()
+                        }
+                        
                         logger.info("="*80)
                         logger.info("STORING PAYMENT SESSION")
                         logger.info(f"Session ID: {payment_data['session_id']}")
-                        logger.info(f"Session Data: {session_data}")
+                        logger.info(f"Session Data: {json.dumps(metadata_log, indent=2)}")
                         logger.info("="*80)
                         return None
                 except ValueError:
