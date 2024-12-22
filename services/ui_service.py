@@ -409,14 +409,14 @@ class UIService:
                 else:
                     serializable_form_data[key] = str(value)
 
-            # Use the serializable form data for all operations
-            form_data = serializable_form_data
+            # Convert form data to strings for spreadsheet update
+            stringified_form_data = {k: str(v) for k, v in serializable_form_data.items()}
 
             logger.info("=" * 80)
             logger.info("FORM SUBMISSION HANDLER")
             logger.info("=" * 80)
             logger.info(f"Processing submission for sheet: {sheet_name}")
-            logger.info(f"Form data received: {json.dumps(form_data, indent=2)}")
+            logger.info(f"Form data received: {json.dumps(stringified_form_data, indent=2)}")
 
             from services.spreadsheet_service import SpreadsheetService
 
@@ -444,11 +444,13 @@ class UIService:
             df = sheets_client.read_spreadsheet(spreadsheet_id, f"{sheet_name}!A1:Z1000")
             form_fields, _ = FormBuilderService().get_form_fields(df, spreadsheet_id, sheet_name)
 
-            for field_name, value in form_data.items():
+            # Use stringified form data for cell updates
+            for field_name, value in stringified_form_data.items():
                 field_info = next((f for f in form_fields if f['name'] == field_name), None)
                 if field_info:
                     column_index = field_info['column_index'] + 1
-                    cell_updates.extend([next_row, column_index, str(value)])
+                    # Ensure value is a string
+                    cell_updates.extend([next_row, column_index, value])
 
             update_success = SpreadsheetService.UpdateEntryCells(
                 spreadsheet_id=spreadsheet_id,
