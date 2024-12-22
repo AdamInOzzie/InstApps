@@ -374,9 +374,9 @@ class UIService:
             if 'current_form_data' not in st.session_state:
                 st.session_state.current_form_data = form_data
 
-            # Create unique button ID by removing trailing 's' from sheet name if it exists
+            # Create unique button ID and label using sheet name without trailing 's'
             button_id = sheet_name.rstrip('s')
-            if st.button("Submit Entry", type="primary", key=f"submit_{button_id}"):
+            if st.button(f"Submit {button_id}", type="primary", key=f"submit_{button_id}"):
                 logger.info("Submit button clicked - Processing form submission")
                 
                 # Handle form submission and store result
