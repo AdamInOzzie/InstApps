@@ -87,7 +87,7 @@ class UIService:
             # Log complete payment status for debugging
             logger.info("="*80)
             logger.info("PAYMENT STATUS DETAILS")
-            logger.info(f"Full payment status: {json.dumps(payment_status, indent=2)}")
+            logger.info(f"Full payment status: {json.dumps(payment_status, default=str, indent=2)}")
             logger.info("="*80)
 
             logger.info("="*80)
@@ -108,7 +108,7 @@ class UIService:
             # Log metadata details
             logger.info("="*80)
             logger.info("STRIPE CALLBACK METADATA")
-            logger.info(f"Raw metadata: {json.dumps(metadata, indent=2)}")
+            logger.info(f"Raw metadata: {json.dumps(metadata, default=str, indent=2)}")
             logger.info(f"Spreadsheet ID: {spreadsheet_id}")
             logger.info(f"Row Number: {row_number}")
             logger.info("="*80)
