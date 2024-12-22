@@ -161,7 +161,12 @@ class UIService:
 
             # Read headers to detect Paid column position
             header_range = f'{sheet_name}!A1:Z1'
+            logger.info(f"Reading headers from range: {header_range}")
             df_headers = sheets_client.read_spreadsheet(spreadsheet_id, header_range)
+            logger.info("Raw headers data:")
+            logger.info(str(df_headers))
+            logger.info("Headers as list:")
+            logger.info(str(list(df_headers.columns) if df_headers is not None else 'None'))
             
             logger.info("=" * 80)
             logger.info("HEADER DETECTION")
