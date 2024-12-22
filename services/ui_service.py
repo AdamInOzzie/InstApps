@@ -610,7 +610,7 @@ class UIService:
                 sheet_names = [sheet['properties']['title'] for sheet in metadata.get('sheets', [])]
 
                 # Create sheet selector
-                selected_sheet = st.selectbox(
+                selected_sheet_name = st.selectbox(
                     "Select Sheet",
                     options=sheet_names,
                     index=sheet_names.index("Volunteers") if "Volunteers" in sheet_names else 0,
@@ -630,29 +630,33 @@ class UIService:
                 help="Select the row number where you want to copy the data"
             )
 
+            show_options = st.checkbox(
+                f"Show {selected_sheet_name}", value=False,
+                key='show_options_checkbox')
+
             if st.button("Copy to Selected Row", type="primary", key="test_copy_button"):
                 try:
                     # Display parameters on screen
                     st.info("Copy Operation Parameters:")
                     st.write({
                         "Spreadsheet ID": spreadsheet_id,
-                        "Sheet Name": selected_sheet,
-                        "Source Range": f"{selected_sheet}!A2:Z2",
+                        "Sheet Name": selected_sheet_name,
+                        "Source Range": f"{selected_sheet_name}!A2:Z2",
                         "Target Row": target_row
                     })
 
-                    source_range = f"{selected_sheet}!A2:Z2"
+                    source_range = f"{selected_sheet_name}!A2:Z2"
                     st.write("About to execute copy_entry with these parameters")
 
                     success = copy_service.copy_entry(
                         spreadsheet_id=spreadsheet_id,
-                        sheet_name=selected_sheet,
+                        sheet_name=selected_sheet_name,
                         source_range=source_range,
                         target_row=target_row
                     )
 
                     if success:
-                        st.success(f"✅ Successfully copied to row {target_row} in {selected_sheet}!")
+                        st.success(f"✅ Successfully copied to row {target_row} in {selected_sheet_name}!")
                     else:
                         st.error("Failed to copy entry")
                 except Exception as e:
