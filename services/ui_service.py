@@ -487,7 +487,8 @@ class UIService:
                             amount=payment_amount,
                             spreadsheet_id=spreadsheet_id,
                             row_number=next_row,
-                            sheet_name=sheet_name #Added sheet_name here
+                            sheet_name=sheet_name,
+                            meta_data={'sheet_name': sheet_name}  # Ensure sheet_name is in metadata
                         )
 
                         if 'error' in payment_data:
