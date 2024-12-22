@@ -173,7 +173,7 @@ class UIService:
 
                 # Read headers to find exact "Paid" column with correct range
                 logger.info("Attempting to read sheet headers...")
-                header_range = 'Sponsors!A1:I1'  # Updated range to include 'Paid' column
+                header_range = 'Sponsors!A1:Z1'  # Read all possible columns to ensure we find 'Paid'
                 sheet_data = sheets_client.read_spreadsheet(spreadsheet_id, header_range)
                 
                 if sheet_data is not None and not sheet_data.empty:
@@ -187,33 +187,53 @@ class UIService:
                         logger.info(f"Column {chr(65+i)}: '{header}'")
                     logger.info("=" * 80)
                     
-                    # Force column I (index 9) for 'Paid' status
-                    paid_column_index = 9  # Column I
-                    logger.info(f"Using fixed column I (index 9) for Paid status")
-                else:
-                    paid_column_index = 8
-                    logger.error("Failed to read headers, defaulting to column H (index 8)")
+                    # Search for 'Paid' column in headers
+                    paid_column_index = None
+                    for i, col in enumerate(headers):
+                        col_str = str(col).strip()
+                        logger.info(f"Analyzing column {chr(65+i)}: '{col_str}'")
+                        if col_str == "Paid":
+                            paid_column_index = i + 1  # Add 1 because spreadsheet columns start at 1
+                            logger.info(f"Found 'Paid' column at position {paid_column_index} (column {chr(64+paid_column_index)})")
+                            break
                     
-                logger.info(f"Will use column index {paid_column_index} ({chr(64+paid_column_index)}) for payment status updates")
+                    if paid_column_index is None:
+                        error_msg = "Could not find 'Paid' column in headers. Available headers: " + ", ".join(headers)
+                        logger.error(error_msg)
+                        st.error(error_msg)
+                        return False
+                        
+                    logger.info(f"Will use column index {paid_column_index} ({chr(64+paid_column_index)}) for payment status updates")
+                else:
+                    error_msg = "Failed to read sheet headers"
+                    logger.error(error_msg)
+                    st.error(error_msg)
+                    return False
 
             except Exception as e:
                 logger.error(f"Error detecting Paid column: {str(e)}")
                 paid_column_index = 8  # Default to column H as fallback
                 logger.error("Defaulting to column H (index 8) due to error")
 
-            # Prepare update with payment verification
+            # Always use column I (index 9) for Paid status
+            paid_column_index = 9  # Column I
             payment_status = f"PAID_STRIPE_{session_id}"
+            
+            # Verify current value before update
+            current_data = sheets_client.read_spreadsheet(spreadsheet_id, f'Sponsors!{chr(64 + paid_column_index)}{row_number}')
+            if current_data is not None and not current_data.empty:
+                logger.info(f"Current value in cell {chr(64 + paid_column_index)}{row_number}: {current_data.iloc[0, 0] if not current_data.empty else 'Empty'}")
+            
             cell_updates = [row_number, paid_column_index, payment_status]
-            logger.info(f"Updating cell {chr(64 + paid_column_index)}{row_number} with: {payment_status}")
-
-            # Log sheet update attempt
+            
+            # Log detailed update information
             logger.info("="*80)
-            logger.info("ATTEMPTING SHEET UPDATE")
-            logger.info(f"Spreadsheet ID: {spreadsheet_id}")
-            logger.info(f"Sheet Name: Sponsors")
-            logger.info(f"Row Number: {row_number}")
+            logger.info("PAYMENT STATUS UPDATE DETAILS")
+            logger.info(f"Target Cell: {chr(64 + paid_column_index)}{row_number}")
+            logger.info(f"Column Letter: {chr(64 + paid_column_index)} (I)")
             logger.info(f"Column Index: {paid_column_index}")
-            logger.info(f"Cell Updates: {cell_updates}")
+            logger.info(f"Row Number: {row_number}")
+            logger.info(f"New Value: {payment_status}")
             logger.info("="*80)
 
             # Verify current value before update
