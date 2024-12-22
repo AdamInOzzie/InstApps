@@ -132,12 +132,14 @@ class UIService:
             available_sheets = [sheet['properties']['title'] for sheet in sheet_metadata.get('sheets', [])]
             logger.info(f"Available sheets: {available_sheets}")
 
-            if 'Sponsors' not in available_sheets:
-                logger.error("Sponsors sheet not found in spreadsheet")
+            # Get sheet name from payment metadata
+            sheet_name = metadata.get('sheet_name')
+            if not sheet_name or sheet_name not in available_sheets:
+                logger.error(f"Sheet {sheet_name} not found in spreadsheet")
                 return False
 
             # Verify sheet access and row validity
-            df = sheets_client.read_spreadsheet(spreadsheet_id, 'Sponsors!A:H')
+            df = sheets_client.read_spreadsheet(spreadsheet_id, f'{sheet_name}!A:H')
             if df is None:
                 logger.error("Failed to read Sponsors sheet")
                 return False
@@ -158,7 +160,7 @@ class UIService:
             logger.info("=" * 80)
 
             # Read headers to detect Paid column position
-            header_range = 'Sponsors!A1:Z1'
+            header_range = f'{sheet_name}!A1:Z1'
             df_headers = sheets_client.read_spreadsheet(spreadsheet_id, header_range)
             
             logger.info("=" * 80)
@@ -230,7 +232,7 @@ class UIService:
             try:
                 update_success = SpreadsheetService.UpdateEntryCells(
                     spreadsheet_id=spreadsheet_id,
-                    sheet_name='Sponsors',
+                    sheet_name=sheet_name,
                     cell_updates=cell_updates
                 )
                 logger.info(f"Sheet update result: {update_success}")
