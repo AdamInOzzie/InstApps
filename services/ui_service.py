@@ -138,7 +138,7 @@ class UIService:
                 return False
 
             # Verify sheet access and row validity
-            df = sheets_client.read_spreadsheet(spreadsheet_id, 'Sponsors!A:H')
+            df = sheets_client.read_spreadsheet(spreadsheet_id, 'Sponsors!A:Z')
             if df is None:
                 logger.error("Failed to read Sponsors sheet")
                 return False
