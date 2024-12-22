@@ -257,64 +257,48 @@ def main():
     # Check for payment callback first
     logger.info("=" * 80)
     logger.info("CHECKING PAYMENT CALLBACK")
+    logger.info("=" * 80)
     query_params = dict(st.query_params)
     logger.info(f"All query parameters: {query_params}")
     logger.info(f"Raw URL being accessed: {query_params}")
+    logger.info("=" * 80)
     logger.info("Session and Request Information")
+    logger.info("=" * 80)
+    logger.info(f"Payment Parameter: {st.query_params.get('payment')}")
+    logger.info(f"Session ID Parameter: {st.query_params.get('session_id')}")
+    logger.info(f"All Session State Keys: {list(st.session_state.keys())}")
+    logger.info(f"UI Service Present: {'ui_service' in st.session_state}")
+    logger.info(f"Sheets Client Present: {'sheets_client' in st.session_state}")
+    logger.info("=" * 80)
     if hasattr(st, 'session_state'):
         logger.info(f"Session State Keys: {list(st.session_state.keys())}")
     
-    if 'payment' in st.query_params and 'session_id' in st.query_params:
-        logger.info(f"Payment status: {st.query_params.get('payment')}")
-        logger.info(f"Session ID: {st.query_params.get('session_id')}")
-        logger.info("Payment callback parameters detected")
-        if st.query_params.get('payment') == 'success':
-            session_id = st.query_params.get('session_id')
-            logger.info("=" * 80)
-            logger.info("PAYMENT CALLBACK RECEIVED")
-            logger.info(
-                f"Processing payment callback for session: {session_id}")
-            # Log Stripe session metadata
-            logger.info("=" * 80)
-            logger.info("STRIPE SESSION METADATA CHECK")
-            logger.info(f"Processing payment session ID: {session_id}")
-            try:
-                stripe_session = stripe.checkout.Session.retrieve(session_id)
-                logger.info(f"Retrieved metadata from Stripe session: {stripe_session.metadata}")
-                logger.info(f"Spreadsheet ID: {stripe_session.metadata.get('spreadsheet_id')}")
-                logger.info(f"Row Number: {stripe_session.metadata.get('row_number')}")
-            except Exception as e:
-                logger.error(f"Failed to retrieve Stripe session metadata: {str(e)}")
-            logger.info("=" * 80)
-            logger.info("=" * 80)
-
-            # Initialize essential services for payment verification
-            if 'sheets_client' not in st.session_state:
-                st.session_state.sheets_client = GoogleSheetsClient()
-
-            try:
-                logger.info("=" * 80)
-                logger.info("PROCESSING PAYMENT CALLBACK")
-                logger.info(f"Session ID: {session_id}")
-                
-                # Use UI service to handle payment verification and sheet update
-                if 'ui_service' not in st.session_state:
-                    st.session_state.ui_service = UIService()
-                
-                logger.info("Calling UI service to verify payment and update sheet")
-                verification_result = st.session_state.ui_service.verify_payment_and_submit(session_id, st.session_state.sheets_client)
-                
-                if verification_result:
-                    success_message = "✅ Payment verified and recorded successfully!"
-                    logger.info(success_message)
-                    st.success(success_message)
-                else:
-                    error_message = "Failed to verify payment or update record"
-                    logger.error(error_message)
-                    st.error(error_message)
-            except Exception as e:
-                logger.error(f"Error processing payment callback: {str(e)}")
-                st.error(f"Error processing payment: {str(e)}")
+    # Handle payment callback
+    if 'payment' in st.query_params and st.query_params.get('payment') == 'success' and 'session_id' in st.query_params:
+        session_id = st.query_params.get('session_id')
+        logger.info("=" * 80)
+        logger.info("PAYMENT CALLBACK RECEIVED")
+        logger.info(f"Processing payment callback for session: {session_id}")
+        
+        # Initialize services if needed
+        if 'sheets_client' not in st.session_state:
+            st.session_state.sheets_client = GoogleSheetsClient()
+        if 'ui_service' not in st.session_state:
+            st.session_state.ui_service = UIService()
+            
+        # Process payment verification
+        try:
+            verification_result = UIService.verify_payment_and_submit(
+                session_id=session_id,
+                sheets_client=st.session_state.sheets_client
+            )
+            if verification_result:
+                st.success("✅ Payment verified and recorded successfully!")
+            else:
+                st.error("Failed to verify payment or update record")
+        except Exception as e:
+            logger.error(f"Error processing payment callback: {str(e)}")
+            st.error(f"Error processing payment: {str(e)}")
 
     # Initialize login state if not exists
     if 'is_logged_in' not in st.session_state:
@@ -1116,8 +1100,8 @@ def main():
             selected_sheet_name = st.session_state.get('append_sheet_selector',
                                                        '')
             show_options = st.checkbox(
-                f"Show data", value=False,
-                key='show_options_checkbox')  #Updated checkbox label
+                f"Show {selected_sheet_name}", value=False,
+                key='show_options_checkbox')
             if show_options:
                 # Get list of available sheets excluding special sheets
                 available_sheets = [
