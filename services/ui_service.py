@@ -64,8 +64,8 @@ class UIService:
             logger.info("PAYMENT VERIFICATION STARTED")
             logger.info("="*80)
             logger.info(f"Processing session ID: {session_id}")
-            logger.info(f"Query parameters: {dict(st.query_params)}")
-            logger.info(f"Session state keys: {list(st.session_state.keys())}")
+            logger.info(f"Query parameters: {json.dumps(dict(st.query_params), default=str)}")
+            logger.info(f"Session state keys: {json.dumps(list(st.session_state.keys()), default=str)}")
             logger.info("="*80)
 
             # Initialize payment service and verify payment status
@@ -401,7 +401,7 @@ class UIService:
     ) -> Optional[Dict[str, Any]]:
         """Handle form submission with payment processing if required."""
         try:
-            # Convert form data to serializable format
+            # Convert form data to serializable format and store it
             serializable_form_data = {}
             for key, value in form_data.items():
                 if isinstance(value, (datetime, date)):
@@ -409,11 +409,14 @@ class UIService:
                 else:
                     serializable_form_data[key] = str(value)
 
+            # Use the serializable form data for all operations
+            form_data = serializable_form_data
+
             logger.info("=" * 80)
             logger.info("FORM SUBMISSION HANDLER")
             logger.info("=" * 80)
             logger.info(f"Processing submission for sheet: {sheet_name}")
-            logger.info(f"Form data received: {json.dumps(serializable_form_data, indent=2)}")
+            logger.info(f"Form data received: {json.dumps(form_data, indent=2)}")
 
             from services.spreadsheet_service import SpreadsheetService
 
