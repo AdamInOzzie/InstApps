@@ -157,24 +157,27 @@ class UIService:
             logger.info("DETECTING PAID COLUMN")
             logger.info("=" * 80)
 
-            # Get column names from DataFrame
+            # Read all headers from the first row
             header_range = 'Sponsors!A1:Z1'
             sheet_data = sheets_client.read_spreadsheet(spreadsheet_id, header_range)
             
-            if sheet_data is None or sheet_data.empty:
-                logger.error("Failed to read sheet headers")
-                return False
-
+            logger.info("=" * 80)
+            logger.info("HEADER DETECTION")
+            logger.info(f"Raw DataFrame columns: {list(sheet_data.columns)}")
+            
             # Find the Paid column index
             try:
                 paid_column_name = 'Paid'
-                if paid_column_name not in sheet_data.columns:
-                    logger.error(f"Could not find '{paid_column_name}' column in headers: {list(sheet_data.columns)}")
+                column_list = list(sheet_data.columns)
+                
+                if paid_column_name not in column_list:
+                    logger.error(f"Could not find '{paid_column_name}' column in headers: {column_list}")
                     return False
-                    
-                # Get 1-based column index for spreadsheet (add 1 to 0-based DataFrame index)
-                paid_column_index = sheet_data.columns.get_loc(paid_column_name) + 1
-                logger.info(f"Found '{paid_column_name}' at column index {paid_column_index} (column {chr(64+paid_column_index)})")
+                
+                # Get 0-based index of Paid column
+                paid_column_index = column_list.index(paid_column_name) + 1  # Add 1 for 1-based spreadsheet columns
+                logger.info(f"Found '{paid_column_name}' at index {paid_column_index-1} (column {chr(64+paid_column_index)})")
+                logger.info(f"Will update column {chr(64+paid_column_index)} with payment status")
             except Exception as e:
                 logger.error(f"Error finding Paid column: {str(e)}")
                 return False
