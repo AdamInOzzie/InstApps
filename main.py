@@ -257,19 +257,10 @@ def main():
     # Check for payment callback first
     logger.info("=" * 80)
     logger.info("CHECKING PAYMENT CALLBACK")
-    logger.info("=" * 80)
     query_params = dict(st.query_params)
     logger.info(f"All query parameters: {query_params}")
     logger.info(f"Raw URL being accessed: {query_params}")
-    logger.info("=" * 80)
     logger.info("Session and Request Information")
-    logger.info("=" * 80)
-    logger.info(f"Payment Parameter: {st.query_params.get('payment')}")
-    logger.info(f"Session ID Parameter: {st.query_params.get('session_id')}")
-    logger.info(f"All Session State Keys: {list(st.session_state.keys())}")
-    logger.info(f"UI Service Present: {'ui_service' in st.session_state}")
-    logger.info(f"Sheets Client Present: {'sheets_client' in st.session_state}")
-    logger.info("=" * 80)
     if hasattr(st, 'session_state'):
         logger.info(f"Session State Keys: {list(st.session_state.keys())}")
     
@@ -1125,8 +1116,8 @@ def main():
             selected_sheet_name = st.session_state.get('append_sheet_selector',
                                                        '')
             show_options = st.checkbox(
-                f"Show {selected_sheet_name}", value=False,
-                key='show_options_checkbox')
+                f"Show data", value=False,
+                key='show_options_checkbox')  #Updated checkbox label
             if show_options:
                 # Get list of available sheets excluding special sheets
                 available_sheets = [

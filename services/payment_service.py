@@ -81,7 +81,7 @@ class PaymentService:
             logger.error(f"Failed to initialize PaymentService: {str(e)}")
             raise
 
-    def create_payment_intent(self, amount: float, spreadsheet_id: str = None, row_number: int = None, sheet_name: str = None, currency: str = 'usd', meta_data: Dict = None) -> Dict[str, Any]:
+    def create_payment_intent(self, amount: float, spreadsheet_id: str = None, row_number: int = None, currency: str = 'usd') -> Dict[str, Any]:
         """
         Create a Stripe Checkout session for the specified amount
         
@@ -165,13 +165,8 @@ class PaymentService:
                 'spreadsheet_id': str(spreadsheet_id),
                 'row_number': str(row_number),
                 'payment_status': 'pending',
-                'payment_type': 'form_submission',
-                'sheet_name': sheet_name  # Use dynamic sheet name
+                'payment_type': 'form_submission'
             }
-            
-            # Merge additional metadata if provided
-            if meta_data:
-                metadata.update(meta_data)
             
             # Log the metadata being stored
             logger.info("Creating Stripe session with metadata:")

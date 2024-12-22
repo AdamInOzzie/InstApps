@@ -132,14 +132,12 @@ class UIService:
             available_sheets = [sheet['properties']['title'] for sheet in sheet_metadata.get('sheets', [])]
             logger.info(f"Available sheets: {available_sheets}")
 
-            # Get sheet name from payment metadata
-            sheet_name = metadata.get('sheet_name')
-            if not sheet_name or sheet_name not in available_sheets:
-                logger.error(f"Sheet {sheet_name} not found in spreadsheet")
+            if 'Sponsors' not in available_sheets:
+                logger.error("Sponsors sheet not found in spreadsheet")
                 return False
 
             # Verify sheet access and row validity
-            df = sheets_client.read_spreadsheet(spreadsheet_id, f'{sheet_name}!A:Z')
+            df = sheets_client.read_spreadsheet(spreadsheet_id, 'Sponsors!A:H')
             if df is None:
                 logger.error("Failed to read Sponsors sheet")
                 return False
@@ -160,20 +158,12 @@ class UIService:
             logger.info("=" * 80)
 
             # Read headers to detect Paid column position
-            header_range = f'{sheet_name}!A1:Z1'
-            logger.info(f"Reading headers from range: {header_range}")
+            header_range = 'Sponsors!A1:Z1'
             df_headers = sheets_client.read_spreadsheet(spreadsheet_id, header_range)
-            logger.info("Raw headers data:")
-            logger.info(str(df_headers))
-            logger.info("Headers as list:")
-            logger.info(str(list(df_headers.columns) if df_headers is not None else 'None'))
             
             logger.info("=" * 80)
             logger.info("HEADER DETECTION")
-            logger.info(f"DataFrame headers raw: {df_headers}")
-            logger.info(f"DataFrame columns: {df_headers.columns.tolist() if df_headers is not None else 'None'}")
-            logger.info(f"DataFrame first row: {df_headers.iloc[0].tolist() if df_headers is not None and not df_headers.empty else 'None'}")
-            logger.info("=" * 80)
+            logger.info(f"DataFrame headers: {df_headers}")
             
             try:
                 if df_headers is None:
@@ -215,7 +205,7 @@ class UIService:
             payment_status = f"PAID_STRIPE_{session_id}"
             
             # Verify current value before update
-            current_data = sheets_client.read_spreadsheet(spreadsheet_id, f'{sheet_name}!{chr(64 + paid_column_index)}{row_number}')
+            current_data = sheets_client.read_spreadsheet(spreadsheet_id, f'Sponsors!{chr(64 + paid_column_index)}{row_number}')
             if current_data is not None and not current_data.empty:
                 logger.info(f"Current value in cell {chr(64 + paid_column_index)}{row_number}: {current_data.iloc[0, 0] if not current_data.empty else 'Empty'}")
             
@@ -232,7 +222,7 @@ class UIService:
             logger.info("="*80)
 
             # Verify current value before update
-            current_data = sheets_client.read_spreadsheet(spreadsheet_id, f'{sheet_name}!{chr(64 + paid_column_index)}{row_number}')
+            current_data = sheets_client.read_spreadsheet(spreadsheet_id, f'Sponsors!{chr(64 + paid_column_index)}{row_number}')
             if current_data is not None and not current_data.empty:
                 logger.info(f"Current value in cell: {current_data.iloc[0, 0] if not current_data.empty else 'Empty'}")
 
@@ -240,7 +230,7 @@ class UIService:
             try:
                 update_success = SpreadsheetService.UpdateEntryCells(
                     spreadsheet_id=spreadsheet_id,
-                    sheet_name=sheet_name,
+                    sheet_name='Sponsors',
                     cell_updates=cell_updates
                 )
                 logger.info(f"Sheet update result: {update_success}")
@@ -491,17 +481,10 @@ class UIService:
                         # Create payment intent using PaymentService with required parameters
                         from services.payment_service import PaymentService
                         payment_service = PaymentService()
-                        meta_data = {
-                            'sheet_name': sheet_name,
-                            'spreadsheet_id': spreadsheet_id,
-                            'row_number': str(next_row)
-                        }
                         payment_data = payment_service.create_payment_intent(
                             amount=payment_amount,
                             spreadsheet_id=spreadsheet_id,
-                            row_number=next_row,
-                            sheet_name=sheet_name,
-                            meta_data=meta_data
+                            row_number=next_row
                         )
 
                         if 'error' in payment_data:
@@ -663,6 +646,7 @@ class UIService:
                         "Target Row": target_row
                     })
 
+                    source_range = f"{selected_sheet_name}!A2:Z2"
                     st.write("About to execute copy_entry with these parameters")
 
                     success = copy_service.copy_entry(
