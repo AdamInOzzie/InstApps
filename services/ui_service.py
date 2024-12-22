@@ -475,29 +475,47 @@ class UIService:
                             st.error(f"Payment Error: {payment_data['error']}")
                             return None
 
-                        # Display payment link
+                        # Save current application state to environment for Stripe metadata
+                        os.environ['CURRENT_USERNAME'] = st.session_state.get('username', '')
+                        os.environ['SELECTED_SHEET'] = st.session_state.get('selected_sheet', '')
+                        os.environ['CURRENT_SHEET_TAB'] = sheet_name
+
+                        # Display payment information and redirect button
                         st.info("💳 Payment Required")
                         st.write(f"Amount: ${payment_amount:.2f}")
-                        st.link_button("Complete Payment", payment_data['session_url'])
-
-                        # Store payment session with row information
-                        if 'payment_sessions' not in st.session_state:
-                            st.session_state.payment_sessions = {}
-
-                        # Create session data with all necessary information
-                        session_data = {
-                            'amount': payment_amount,
-                            'form_data': form_data,
-                            'spreadsheet_id': spreadsheet_id,
-                            'sheet_name': sheet_name,
-                            'row_number': next_row,
-                            'username': st.session_state.get('username'),
-                            'selected_sheet': st.session_state.get('selected_sheet'),
-                            'timestamp': datetime.now().isoformat()
-                        }
-
-                        # Store in session state
-                        st.session_state.payment_sessions[payment_data['session_id']] = session_data
+                        
+                        # Use JavaScript to redirect in current window
+                        js_code = f"""
+                        <script>
+                            function redirectToPayment() {{
+                                window.location.href = "{payment_data['session_url']}";
+                            }}
+                        </script>
+                        <button 
+                            onclick="redirectToPayment()" 
+                            style="
+                                background-color: #4CAF50; 
+                                color: white; 
+                                padding: 12px 20px; 
+                                border: none; 
+                                border-radius: 4px; 
+                                cursor: pointer;
+                            "
+                        >
+                            Complete Payment
+                        </button>
+                        """
+                        st.markdown(js_code, unsafe_allow_html=True)
+                        
+                        # Log the payment flow initiation
+                        logger.info("="*80)
+                        logger.info("PAYMENT FLOW INITIATED")
+                        logger.info(f"Username: {os.environ.get('CURRENT_USERNAME')}")
+                        logger.info(f"Selected Sheet: {os.environ.get('SELECTED_SHEET')}")
+                        logger.info(f"Current Tab: {os.environ.get('CURRENT_SHEET_TAB')}")
+                        logger.info(f"Amount: ${payment_amount:.2f}")
+                        logger.info(f"Session URL: {payment_data['session_url']}")
+                        logger.info("="*80)
                         logger.info("="*80)
                         logger.info("STORING PAYMENT SESSION")
                         logger.info(f"Session ID: {payment_data['session_id']}")

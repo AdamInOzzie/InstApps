@@ -524,18 +524,43 @@ def main():
     payment_status = st.query_params.get("payment")
     session_id = st.query_params.get("session_id")
 
-    # Persist login state through payment callback
+    # Handle payment callback and session restoration
     if payment_status == "success" and session_id:
-        if 'payment_sessions' in st.session_state and session_id in st.session_state.payment_sessions:
-            payment_data = st.session_state.payment_sessions[session_id]
-            if 'username' in payment_data:
-                st.session_state.is_logged_in = True
-                st.session_state.username = payment_data['username']
-                st.session_state.selected_sheet = payment_data[
-                    'selected_sheet']
-
         try:
-            # Initialize Stripe with the secret key
+            # Initialize Stripe client
+            stripe_key = os.getenv('STRIPE_SECRET_KEY')
+            if not stripe_key:
+                logger.error("Stripe secret key is missing")
+                st.error("⚠️ Payment verification failed: Missing Stripe configuration")
+                return
+                
+            stripe.api_key = stripe_key
+            
+            # Retrieve session and restore user context
+            logger.info(f"Starting payment verification for session: {session_id}")
+            stripe_session = stripe.checkout.Session.retrieve(session_id)
+            metadata = stripe_session.metadata
+            
+            if metadata:
+                # Restore all relevant session state
+                st.session_state.is_logged_in = True
+                st.session_state.username = metadata.get('username', '')
+                st.session_state.selected_sheet = metadata.get('selected_sheet', '')
+                st.session_state.current_sheet_tab = metadata.get('current_sheet_tab', '')
+                
+                # Log successful session restoration
+                logger.info("=" * 80)
+                logger.info("SESSION RESTORATION")
+                logger.info(f"User: {st.session_state.username}")
+                logger.info(f"Sheet: {st.session_state.selected_sheet}")
+                logger.info(f"Tab: {st.session_state.current_sheet_tab}")
+                logger.info("=" * 80)
+                
+                # Show welcome back message
+                st.success("✅ Payment completed successfully! Welcome back.")
+                st.info(f"Welcome back {st.session_state.username}! Your payment has been processed.")
+
+            # Initialize payment verification
             stripe_key = os.getenv('STRIPE_SECRET_KEY')
             if not stripe_key:
                 logger.error("Stripe secret key is missing")
