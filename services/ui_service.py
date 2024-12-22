@@ -389,14 +389,11 @@ class UIService:
                 # Check for payment redirection
                 if isinstance(result, dict) and 'payment_url' in result:
                     logger.info("Redirecting to Stripe payment")
-                    st.markdown(
-                        f"""
-                        <script>
-                            window.location.href = "{result['payment_url']}";
-                        </script>
-                        """,
-                        unsafe_allow_html=True
-                    )
+                    payment_url = result['payment_url']
+                    st.link_button("Click to Complete Payment", payment_url)
+                    # Store URL for auto-redirect
+                    if 'redirect_url' not in st.session_state:
+                        st.session_state.redirect_url = payment_url
                     return None
 
                 logger.info(f"Form submission result: {result}")
