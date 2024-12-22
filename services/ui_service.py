@@ -101,6 +101,7 @@ class UIService:
             metadata = payment_status.get('metadata', {})
             spreadsheet_id = metadata.get('spreadsheet_id')
             row_number = metadata.get('row_number')
+            sheet_name = metadata.get('sheet_name', 'Sponsors')  # Default to 'Sponsors' for backward compatibility
 
             # Log metadata details
             logger.info("="*80)
