@@ -235,6 +235,16 @@ class SpreadsheetService:
                     if row < 1 or col < 1:
                         logger.error(f"Row ({row}) and column ({col}) must be positive")
                         continue
+                    
+                    # Ensure value is converted to string
+                    if isinstance(value, dict):
+                        value = str(value)
+                    elif isinstance(value, (list, tuple)):
+                        value = str(value)
+                    elif value is None:
+                        value = ""
+                    else:
+                        value = str(value)
                         
                     # Convert column number to letter(s)
                     col_letter = ""
