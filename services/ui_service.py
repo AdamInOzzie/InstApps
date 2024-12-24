@@ -61,8 +61,11 @@ class UIService:
             logger.info("PAYMENT VERIFICATION STARTED")
             logger.info("="*80)
             logger.info(f"Processing session ID: {session_id}")
+            logger.info(f"Raw session ID value: {session_id}")
             logger.info(f"Query parameters: {dict(st.query_params)}")
             logger.info(f"Session state keys: {list(st.session_state.keys())}")
+            logger.info(f"Payment status in query params: {st.query_params.get('payment')}")
+            logger.info(f"Session ID in query params: {st.query_params.get('session_id')}")
             logger.info("="*80)
 
             # Initialize payment service and verify payment status
