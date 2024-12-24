@@ -158,7 +158,7 @@ class UIService:
             logger.info("DETECTING PAID COLUMN")
             logger.info("=" * 80)
 
-            # Read headers to detect Paid column position
+            # Read headers to detect Paid and When Paid column positions
             header_range = f'{sheet_name}!A1:Z1'
             df_headers = sheets_client.read_spreadsheet(spreadsheet_id, header_range)
             
@@ -181,21 +181,31 @@ class UIService:
                     header_str = str(header).strip()
                     logger.info(f"Column {chr(65+i)}: '{header_str}'")
                 
-                # Search for 'Paid' in the headers with detailed logging
+                # Search for both columns in the headers
                 paid_column_name = 'Paid'
+                when_paid_column_name = 'When Paid'
                 paid_column_index = None
+                when_paid_column_index = None
                 
-                # Examine each header for exact match
+                # Examine each header for exact matches
                 for i, header in enumerate(headers):
                     header_str = str(header).strip()
-                    logger.info(f"Checking column {chr(65+i)}: '{header_str}' against '{paid_column_name}'")
+                    logger.info(f"Checking column {chr(65+i)}: '{header_str}'")
+                    
                     if header_str == paid_column_name:
                         paid_column_index = i + 1  # Add 1 for 1-based spreadsheet columns
                         logger.info(f"Found exact match for '{paid_column_name}' at column {chr(64+paid_column_index)}")
-                        break
+                        
+                    if header_str == when_paid_column_name:
+                        when_paid_column_index = i + 1  # Add 1 for 1-based spreadsheet columns
+                        logger.info(f"Found exact match for '{when_paid_column_name}' at column {chr(64+when_paid_column_index)}")
                 
                 if paid_column_index is None:
                     logger.error(f"Could not find exact match for '{paid_column_name}' column in headers: {headers}")
+                    return False
+                    
+                if when_paid_column_index is None:
+                    logger.error(f"Could not find exact match for '{when_paid_column_name}' column in headers: {headers}")
                     return False
                     
                 logger.info(f"Will update column {chr(64+paid_column_index)} with payment status")
@@ -204,13 +214,22 @@ class UIService:
                 return False
 
             payment_status = f"PAID_STRIPE_{session_id}"
+            current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             
-            # Verify current value before update
-            current_data = sheets_client.read_spreadsheet(spreadsheet_id, f'{sheet_name}!{chr(64 + paid_column_index)}{row_number}')
-            if current_data is not None and not current_data.empty:
-                logger.info(f"Current value in cell {chr(64 + paid_column_index)}{row_number}: {current_data.iloc[0, 0] if not current_data.empty else 'Empty'}")
+            # Verify current values before update
+            current_paid = sheets_client.read_spreadsheet(spreadsheet_id, f'{sheet_name}!{chr(64 + paid_column_index)}{row_number}')
+            current_when_paid = sheets_client.read_spreadsheet(spreadsheet_id, f'{sheet_name}!{chr(64 + when_paid_column_index)}{row_number}')
             
-            cell_updates = [row_number, paid_column_index, payment_status]
+            if current_paid is not None and not current_paid.empty:
+                logger.info(f"Current value in Paid cell {chr(64 + paid_column_index)}{row_number}: {current_paid.iloc[0, 0] if not current_paid.empty else 'Empty'}")
+            if current_when_paid is not None and not current_when_paid.empty:
+                logger.info(f"Current value in When Paid cell {chr(64 + when_paid_column_index)}{row_number}: {current_when_paid.iloc[0, 0] if not current_when_paid.empty else 'Empty'}")
+            
+            # Add both updates to the cell_updates list
+            cell_updates = [
+                row_number, paid_column_index, payment_status,
+                row_number, when_paid_column_index, current_time
+            ]
             
             # Log detailed update information
             logger.info("="*80)
