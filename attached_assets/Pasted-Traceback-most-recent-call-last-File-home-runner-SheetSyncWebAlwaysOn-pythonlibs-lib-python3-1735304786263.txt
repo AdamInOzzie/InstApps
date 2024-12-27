@@ -1,0 +1,29 @@
+Traceback (most recent call last):
+  File "/home/runner/SheetSyncWebAlwaysOn/.pythonlibs/lib/python3.11/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 88, in exec_func_with_error_handling
+    result = func()
+             ^^^^^^
+  File "/home/runner/SheetSyncWebAlwaysOn/.pythonlibs/lib/python3.11/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 579, in code_to_exec
+    exec(code, module.__dict__)
+  File "/home/runner/SheetSyncWebAlwaysOn/main.py", line 38, in <module>
+    from services import (SpreadsheetService, FormService, UIService,
+  File "/home/runner/SheetSyncWebAlwaysOn/services/__init__.py", line 5, in <module>
+    from .form_service import FormService
+  File "/home/runner/SheetSyncWebAlwaysOn/services/form_service.py", line 111
+    step_size = 0.01 if isinstance(display_value, str) and '%' in display_value or numeric_value < 10 else 1.0
+    ^^^^^^^^^
+IndentationError: expected an indented block after 'if' statement on line 110
+2024-12-27 13:06:15.515 Uncaught app exception
+Traceback (most recent call last):
+  File "/home/runner/SheetSyncWebAlwaysOn/.pythonlibs/lib/python3.11/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 88, in exec_func_with_error_handling
+    result = func()
+             ^^^^^^
+  File "/home/runner/SheetSyncWebAlwaysOn/.pythonlibs/lib/python3.11/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 579, in code_to_exec
+    exec(code, module.__dict__)
+  File "/home/runner/SheetSyncWebAlwaysOn/main.py", line 38, in <module>
+    from services import (SpreadsheetService, FormService, UIService,
+  File "/home/runner/SheetSyncWebAlwaysOn/services/__init__.py", line 5, in <module>
+    from .form_service import FormService
+  File "/home/runner/SheetSyncWebAlwaysOn/services/form_service.py", line 111
+    step_size = 0.01 if isinstance(display_value, str) and '%' in display_value or numeric_value < 10 else 1.0
+    ^^^^^^^^^
+IndentationError: expected an indented block after 'if' statement on line 110
