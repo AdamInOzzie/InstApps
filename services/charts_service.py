@@ -131,9 +131,22 @@ class ChartsService:
                                                     chart_row['OUTPUT1']: output1_values,
                                                     **({chart_row['OUTPUT2']: output2_values} if output2_values else {})
                                                 })
+                                                # Format x-axis labels to 1 decimal place
+                                                chart_data.index = chart_data['Input'].round(1)
+                                                
+                                                # Get max value for y-axis
+                                                max_val = max(
+                                                    chart_data[chart_row['OUTPUT1']].max(),
+                                                    chart_data[chart_row['OUTPUT2']].max() if chart_row['OUTPUT2'] in chart_data else 0
+                                                )
+                                                
+                                                # Create bar chart with custom config
                                                 st.bar_chart(
-                                                    chart_data.set_index('Input'),
-                                                    height=400
+                                                    data=chart_data.drop('Input', axis=1),
+                                                    height=400,
+                                                    use_container_width=True,
+                                                    y_min=0,
+                                                    y_max=max_val * 1.1  # Add 10% padding to top
                                                 )
                                             else:
                                                 # For non-bar charts, just show table
