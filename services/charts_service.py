@@ -89,17 +89,29 @@ class ChartsService:
                                                     outputs_df = sheets_client.read_sheet_data(sheet_id, 'OUTPUTS')
                                                     if outputs_df is None or outputs_df.empty:
                                                         logger.error("Empty outputs dataframe")
-                                                        continue
+                                                        st.error("No data found in OUTPUTS sheet")
+                                                        return
                                                     
+                                                    # Verify OUTPUT1 exists
                                                     output1_row = outputs_df[outputs_df['Name'] == chart_row['OUTPUT1']]
-                                                    if not output1_row.empty:
-                                                        input_values.append(current_value)
-                                                        output1_values.append(output1_row['Value'].iloc[0])
-                                                        
-                                                        if chart_row['OUTPUT2']:
-                                                            output2_row = outputs_df[outputs_df['Name'] == chart_row['OUTPUT2']]
-                                                            if not output2_row.empty:
-                                                                output2_values.append(output2_row['Value'].iloc[0])
+                                                    if output1_row.empty:
+                                                        error_msg = f"ERROR: Output field '{chart_row['OUTPUT1']}' not found in OUTPUTS sheet"
+                                                        logger.error(error_msg)
+                                                        st.error(error_msg)
+                                                        return
+                                                    
+                                                    input_values.append(current_value)
+                                                    output1_values.append(output1_row['Value'].iloc[0])
+                                                    
+                                                    # Verify OUTPUT2 if specified
+                                                    if chart_row['OUTPUT2']:
+                                                        output2_row = outputs_df[outputs_df['Name'] == chart_row['OUTPUT2']]
+                                                        if output2_row.empty:
+                                                            error_msg = f"ERROR: Output field '{chart_row['OUTPUT2']}' not found in OUTPUTS sheet"
+                                                            logger.error(error_msg)
+                                                            st.error(error_msg)
+                                                            return
+                                                        output2_values.append(output2_row['Value'].iloc[0])
                                                     
                                                     del outputs_df
                                                     
