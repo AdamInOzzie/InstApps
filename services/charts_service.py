@@ -30,6 +30,24 @@ class ChartsService:
                                     options=chart_names,
                                     key='chart_selector'
                                 )
+                                
+                                # Load chart data when selected
+                                if selected_chart:
+                                    chart_row = charts_df[charts_df[chart_column] == selected_chart].iloc[0]
+                                    st.session_state.current_chart = {
+                                        'name': selected_chart,
+                                        'type': chart_row['TYPE'],
+                                        'input': chart_row['INPUT'],
+                                        'input_low': float(chart_row['INPUT LOW']),
+                                        'input_high': float(chart_row['INPUT HIGH']),
+                                        'input_step': float(chart_row['INPUT STEP']),
+                                        'output1': chart_row['OUTPUT1'],
+                                        'output2': chart_row['OUTPUT2'],
+                                        'x_axis_low': float(chart_row['X AXIS Low']),
+                                        'x_axis_high': float(chart_row['X AXIS HIGH'])
+                                    }
+                                    logger.info(f"Loaded chart data: {st.session_state.current_chart}")
+                                    
                 except Exception as e:
                     logger.error(f"Error loading CHARTS: {str(e)}")
                     
