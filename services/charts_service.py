@@ -11,16 +11,18 @@ class ChartsService:
     def handle_charts(sheet_names: List[str], sheet_id: str, sheets_client) -> None:
         """Handle the CHARTS sheet functionality."""
         try:
-            # Show Charts dropdown if CHARTS sheet exists
+            # Display Charts dropdown if CHARTS sheet exists
             if 'CHARTS' in sheet_names:
                 try:
-                    charts_df = sheets_client.read_sheet_data(sheet_id, 'CHARTS')
-                    if not charts_df.empty:
+                    if 'charts_df' not in st.session_state:
+                        st.session_state.charts_df = sheets_client.read_sheet_data(sheet_id, 'CHARTS')
+                    
+                    if not st.session_state.charts_df.empty:
                         chart_column = next((col for col in ['ChartName', 'CHARTNAME'] 
-                                          if col in charts_df.columns), None)
+                                          if col in st.session_state.charts_df.columns), None)
                         
                         if chart_column:
-                            chart_names = charts_df[chart_column].dropna().tolist()
+                            chart_names = st.session_state.charts_df[chart_column].dropna().tolist()
                             if chart_names:
                                 st.markdown("### 📊 Chart Selection")
                                 
@@ -31,19 +33,19 @@ class ChartsService:
                                     selected_chart = st.selectbox(
                                         "Select a chart to view",
                                         options=chart_names,
-                                        key=f'chart_selector_{sheet_id}_{id(chart_names)}',
+                                        key='chart_selector',
                                         label_visibility="collapsed"
                                     )
                                 
                                 with col2:
                                     compute_button = st.button(
                                         "Display Chart",
-                                        key=f"compute_chart_{sheet_id}_{id(selected_chart)}"
+                                        key='compute_chart'
                                     )
 
                                 # Only proceed if chart is selected and button is clicked
                                 if selected_chart and compute_button:
-                                    chart_row = charts_df[charts_df[chart_column] == selected_chart].iloc[0]
+                                    chart_row = st.session_state.charts_df[st.session_state.charts_df[chart_column] == selected_chart].iloc[0]
                                     st.session_state.current_chart = {
                                         'name': selected_chart,
                                         'type': chart_row['TYPE'],
