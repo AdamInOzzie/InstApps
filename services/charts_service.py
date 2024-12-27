@@ -31,7 +31,7 @@ class ChartsService:
                                     selected_chart = st.selectbox(
                                         "Select a chart to view",
                                         options=chart_names,
-                                        key=f'chart_selector_{sheet_id}_{chart_column}',
+                                        key=f'chart_selector_{sheet_id}',
                                         label_visibility="collapsed"
                                     )
                                 
@@ -40,7 +40,7 @@ class ChartsService:
                                         "Display Options",
                                         options=["Hide All", "Display Table", "Display Chart", "Display Chart and Table"],
                                         index=0,
-                                        key=f"display_option_{sheet_id}_{chart_column}",
+                                        key=f"display_option_{sheet_id}",
                                         label_visibility="collapsed"
                                     )
 
@@ -60,8 +60,8 @@ class ChartsService:
                                         'x_axis_high': float(chart_row['X AXIS HIGH'])
                                     }
 
-                                    # Handle chart computation
-                                    if chart_row['TYPE'].lower() in ['bar', 'bar chart', 'line', 'line chart']:
+                                    # Handle BAR chart computation
+                                    if chart_row['TYPE'].lower() in ['bar', 'bar chart']:
                                         inputs_df = sheets_client.read_sheet_data(sheet_id, 'INPUTS')
                                         input_field_row = inputs_df[inputs_df['Name'] == chart_row['INPUT']]
                                         
@@ -134,19 +134,18 @@ class ChartsService:
                                                     **({chart_row['OUTPUT2']: pd.to_numeric(output2_values, errors='coerce')} if output2_values else {})
                                                 })
                                                 # Set chart type based on TYPE column
-                                                chart_type = 'line' if chart_row['TYPE'].lower() in ['line', 'line chart'] else 'bar'
+                                                chart_type = 'line' if chart_row['TYPE'].lower() == 'line' else 'bar'
+                                                
                                                 # Create chart
                                                 chart = {
                                                     'data': [{
                                                         'x': input_values,
                                                         'y': pd.to_numeric(output1_values, errors='coerce'),
                                                         'name': chart_row['OUTPUT1'],
-                                                        'type': chart_type,
-                                                        'mode': 'lines' if chart_type == 'line' else None
+                                                        'type': chart_type
                                                     }],
                                                     'layout': {
-                                                        'title': selected_chart,
-                                                        'barmode': 'group'
+                                                        'title': selected_chart
                                                     }
                                                 }
                                                 if output2_values:
@@ -154,12 +153,11 @@ class ChartsService:
                                                         'x': input_values,
                                                         'y': pd.to_numeric(output2_values, errors='coerce'),
                                                         'name': chart_row['OUTPUT2'],
-                                                        'type': chart_type,
-                                                        'mode': 'lines' if chart_type == 'line' else None
+                                                        'type': chart_type
                                                     })
-                                                
                                                 st.plotly_chart(chart, height=400)
                                             else:
+                                                # For non-bar charts, just show table
                                                 table_placeholder.dataframe(df, hide_index=True)
                                     
                 except Exception as e:
