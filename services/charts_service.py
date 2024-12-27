@@ -31,7 +31,7 @@ class ChartsService:
                                     selected_chart = st.selectbox(
                                         "Select a chart to view",
                                         options=chart_names,
-                                        key=f'chart_selector_{sheet_id}',
+                                        key=f'chart_selector_{sheet_id}_{chart_column}',
                                         label_visibility="collapsed"
                                     )
                                 
@@ -40,7 +40,7 @@ class ChartsService:
                                         "Display Options",
                                         options=["Hide All", "Display Table", "Display Chart", "Display Chart and Table"],
                                         index=0,
-                                        key=f"display_option_{sheet_id}",
+                                        key=f"display_option_{sheet_id}_{chart_column}",
                                         label_visibility="collapsed"
                                     )
 
