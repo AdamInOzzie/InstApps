@@ -93,17 +93,18 @@ class FormService:
             col1, col2 = st.columns([4, 1])
             
             with col1:
-                st.selectbox(
+                display_choice = st.selectbox(
                     "Inputs",
-                    options=["Fixed Income Inputs"],
+                    options=["Display Inputs", "Hide Inputs"],
                     key="inputs_selector",
                     label_visibility="collapsed"
                 )
             
             with col2:
-                st.button("Display Inputs", key="display_inputs_btn")
+                st.button("Update", key="display_inputs_btn")
 
-            for row_idx, (field_name, current_value) in enumerate(fields, start=2):
+            if display_choice == "Display Inputs":
+                for row_idx, (field_name, current_value) in enumerate(fields, start=2):
                 numeric_value, display_value = self.process_input_value(current_value)
                 
                 if numeric_value is not None:
