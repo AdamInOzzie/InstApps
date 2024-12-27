@@ -238,30 +238,17 @@ class FormService:
                                 st.error(f"Error updating field: {str(e)}")
                         return callback
 
-                    format_str = "%.2f" if numeric_value >= 10 else "%.3f"
-                    if isinstance(display_value, str) and '%' in display_value:
-                        format_str = "%.2f"
-                    
-                    input_key = f"input_{row_idx}"
+                    # Remove duplicate input field generation
+                else:
+                    input_key = f"input_text_{row_idx}"
                     callback_fn = create_callback(row_idx)
                     st.session_state[f"callback_{input_key}"] = callback_fn
                     
-                    st.number_input(
-                        field_name,
-                        value=numeric_value,
-                        format=format_str,
-                        step=step_size,
-                        key=input_key,
-                        on_change=st.session_state[f"callback_{input_key}"],
-                        help=f"Column {row_idx}"
-                    )
-                else:
-                    input_key = f"input_{row_idx}"
                     st.text_input(
                         field_name,
                         value=str(current_value),
                         key=input_key,
-                        on_change=create_callback(row_idx)
+                        on_change=st.session_state[f"callback_{input_key}"]
                     )
             return True
             
