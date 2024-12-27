@@ -109,7 +109,32 @@ class FormService:
                     
                     if numeric_value is not None:
                         step_size = 0.01 if isinstance(display_value, str) and '%' in display_value or numeric_value < 10 else 1.0
-                    
+                        
+                        input_key = f"input_row_{row_idx}"
+                        callback_fn = create_callback(row_idx)
+                        st.session_state[f"callback_{input_key}"] = callback_fn
+                        
+                        st.number_input(
+                            field_name,
+                            value=numeric_value,
+                            format="%.3f" if numeric_value < 10 else "%.2f",
+                            step=step_size,
+                            key=input_key,
+                            on_change=st.session_state[f"callback_{input_key}"],
+                            help=f"Column {row_idx}"
+                        )
+                    else:
+                        input_key = f"input_text_row_{row_idx}"
+                        callback_fn = create_callback(row_idx)
+                        st.session_state[f"callback_{input_key}"] = callback_fn
+                        
+                        st.text_input(
+                            field_name,
+                            value=str(current_value),
+                            key=input_key,
+                            on_change=st.session_state[f"callback_{input_key}"]
+                        )
+                        
                     def create_callback(row):
                         def callback():
                             actual_row = row
