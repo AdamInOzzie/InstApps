@@ -48,12 +48,11 @@ class ChartsService:
                                     if compute_button:
                                         st.session_state[f'show_chart_{sheet_id}'] = not st.session_state[f'show_chart_{sheet_id}']
                                         st.rerun()
-                                        
+                                
                                 if not st.session_state[f'show_chart_{sheet_id}']:
-                                    continue
+                                    return
 
-                                # Only proceed if chart is selected and button is clicked
-                                if selected_chart and compute_button:
+                                if selected_chart:
                                     chart_row = charts_df[charts_df[chart_column] == selected_chart].iloc[0]
                                     st.session_state.current_chart = {
                                         'name': selected_chart,
