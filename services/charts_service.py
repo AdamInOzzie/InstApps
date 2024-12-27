@@ -80,19 +80,31 @@ class ChartsService:
                                                 import time
                                                 time.sleep(1.0)
                                                 
-                                                # Read outputs
-                                                outputs_df = sheets_client.read_sheet_data(sheet_id, 'OUTPUTS')
-                                                output1_row = outputs_df[outputs_df['Name'] == chart_row['OUTPUT1']]
-                                                
-                                                if not output1_row.empty:
-                                                    input_values.append(current_value)
-                                                    output1_values.append(output1_row['Value'].iloc[0])
+                                                try:
+                                                    # Read outputs with timeout
+                                                    outputs_df = sheets_client.read_sheet_data(sheet_id, 'OUTPUTS')
+                                                    if outputs_df is None or outputs_df.empty:
+                                                        logger.error("Empty outputs dataframe")
+                                                        continue
                                                     
-                                                    if chart_row['OUTPUT2']:
-                                                        output2_row = outputs_df[outputs_df['Name'] == chart_row['OUTPUT2']]
-                                                        if not output2_row.empty:
-                                                            output2_values.append(output2_row['Value'].iloc[0])
-                                                
+                                                    # Process first output
+                                                    output1_row = outputs_df[outputs_df['Name'] == chart_row['OUTPUT1']]
+                                                    if not output1_row.empty:
+                                                        input_values.append(current_value)
+                                                        output1_values.append(output1_row['Value'].iloc[0])
+                                                        
+                                                        # Process second output if it exists
+                                                        if chart_row['OUTPUT2']:
+                                                            output2_row = outputs_df[outputs_df['Name'] == chart_row['OUTPUT2']]
+                                                            if not output2_row.empty:
+                                                                output2_values.append(output2_row['Value'].iloc[0])
+                                                    
+                                                    # Clear memory
+                                                    del outputs_df
+                                                    
+                                                except Exception as e:
+                                                    logger.error(f"Error processing outputs: {str(e)}")
+                                                    continue
                                                 current_value += float(chart_row['INPUT STEP'])
                                             
                                             # Reset to original value
