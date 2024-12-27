@@ -119,9 +119,9 @@ class FormService:
                         step_size = 0.01 if isinstance(display_value, str) and '%' in display_value or numeric_value < 10 else 1.0
                         
                         def create_callback(row):
-                        def callback():
-                            actual_row = row
-                            logger.info("\n" + "="*80)
+                            def callback():
+                                actual_row = row
+                                logger.info("\n" + "="*80)
                             logger.info(f"CALLBACK TRIGGERED for row {actual_row} (sheet row {actual_row})")
                             logger.info("="*80 + "\n")
                             try:
