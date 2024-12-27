@@ -60,8 +60,8 @@ class ChartsService:
                                         'x_axis_high': float(chart_row['X AXIS HIGH'])
                                     }
 
-                                    # Handle BAR chart computation
-                                    if chart_row['TYPE'].lower() in ['bar', 'bar chart']:
+                                    # Handle chart computation
+                                    if chart_row['TYPE'].lower() in ['bar', 'bar chart', 'line', 'line chart']:
                                         inputs_df = sheets_client.read_sheet_data(sheet_id, 'INPUTS')
                                         input_field_row = inputs_df[inputs_df['Name'] == chart_row['INPUT']]
                                         
@@ -127,19 +127,21 @@ class ChartsService:
                                                 table_placeholder.dataframe(df, hide_index=True)
                                             
                                             if display_option in ["Display Chart", "Display Chart and Table"]:
-                                                # Create bar chart
+                                                # Create chart data
                                                 chart_data = pd.DataFrame({
                                                     'Input': input_values,
                                                     chart_row['OUTPUT1']: pd.to_numeric(output1_values, errors='coerce'),
                                                     **({chart_row['OUTPUT2']: pd.to_numeric(output2_values, errors='coerce')} if output2_values else {})
                                                 })
-                                                # Create side by side bar chart
+                                                # Set chart type based on TYPE column
+                                                chart_type = 'line' if chart_row['TYPE'].lower() in ['line', 'line chart'] else 'bar'
+                                                # Create chart
                                                 chart = {
                                                     'data': [{
                                                         'x': input_values,
                                                         'y': pd.to_numeric(output1_values, errors='coerce'),
                                                         'name': chart_row['OUTPUT1'],
-                                                        'type': 'bar'
+                                                        'type': chart_type
                                                     }],
                                                     'layout': {
                                                         'title': selected_chart
@@ -150,7 +152,7 @@ class ChartsService:
                                                         'x': input_values,
                                                         'y': pd.to_numeric(output2_values, errors='coerce'),
                                                         'name': chart_row['OUTPUT2'],
-                                                        'type': 'bar'
+                                                        'type': chart_type
                                                     })
                                                 st.plotly_chart(chart, height=400)
                                             else:
