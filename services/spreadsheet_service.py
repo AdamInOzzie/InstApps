@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 class SpreadsheetService:
     def __init__(self, sheets_client: GoogleSheetsClient):
         self.sheets_client = sheets_client
+        self.sheets_service = sheets_client.sheets_service
 
     def list_spreadsheets(self) -> List[Dict[str, str]]:
         """Get list of available spreadsheets."""
