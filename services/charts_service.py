@@ -62,10 +62,9 @@ class ChartsService:
                                                 
                                                 if not input_field_row.empty:
                                                     original_value = input_field_row['Value'].iloc[0]
-                                                    st.markdown("<div style='padding-left: 1px'>", unsafe_allow_html=True)
-                                                    st.write("### Bar Chart Data")
-                                                    st.write(f"Computing values for input field: {chart_row['INPUT']}")
-                                                    st.markdown("</div>", unsafe_allow_html=True)
+                                                    with col1:
+                                                        st.write("### Bar Chart Data")
+                                                        st.write(f"Computing values for input field: {chart_row['INPUT']}")
                                                     
                                                     # Create data collection lists
                                                     input_values = []
