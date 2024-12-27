@@ -125,10 +125,10 @@ class FormService:
                                 logger.info(f"CALLBACK TRIGGERED for row {actual_row} (sheet row {actual_row})")
                                 logger.info("="*80 + "\n")
                                 try:
-                                input_key = f"input_{row}"
-                                logger.info(f"Processing callback for input {input_key} (sheet row {actual_row})")
-                                logger.info(f"All session state keys: {list(st.session_state.keys())}")
-                                logger.info(f"Current session state for {input_key}: {st.session_state.get(input_key)}")
+                                    input_key = f"input_{row}"
+                                    logger.info(f"Processing callback for input {input_key} (sheet row {actual_row})")
+                                    logger.info(f"All session state keys: {list(st.session_state.keys())}")
+                                    logger.info(f"Current session state for {input_key}: {st.session_state.get(input_key)}")
                                 
                                 if input_key not in st.session_state:
                                     logger.error(f"Session state key {input_key} not found")
