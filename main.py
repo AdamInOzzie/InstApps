@@ -1122,7 +1122,7 @@ def main():
                 # Get list of available sheets excluding special sheets
                 available_sheets = [
                     s for s in sheet_names
-                    if s not in ['INPUTS', 'OUTPUTS', 'USERS']
+                    if s not in ['INPUTS', 'OUTPUTS', 'USERS', 'CHARTS']
                 ]
 
                 if not available_sheets:
