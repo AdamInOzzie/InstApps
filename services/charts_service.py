@@ -62,11 +62,6 @@ class ChartsService:
                                                 
                                                 if not input_field_row.empty:
                                                     original_value = input_field_row['Value'].iloc[0]
-                                                    with col1:
-                                                        st.write("### Bar Chart Data")
-                                                        st.write(f"Computing values for input field: {chart_row['INPUT']}")
-                                                    
-                                                    # Create data collection lists
                                                     input_values = []
                                                     output1_values = []
                                                     output2_values = []
