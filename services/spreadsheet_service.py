@@ -177,20 +177,24 @@ class SpreadsheetService:
             logger.info("Making API request to update cell")
             logger.info(f"Request body: {body}")
             
-            # Execute the update
-            result = self.sheets_client.sheets_service.spreadsheets().values().update(
-                spreadsheetId=spreadsheet_id,
-                range=cell_range,
-                valueInputOption='USER_ENTERED',
-                body={'values': [[str(value)]]}
-            ).execute()
+            # Log detailed parameters
+            values_to_write = [[str(value)]]
+            logger.info("Calling write_to_spreadsheet with parameters:")
+            logger.info(f"  spreadsheet_id: {spreadsheet_id}")
+            logger.info(f"  range_name: {cell_range}")
+            logger.info(f"  values: {values_to_write}")
             
-            # Log the API response
-            logger.info(f"API Response: {result}")
+            # Execute the update using write_to_spreadsheet
+            result = self.sheets_client.write_to_spreadsheet(
+                spreadsheet_id=spreadsheet_id,
+                range_name=cell_range,
+                values=values_to_write
+            )
             
-            # Verify update success
-            updated_cells = result.get('updatedCells', 0)
-            if updated_cells > 0:
+            # Log result
+            logger.info(f"write_to_spreadsheet result: {result}")
+            
+            if result:
                 logger.info(f"Successfully updated cell {cell_range}")
                 return True
             
