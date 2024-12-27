@@ -141,10 +141,12 @@ class ChartsService:
                                                         'x': input_values,
                                                         'y': pd.to_numeric(output1_values, errors='coerce'),
                                                         'name': chart_row['OUTPUT1'],
-                                                        'type': chart_type
+                                                        'type': chart_type,
+                                                        'mode': 'lines' if chart_type == 'line' else None
                                                     }],
                                                     'layout': {
-                                                        'title': selected_chart
+                                                        'title': selected_chart,
+                                                        'barmode': 'group'
                                                     }
                                                 }
                                                 if output2_values:
@@ -155,11 +157,6 @@ class ChartsService:
                                                         'type': chart_type,
                                                         'mode': 'lines' if chart_type == 'line' else None
                                                     })
-                                                
-                                                # Set line mode for line charts
-                                                if chart_type == 'line':
-                                                    for trace in chart['data']:
-                                                        trace['mode'] = 'lines'
                                                 
                                                 st.plotly_chart(chart, height=400)
                                             else:
