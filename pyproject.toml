@@ -15,4 +15,5 @@ dependencies = [
     "watchdog",
     "streamlit-aggrid>=1.0.5",
     "stripe>=11.3.0",
+    "plotly>=5.24.1",
 ]
