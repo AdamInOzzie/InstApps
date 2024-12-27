@@ -103,6 +103,46 @@ class FormService:
             with col2:
                 st.button("Update", key="display_inputs_btn")
 
+            def create_callback(row):
+                def callback():
+                    actual_row = row
+                    logger.info("\n" + "="*80)
+                    logger.info(f"CALLBACK TRIGGERED for row {actual_row} (sheet row {actual_row})")
+                    logger.info("="*80 + "\n")
+                    try:
+                        input_key = f"input_{row}"
+                        logger.info(f"Processing callback for input {input_key} (sheet row {actual_row})")
+                        logger.info(f"All session state keys: {list(st.session_state.keys())}")
+                        logger.info(f"Current session state for {input_key}: {st.session_state.get(input_key)}")
+                        
+                        if input_key not in st.session_state:
+                            logger.error(f"Session state key {input_key} not found")
+                            return
+                            
+                        value = st.session_state[input_key]
+                        logger.info(f"Raw input value retrieved: {value} (type: {type(value)})")
+                        
+                        from services.spreadsheet_service import SpreadsheetService
+                        spreadsheet_service = SpreadsheetService(self.sheets_client)
+                        success = spreadsheet_service.update_input_cell(
+                            selected_sheet_id,
+                            str(value),
+                            row
+                        )
+                        
+                        if success:
+                            logger.info(f"✅ Successfully updated cell B{row} with value {value}")
+                            time.sleep(0.5)
+                            st.success("Updated successfully")
+                        else:
+                            logger.error(f"❌ Failed to update cell B{row}")
+                            st.error("Failed to update value")
+                            
+                    except Exception as e:
+                        logger.error(f"Error in callback: {str(e)}")
+                        st.error(f"Error updating field: {str(e)}")
+                return callback
+
             if display_choice == "Display Inputs":
                 for row_idx, (field_name, current_value) in enumerate(fields, start=2):
                     numeric_value, display_value = self.process_input_value(current_value)
