@@ -89,15 +89,20 @@ class FormService:
                 st.warning("No data found in INPUTS sheet. Please ensure the sheet has data.")
                 return False
             
-            # Create header row with two columns
+            # Create two columns for Inputs dropdown and button
             col1, col2 = st.columns([4, 1])
             
             with col1:
-                st.markdown("### 📊 Inputs", help="Configure input values")
+                st.selectbox(
+                    "Inputs",
+                    options=["Fixed Income Inputs"],
+                    key="inputs_selector",
+                    label_visibility="collapsed"
+                )
             
             with col2:
                 st.button("Display Inputs", key="display_inputs_btn")
-            
+
             for row_idx, (field_name, current_value) in enumerate(fields, start=2):
                 numeric_value, display_value = self.process_input_value(current_value)
                 
