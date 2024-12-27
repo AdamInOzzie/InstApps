@@ -128,8 +128,8 @@ class ChartsService:
                                                 st.markdown("### Bar Chart View")
                                                 chart_data = pd.DataFrame({
                                                     'Input': input_values,
-                                                    chart_row['OUTPUT1']: output1_values,
-                                                    **({chart_row['OUTPUT2']: output2_values} if output2_values else {})
+                                                    chart_row['OUTPUT1']: pd.to_numeric(output1_values, errors='coerce'),
+                                                    **({chart_row['OUTPUT2']: pd.to_numeric(output2_values, errors='coerce')} if output2_values else {})
                                                 })
                                                 st.bar_chart(
                                                     chart_data.set_index('Input'),
