@@ -28,7 +28,7 @@ class ChartsService:
                                 selected_chart = st.selectbox(
                                     "Select a chart to view",
                                     options=chart_names,
-                                    key='chart_selector'
+                                    key='charts_dropdown_selector'
                                 )
                                 
                                 # Load chart data when selected
