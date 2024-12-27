@@ -17,7 +17,6 @@ class ChartsService:
                 try:
                     charts_df = sheets_client.read_sheet_data(sheet_id, 'CHARTS')
                     if not charts_df.empty:
-                        # Try both column name variants
                         chart_column = next((col for col in ['ChartName', 'CHARTNAME'] 
                                           if col in charts_df.columns), None)
                         
@@ -25,19 +24,26 @@ class ChartsService:
                             chart_names = charts_df[chart_column].dropna().tolist()
                             if chart_names:
                                 st.markdown("### 📊 Chart Selection")
-                                selected_chart = st.selectbox(
-                                    "Select a chart to view",
-                                    options=chart_names,
-                                    key=f'charts_dropdown_selector_{sheet_id}_{chart_column}',
-                                    label_visibility="collapsed"
-                                )
                                 
+                                # Create two columns with 4:1 ratio
                                 col1, col2 = st.columns([4, 1])
+                                
+                                with col1:
+                                    selected_chart = st.selectbox(
+                                        "Select a chart to view",
+                                        options=chart_names,
+                                        key=f'chart_selector_{sheet_id}',
+                                        label_visibility="collapsed"
+                                    )
+                                
                                 with col2:
-                                    compute_button = st.button("Display Chart", key=f"display_chart_{sheet_id}")
+                                    compute_button = st.button(
+                                        "Display Chart",
+                                        key=f"compute_chart_{sheet_id}"
+                                    )
 
-                                # Load chart data when selected
-                                if selected_chart:
+                                # Only proceed if chart is selected and button is clicked
+                                if selected_chart and compute_button:
                                     chart_row = charts_df[charts_df[chart_column] == selected_chart].iloc[0]
                                     st.session_state.current_chart = {
                                         'name': selected_chart,
@@ -51,81 +57,66 @@ class ChartsService:
                                         'x_axis_low': float(chart_row['X AXIS Low']),
                                         'x_axis_high': float(chart_row['X AXIS HIGH'])
                                     }
-                                    logger.info(f"Loaded chart data: {st.session_state.current_chart}")
 
-                                    # Display chart data
-                                    if compute_button or 'display_chart_data' not in st.session_state:
-                                        st.session_state.display_chart_data = True
-                                    
-                                    if st.session_state.display_chart_data:
-                                            # Handle BAR chart computation
-                                            if chart_row['TYPE'].lower() in ['bar', 'bar chart']:
-                                                # Get current value of the input field
-                                                inputs_df = sheets_client.read_sheet_data(sheet_id, 'INPUTS')
-                                                input_field_row = inputs_df[inputs_df['Name'] == chart_row['INPUT']]
+                                    # Handle BAR chart computation
+                                    if chart_row['TYPE'].lower() in ['bar', 'bar chart']:
+                                        inputs_df = sheets_client.read_sheet_data(sheet_id, 'INPUTS')
+                                        input_field_row = inputs_df[inputs_df['Name'] == chart_row['INPUT']]
+                                        
+                                        if not input_field_row.empty:
+                                            original_value = input_field_row['Value'].iloc[0]
+                                            input_values = []
+                                            output1_values = []
+                                            output2_values = []
+                                            
+                                            current_value = float(chart_row['INPUT LOW'])
+                                            while current_value <= float(chart_row['INPUT HIGH']):
+                                                from services.spreadsheet_service import SpreadsheetService
+                                                spreadsheet_service = SpreadsheetService(sheets_client)
+                                                input_row = input_field_row.index[0] + 2
+                                                success = spreadsheet_service.update_input_cell(sheet_id, str(current_value), input_row)
                                                 
-                                                if not input_field_row.empty:
-                                                    original_value = input_field_row['Value'].iloc[0]
-                                                    input_values = []
-                                                    output1_values = []
-                                                    output2_values = []
+                                                if not success:
+                                                    logger.error(f"Failed to update input cell with value {current_value}")
+                                                    break
+                                                
+                                                import time
+                                                time.sleep(1.0)
+                                                
+                                                try:
+                                                    outputs_df = sheets_client.read_sheet_data(sheet_id, 'OUTPUTS')
+                                                    if outputs_df is None or outputs_df.empty:
+                                                        logger.error("Empty outputs dataframe")
+                                                        continue
                                                     
-                                                    # Iterate through input values
-                                                    current_value = float(chart_row['INPUT LOW'])
-                                                    while current_value <= float(chart_row['INPUT HIGH']):
-                                                        # Update input value
-                                                        from services.spreadsheet_service import SpreadsheetService
-                                                        spreadsheet_service = SpreadsheetService(sheets_client)
-                                                        input_row = input_field_row.index[0] + 2  # +2 for 1-based index and header
-                                                        success = spreadsheet_service.update_input_cell(sheet_id, str(current_value), input_row)
+                                                    output1_row = outputs_df[outputs_df['Name'] == chart_row['OUTPUT1']]
+                                                    if not output1_row.empty:
+                                                        input_values.append(current_value)
+                                                        output1_values.append(output1_row['Value'].iloc[0])
                                                         
-                                                        if not success:
-                                                            logger.error(f"Failed to update input cell with value {current_value}")
-                                                            break
-                                                        
-                                                        # Allow time for calculation
-                                                        import time
-                                                        time.sleep(1.0)
-                                                        
-                                                        try:
-                                                            # Read outputs with timeout
-                                                            outputs_df = sheets_client.read_sheet_data(sheet_id, 'OUTPUTS')
-                                                            if outputs_df is None or outputs_df.empty:
-                                                                logger.error("Empty outputs dataframe")
-                                                                continue
-                                                            
-                                                            # Process first output
-                                                            output1_row = outputs_df[outputs_df['Name'] == chart_row['OUTPUT1']]
-                                                            if not output1_row.empty:
-                                                                input_values.append(current_value)
-                                                                output1_values.append(output1_row['Value'].iloc[0])
-                                                                
-                                                                # Process second output if it exists
-                                                                if chart_row['OUTPUT2']:
-                                                                    output2_row = outputs_df[outputs_df['Name'] == chart_row['OUTPUT2']]
-                                                                    if not output2_row.empty:
-                                                                        output2_values.append(output2_row['Value'].iloc[0])
-                                                            
-                                                            # Clear memory
-                                                            del outputs_df
-                                                            
-                                                        except Exception as e:
-                                                            logger.error(f"Error processing outputs: {str(e)}")
-                                                            continue
-                                                            
-                                                        current_value += float(chart_row['INPUT STEP'])
+                                                        if chart_row['OUTPUT2']:
+                                                            output2_row = outputs_df[outputs_df['Name'] == chart_row['OUTPUT2']]
+                                                            if not output2_row.empty:
+                                                                output2_values.append(output2_row['Value'].iloc[0])
                                                     
-                                                    # Reset to original value
-                                                    spreadsheet_service.update_input_cell(sheet_id, str(original_value), input_row)
+                                                    del outputs_df
                                                     
-                                                    # Display results
-                                                    import pandas as pd
-                                                    results = {'Input': input_values, 'Output1': output1_values}
-                                                    if output2_values:
-                                                        results['Output2'] = output2_values
-                                                    df = pd.DataFrame(results)
-                                                    df.columns = [chart_row['INPUT'], chart_row['OUTPUT1']] + ([chart_row['OUTPUT2']] if output2_values else [])
-                                                    st.dataframe(df)
+                                                except Exception as e:
+                                                    logger.error(f"Error processing outputs: {str(e)}")
+                                                    continue
+                                                    
+                                                current_value += float(chart_row['INPUT STEP'])
+                                            
+                                            # Reset to original value
+                                            spreadsheet_service.update_input_cell(sheet_id, str(original_value), input_row)
+                                            
+                                            # Display results without index
+                                            results = {'Input': input_values, 'Output1': output1_values}
+                                            if output2_values:
+                                                results['Output2'] = output2_values
+                                            df = pd.DataFrame(results)
+                                            df.columns = [chart_row['INPUT'], chart_row['OUTPUT1']] + ([chart_row['OUTPUT2']] if output2_values else [])
+                                            st.dataframe(df, hide_index=True)
                                     
                 except Exception as e:
                     logger.error(f"Error loading CHARTS: {str(e)}")
