@@ -178,11 +178,12 @@ class SpreadsheetService:
             logger.info(f"Request body: {body}")
             
             # Execute the update
-            result = self.sheets_client.write_to_spreadsheet(
-                spreadsheet_id=spreadsheet_id,
-                range_name=cell_range,
-                values=[[str(value)]]
-            )
+            result = self.sheets_client.sheets_service.spreadsheets().values().update(
+                spreadsheetId=spreadsheet_id,
+                range=cell_range,
+                valueInputOption='USER_ENTERED',
+                body={'values': [[str(value)]]}
+            ).execute()
             
             # Log the API response
             logger.info(f"API Response: {result}")
