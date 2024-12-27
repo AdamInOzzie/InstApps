@@ -125,7 +125,6 @@ class ChartsService:
                                                 table_placeholder.dataframe(df, hide_index=True)
                                                 
                                                 # Create bar chart
-                                                st.markdown("### Bar Chart View")
                                                 chart_data = pd.DataFrame({
                                                     'Input': input_values,
                                                     chart_row['OUTPUT1']: pd.to_numeric(output1_values, errors='coerce'),
