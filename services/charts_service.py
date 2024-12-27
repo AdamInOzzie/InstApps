@@ -36,13 +36,16 @@ class ChartsService:
                                     )
                                 
                                 with col2:
-                                    compute_button = st.button(
-                                        "Display Chart",
-                                        key=f"compute_chart_{sheet_id}"
+                                    display_option = st.selectbox(
+                                        "Display Options",
+                                        options=["Hide All", "Display Table", "Display Chart", "Display Chart and Table"],
+                                        index=0,
+                                        key=f"display_option_{sheet_id}",
+                                        label_visibility="collapsed"
                                     )
 
-                                # Only proceed if chart is selected and button is clicked
-                                if selected_chart and compute_button:
+                                # Only proceed if chart is selected and display option is not Hide All
+                                if selected_chart and display_option != "Hide All":
                                     chart_row = charts_df[charts_df[chart_column] == selected_chart].iloc[0]
                                     st.session_state.current_chart = {
                                         'name': selected_chart,
