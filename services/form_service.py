@@ -110,7 +110,10 @@ class FormService:
                     logger.info(f"CALLBACK TRIGGERED for row {actual_row} (sheet row {actual_row})")
                     logger.info("="*80 + "\n")
                     try:
-                        input_key = f"input_{row}"
+                        input_key = f"input_numeric_{actual_row}"
+                        if input_key not in st.session_state:
+                            input_key = f"input_text_{actual_row}"
+                            
                         logger.info(f"Processing callback for input {input_key} (sheet row {actual_row})")
                         logger.info(f"All session state keys: {list(st.session_state.keys())}")
                         logger.info(f"Current session state for {input_key}: {st.session_state.get(input_key)}")
@@ -150,8 +153,6 @@ class FormService:
                     if numeric_value is not None:
                         step_size = 0.01 if isinstance(display_value, str) and '%' in display_value or numeric_value < 10 else 1.0
                         input_key = f"input_numeric_{row_idx}"
-                        callback_fn = create_callback(row_idx)
-                        st.session_state[f"callback_{input_key}"] = callback_fn
                         
                         st.number_input(
                             field_name,
@@ -159,19 +160,17 @@ class FormService:
                             format="%.3f" if numeric_value < 10 else "%.2f",
                             step=step_size,
                             key=input_key,
-                            on_change=st.session_state[f"callback_{input_key}"],
+                            on_change=create_callback(row_idx),
                             help=f"Column {row_idx}"
                         )
                     else:
                         input_key = f"input_text_{row_idx}"
-                        callback_fn = create_callback(row_idx)
-                        st.session_state[f"callback_{input_key}"] = callback_fn
                         
                         st.text_input(
                             field_name,
                             value=str(current_value),
                             key=input_key,
-                            on_change=st.session_state[f"callback_{input_key}"]
+                            on_change=create_callback(row_idx)
                         )
                         def callback():
                             actual_row = row
