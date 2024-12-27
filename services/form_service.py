@@ -122,9 +122,9 @@ class FormService:
                             def callback():
                                 actual_row = row
                                 logger.info("\n" + "="*80)
-                            logger.info(f"CALLBACK TRIGGERED for row {actual_row} (sheet row {actual_row})")
-                            logger.info("="*80 + "\n")
-                            try:
+                                logger.info(f"CALLBACK TRIGGERED for row {actual_row} (sheet row {actual_row})")
+                                logger.info("="*80 + "\n")
+                                try:
                                 input_key = f"input_{row}"
                                 logger.info(f"Processing callback for input {input_key} (sheet row {actual_row})")
                                 logger.info(f"All session state keys: {list(st.session_state.keys())}")
