@@ -25,11 +25,13 @@ class ChartsService:
                             chart_names = charts_df[chart_column].dropna().tolist()
                             if chart_names:
                                 st.markdown("### 📊 Chart Selection")
-                                selected_chart = st.selectbox(
-                                    "Select a chart to view",
-                                    options=chart_names,
-                                    key=f'charts_dropdown_selector_{sheet_id}_{chart_column}'
-                                )
+                                col1, col2 = st.columns([3, 1])
+                                with col1:
+                                    selected_chart = st.selectbox(
+                                        "Select a chart to view",
+                                        options=chart_names,
+                                        key=f'charts_dropdown_selector_{sheet_id}_{chart_column}'
+                                    )
                                 
                                 # Load chart data when selected
                                 if selected_chart:
@@ -48,8 +50,10 @@ class ChartsService:
                                     }
                                     logger.info(f"Loaded chart data: {st.session_state.current_chart}")
 
-                                    # Add compute button for chart
-                                    if st.button("Compute Chart"):
+                                    # Add display button for chart
+                                    with col2:
+                                        st.write("")  # Add some spacing
+                                        if st.button("Display Chart"):
                                         # Handle BAR chart computation
                                         if chart_row['TYPE'].lower() in ['bar', 'bar chart']:
                                             # Get current value of the input field
