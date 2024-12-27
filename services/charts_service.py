@@ -75,7 +75,7 @@ class ChartsService:
                                                 
                                                 # Allow time for calculation
                                                 import time
-                                                time.sleep(0.5)
+                                                time.sleep(1.0)
                                                 
                                                 # Read outputs
                                                 outputs_df = sheets_client.read_sheet_data(sheet_id, 'OUTPUTS')
