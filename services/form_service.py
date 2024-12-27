@@ -101,34 +101,25 @@ class FormService:
                 )
             
             with col2:
-                if 'show_inputs' not in st.session_state:
-                    st.session_state.show_inputs = False
-                    
-                if st.button(
-                    "Hide Inputs" if st.session_state.show_inputs else "Display Inputs",
-                    key="display_inputs_btn"
-                ):
-                    st.session_state.show_inputs = not st.session_state.show_inputs
-                    st.rerun()
+                st.button("Display Inputs", key="display_inputs_btn")
 
-            if st.session_state.show_inputs:
-                for row_idx, (field_name, current_value) in enumerate(fields, start=2):
-                    numeric_value, display_value = self.process_input_value(current_value)
+            for row_idx, (field_name, current_value) in enumerate(fields, start=2):
+                numeric_value, display_value = self.process_input_value(current_value)
+                
+                if numeric_value is not None:
+                    step_size = 0.01 if isinstance(display_value, str) and '%' in display_value or numeric_value < 10 else 1.0
                     
-                    if numeric_value is not None:
-                        step_size = 0.01 if isinstance(display_value, str) and '%' in display_value or numeric_value < 10 else 1.0
-                        
-                        def create_callback(row):
-                            def callback():
-                                actual_row = row
-                                logger.info("\n" + "="*80)
-                                logger.info(f"CALLBACK TRIGGERED for row {actual_row} (sheet row {actual_row})")
-                                logger.info("="*80 + "\n")
-                                try:
-                                    input_key = f"input_{row}"
-                                    logger.info(f"Processing callback for input {input_key} (sheet row {actual_row})")
-                                    logger.info(f"All session state keys: {list(st.session_state.keys())}")
-                                    logger.info(f"Current session state for {input_key}: {st.session_state.get(input_key)}")
+                    def create_callback(row):
+                        def callback():
+                            actual_row = row
+                            logger.info("\n" + "="*80)
+                            logger.info(f"CALLBACK TRIGGERED for row {actual_row} (sheet row {actual_row})")
+                            logger.info("="*80 + "\n")
+                            try:
+                                input_key = f"input_{row}"
+                                logger.info(f"Processing callback for input {input_key} (sheet row {actual_row})")
+                                logger.info(f"All session state keys: {list(st.session_state.keys())}")
+                                logger.info(f"Current session state for {input_key}: {st.session_state.get(input_key)}")
                                 
                                 if input_key not in st.session_state:
                                     logger.error(f"Session state key {input_key} not found")
