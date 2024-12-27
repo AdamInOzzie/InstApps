@@ -110,13 +110,16 @@ class ChartsService:
                                             # Reset to original value
                                             spreadsheet_service.update_input_cell(sheet_id, str(original_value), input_row)
                                             
-                                            # Display results without index
+                                            # Create placeholder for table
+                                            table_placeholder = st.empty()
+                                            
+                                            # Initial display
                                             results = {'Input': input_values, 'Output1': output1_values}
                                             if output2_values:
                                                 results['Output2'] = output2_values
                                             df = pd.DataFrame(results)
                                             df.columns = [chart_row['INPUT'], chart_row['OUTPUT1']] + ([chart_row['OUTPUT2']] if output2_values else [])
-                                            st.dataframe(df, hide_index=True)
+                                            table_placeholder.dataframe(df, hide_index=True)
                                     
                 except Exception as e:
                     logger.error(f"Error loading CHARTS: {str(e)}")
