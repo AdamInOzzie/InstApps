@@ -1,4 +1,3 @@
-
 """Service for handling dynamic form operations."""
 import logging
 import time
