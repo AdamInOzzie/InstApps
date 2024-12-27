@@ -43,7 +43,7 @@ class ChartsService:
                                         key=f"display_option_{sheet_id}",
                                         label_visibility="collapsed"
                                     )
-
+                                
                                 # Only proceed if chart is selected and display option is not Hide All
                                 if selected_chart and display_option != "Hide All":
                                     chart_row = charts_df[charts_df[chart_column] == selected_chart].iloc[0]
@@ -59,18 +59,18 @@ class ChartsService:
                                         'x_axis_low': float(chart_row['X AXIS Low']),
                                         'x_axis_high': float(chart_row['X AXIS HIGH'])
                                     }
-
+                                    
                                     # Handle BAR chart computation
-                                    if chart_row['TYPE'].lower() in ['bar', 'bar chart']:
+                                    if chart_row['TYPE'].lower() in ['bar', 'bar chart', 'line']:
                                         inputs_df = sheets_client.read_sheet_data(sheet_id, 'INPUTS')
                                         input_field_row = inputs_df[inputs_df['Name'] == chart_row['INPUT']]
-                                        
+
                                         if not input_field_row.empty:
                                             original_value = input_field_row['Value'].iloc[0]
                                             input_values = []
                                             output1_values = []
                                             output2_values = []
-                                            
+
                                             current_value = float(chart_row['INPUT LOW'])
                                             while current_value <= float(chart_row['INPUT HIGH']):
                                                 from services.spreadsheet_service import SpreadsheetService
@@ -106,7 +106,7 @@ class ChartsService:
                                                 except Exception as e:
                                                     logger.error(f"Error processing outputs: {str(e)}")
                                                     continue
-                                                    
+                                                
                                                 current_value += float(chart_row['INPUT STEP'])
                                             
                                             # Reset to original value
@@ -160,6 +160,9 @@ class ChartsService:
                                                 # For non-bar charts, just show table
                                                 table_placeholder.dataframe(df, hide_index=True)
                                     
+                                else:
+                                    pass
+
                 except Exception as e:
                     logger.error(f"Error loading CHARTS: {str(e)}")
                     
