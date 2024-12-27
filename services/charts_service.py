@@ -16,14 +16,20 @@ class ChartsService:
             if 'CHARTS' in sheet_names:
                 try:
                     charts_df = sheets_client.read_sheet_data(sheet_id, 'CHARTS')
-                    if not charts_df.empty and 'ChartName' in charts_df.columns:
-                        chart_names = charts_df['ChartName'].dropna().tolist()
-                        if chart_names:
-                            selected_chart = st.selectbox(
-                                "Select Chart",
-                                options=chart_names,
-                                key='chart_selector'
-                            )
+                    if not charts_df.empty:
+                        # Try both column name variants
+                        chart_column = next((col for col in ['ChartName', 'CHARTNAME'] 
+                                          if col in charts_df.columns), None)
+                        
+                        if chart_column:
+                            chart_names = charts_df[chart_column].dropna().tolist()
+                            if chart_names:
+                                st.markdown("### 📊 Chart Selection")
+                                selected_chart = st.selectbox(
+                                    "Select a chart to view",
+                                    options=chart_names,
+                                    key='chart_selector'
+                                )
                 except Exception as e:
                     logger.error(f"Error loading CHARTS: {str(e)}")
                     
