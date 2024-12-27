@@ -1,4 +1,3 @@
-
 """Service for handling CHARTS functionality."""
 import logging
 import streamlit as st
@@ -71,8 +70,12 @@ class ChartsService:
                                                 from services.spreadsheet_service import SpreadsheetService
                                                 spreadsheet_service = SpreadsheetService(sheets_client)
                                                 input_row = input_field_row.index[0] + 2  # +2 for 1-based index and header
-                                                spreadsheet_service.update_input_cell(sheet_id, str(current_value), input_row)
+                                                success = spreadsheet_service.update_input_cell(sheet_id, str(current_value), input_row)
                                                 
+                                                if not success:
+                                                    logger.error(f"Failed to update input cell with value {current_value}")
+                                                    break #Exit loop if update fails
+
                                                 # Allow time for calculation
                                                 import time
                                                 time.sleep(1.0)

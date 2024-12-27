@@ -184,12 +184,17 @@ class SpreadsheetService:
             logger.info(f"  range_name: {cell_range}")
             logger.info(f"  values: {values_to_write}")
             
-            # Execute the update using write_to_spreadsheet
-            result = self.sheets_client.write_to_spreadsheet(
-                spreadsheet_id=spreadsheet_id,
-                range_name=cell_range,
-                values=values_to_write
-            )
+            # Execute the update using sheets_client
+            result = self.sheets_client.sheets_service.spreadsheets().values().update(
+                spreadsheetId=spreadsheet_id,
+                range=cell_range,
+                valueInputOption='USER_ENTERED',
+                body={'values': values_to_write}
+            ).execute()
+            
+            if 'updatedCells' in result and result['updatedCells'] > 0:
+                logger.info(f"Successfully updated {result['updatedCells']} cells")
+                return True
             
             # Log result
             logger.info(f"write_to_spreadsheet result: {result}")
