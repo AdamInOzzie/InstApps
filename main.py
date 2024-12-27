@@ -36,7 +36,7 @@ import json
 import random  # Added for jitter calculation
 from utils import GoogleSheetsClient
 from services import (SpreadsheetService, FormService, UIService,
-                      FormBuilderService, CopyService, PaymentService)
+                      FormBuilderService, CopyService, PaymentService, ChartsService)
 
 # Configure logging
 logging.basicConfig(
@@ -1010,6 +1010,10 @@ def main():
             # Check for special sheets
             has_inputs = 'INPUTS' in sheet_names
             has_outputs = 'OUTPUTS' in sheet_names
+
+            # Display Charts dropdown if CHARTS sheet exists
+            if 'CHARTS' in sheet_names:
+                ChartsService.handle_charts(sheet_names, selected_sheet['id'], st.session_state.spreadsheet_service)
 
             # Display INPUTS form if it exists
             if has_inputs:
