@@ -47,8 +47,10 @@ class ChartsService:
                                     }
                                     logger.info(f"Loaded chart data: {st.session_state.current_chart}")
 
-                                    # Handle BAR chart computation
-                                    if chart_row['TYPE'].lower() in ['bar', 'bar chart']:
+                                    # Add compute button for chart
+                                    if st.button("Compute Chart"):
+                                        # Handle BAR chart computation
+                                        if chart_row['TYPE'].lower() in ['bar', 'bar chart']:
                                         # Get current value of the input field
                                         inputs_df = sheets_client.read_sheet_data(sheet_id, 'INPUTS')
                                         input_field_row = inputs_df[inputs_df['Name'] == chart_row['INPUT']]
