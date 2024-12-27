@@ -138,7 +138,10 @@ class ChartsService:
                                                         'y': pd.to_numeric(output1_values, errors='coerce'),
                                                         'name': chart_row['OUTPUT1'],
                                                         'type': 'bar'
-                                                    }]
+                                                    }],
+                                                    'layout': {
+                                                        'title': selected_chart
+                                                    }
                                                 }
                                                 if output2_values:
                                                     chart['data'].append({
