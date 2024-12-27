@@ -164,7 +164,7 @@ class SpreadsheetService:
             logger.info(f"  Range: {cell_range}")
             logger.info(f"  Value: {value}")
             
-            if not self.sheets_client or not self.sheets_client.sheets_service:
+            if not self.sheets_client:
                 logger.error("Sheets client not properly initialized")
                 return False
             
@@ -177,7 +177,7 @@ class SpreadsheetService:
             logger.info("Making API request to update cell")
             logger.info(f"Request body: {body}")
             
-            # Execute the update
+            # Execute the update using sheets_client
             result = self.sheets_client.sheets_service.spreadsheets().values().update(
                 spreadsheetId=spreadsheet_id,
                 range=cell_range,
