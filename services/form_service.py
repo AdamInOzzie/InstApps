@@ -116,9 +116,9 @@ class FormService:
                     numeric_value, display_value = self.process_input_value(current_value)
                     
                     if numeric_value is not None:
-                    step_size = 0.01 if isinstance(display_value, str) and '%' in display_value or numeric_value < 10 else 1.0
-                    
-                    def create_callback(row):
+                        step_size = 0.01 if isinstance(display_value, str) and '%' in display_value or numeric_value < 10 else 1.0
+                        
+                        def create_callback(row):
                         def callback():
                             actual_row = row
                             logger.info("\n" + "="*80)
