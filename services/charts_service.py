@@ -38,7 +38,7 @@ class ChartsService:
                                 with col2:
                                     compute_button = st.button(
                                         "Display Chart",
-                                        key=f"compute_chart_{sheet_id}"
+                                        key=f"compute_chart_{sheet_id}_{id(selected_chart)}"
                                     )
 
                                 # Only proceed if chart is selected and button is clicked
