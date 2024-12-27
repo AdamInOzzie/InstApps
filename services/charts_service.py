@@ -25,15 +25,17 @@ class ChartsService:
                             chart_names = charts_df[chart_column].dropna().tolist()
                             if chart_names:
                                 st.markdown("### 📊 Chart Selection")
-                                col1, col2 = st.columns([4, 1])
-                                with col1:
-                                    selected_chart = st.selectbox(
-                                        "Select a chart to view",
-                                        options=chart_names,
-                                        key=f'charts_dropdown_selector_{sheet_id}_{chart_column}',
-                                        label_visibility="collapsed"
-                                    )
+                                selected_chart = st.selectbox(
+                                    "Select a chart to view",
+                                    options=chart_names,
+                                    key=f'charts_dropdown_selector_{sheet_id}_{chart_column}',
+                                    label_visibility="collapsed"
+                                )
                                 
+                                col1, col2 = st.columns([4, 1])
+                                with col2:
+                                    compute_button = st.button("Display Chart", key=f"display_chart_{sheet_id}")
+
                                 # Load chart data when selected
                                 if selected_chart:
                                     chart_row = charts_df[charts_df[chart_column] == selected_chart].iloc[0]
@@ -51,9 +53,11 @@ class ChartsService:
                                     }
                                     logger.info(f"Loaded chart data: {st.session_state.current_chart}")
 
-                                    # Add display button for chart
-                                    with col2:
-                                        if st.button("Display Chart", key=f"display_chart_{sheet_id}"):
+                                    # Display chart data
+                                    if compute_button or 'display_chart_data' not in st.session_state:
+                                        st.session_state.display_chart_data = True
+                                    
+                                    if st.session_state.display_chart_data:
                                             # Handle BAR chart computation
                                             if chart_row['TYPE'].lower() in ['bar', 'bar chart']:
                                                 # Get current value of the input field
