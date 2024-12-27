@@ -101,9 +101,18 @@ class FormService:
                 )
             
             with col2:
-                st.button("Display Inputs", key="display_inputs_btn")
+                if 'show_inputs' not in st.session_state:
+                    st.session_state.show_inputs = False
+                    
+                if st.button(
+                    "Hide Inputs" if st.session_state.show_inputs else "Display Inputs",
+                    key="display_inputs_btn"
+                ):
+                    st.session_state.show_inputs = not st.session_state.show_inputs
+                    st.rerun()
 
-            for row_idx, (field_name, current_value) in enumerate(fields, start=2):
+            if st.session_state.show_inputs:
+                for row_idx, (field_name, current_value) in enumerate(fields, start=2):
                 numeric_value, display_value = self.process_input_value(current_value)
                 
                 if numeric_value is not None:

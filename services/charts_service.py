@@ -37,10 +37,20 @@ class ChartsService:
                                     )
                                 
                                 with col2:
+                                    if f'show_chart_{sheet_id}' not in st.session_state:
+                                        st.session_state[f'show_chart_{sheet_id}'] = False
+                                        
                                     compute_button = st.button(
-                                        "Display Chart",
+                                        "Hide Chart" if st.session_state[f'show_chart_{sheet_id}'] else "Display Chart",
                                         key=f"compute_chart_{sheet_id}"
                                     )
+                                    
+                                    if compute_button:
+                                        st.session_state[f'show_chart_{sheet_id}'] = not st.session_state[f'show_chart_{sheet_id}']
+                                        st.rerun()
+                                        
+                                if not st.session_state[f'show_chart_{sheet_id}']:
+                                    continue
 
                                 # Only proceed if chart is selected and button is clicked
                                 if selected_chart and compute_button:
