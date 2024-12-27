@@ -89,18 +89,14 @@ class FormService:
                 st.warning("No data found in INPUTS sheet. Please ensure the sheet has data.")
                 return False
             
-            # Add a visual indicator for inputs section
-            st.markdown("""
-                <div style="
-                    background-color: #f0f8ff;
-                    padding: 0.5rem 0.8rem;
-                    border-radius: 8px;
-                    border-left: 5px solid #1E88E5;
-                    margin-bottom: 0.6rem;
-                ">
-                    <h3 style="margin: 0; color: #1E88E5; font-size: 1rem;">⚙️ Inputs</h3>
-                </div>
-            """, unsafe_allow_html=True)
+            # Create header row with two columns
+            col1, col2 = st.columns([4, 1])
+            
+            with col1:
+                st.markdown("### 📊 Inputs", help="Configure input values")
+            
+            with col2:
+                st.button("Display Inputs", key="display_inputs_btn")
             
             for row_idx, (field_name, current_value) in enumerate(fields, start=2):
                 numeric_value, display_value = self.process_input_value(current_value)
