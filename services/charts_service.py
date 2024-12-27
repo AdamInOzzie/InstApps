@@ -122,11 +122,11 @@ class ChartsService:
                                             df = pd.DataFrame(results)
                                             df.columns = [chart_row['INPUT'], chart_row['OUTPUT1']] + ([chart_row['OUTPUT2']] if output2_values else [])
                                             
-                                            # Display both table and chart for BAR type
-                                            if chart_row['TYPE'].lower() in ['bar', 'bar chart']:
-                                                # Show table above chart
+                                            # Handle different display options
+                                            if display_option in ["Display Table", "Display Chart and Table"]:
                                                 table_placeholder.dataframe(df, hide_index=True)
-                                                
+                                            
+                                            if display_option in ["Display Chart", "Display Chart and Table"]:
                                                 # Create bar chart
                                                 chart_data = pd.DataFrame({
                                                     'Input': input_values,
