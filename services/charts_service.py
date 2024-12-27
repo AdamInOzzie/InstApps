@@ -60,12 +60,17 @@ class ChartsService:
                                         'x_axis_high': float(chart_row['X AXIS HIGH'])
                                     }
                                     
-                                    # Handle BAR chart computation
-                                    if chart_row['TYPE'].lower() in ['bar', 'bar chart', 'line']:
+                                    # Handle chart computation for both BAR and LINE charts
+                                    chart_type_lower = chart_row['TYPE'].lower().strip()
+                                    logger.info(f"Processing chart of type: {chart_type_lower}")
+
+                                    if chart_type_lower in ['bar', 'bar chart', 'line', 'line chart']:
+                                        logger.info(f"Starting data processing for {chart_type_lower} chart")
                                         inputs_df = sheets_client.read_sheet_data(sheet_id, 'INPUTS')
                                         input_field_row = inputs_df[inputs_df['Name'] == chart_row['INPUT']]
 
                                         if not input_field_row.empty:
+                                            logger.info(f"Found input field: {chart_row['INPUT']}")
                                             original_value = input_field_row['Value'].iloc[0]
                                             input_values = []
                                             output1_values = []
@@ -77,56 +82,59 @@ class ChartsService:
                                                 spreadsheet_service = SpreadsheetService(sheets_client)
                                                 input_row = input_field_row.index[0] + 2
                                                 success = spreadsheet_service.update_input_cell(sheet_id, str(current_value), input_row)
-                                                
+
                                                 if not success:
                                                     logger.error(f"Failed to update input cell with value {current_value}")
                                                     break
-                                                
+
                                                 import time
                                                 time.sleep(1.0)
-                                                
+
                                                 try:
                                                     outputs_df = sheets_client.read_sheet_data(sheet_id, 'OUTPUTS')
                                                     if outputs_df is None or outputs_df.empty:
                                                         logger.error("Empty outputs dataframe")
                                                         continue
-                                                    
+
                                                     output1_row = outputs_df[outputs_df['Name'] == chart_row['OUTPUT1']]
                                                     if not output1_row.empty:
                                                         input_values.append(current_value)
                                                         output1_values.append(output1_row['Value'].iloc[0])
-                                                        
+                                                        logger.info(f"Added data point: input={current_value}, output1={output1_row['Value'].iloc[0]}")
+
                                                         if chart_row['OUTPUT2']:
                                                             output2_row = outputs_df[outputs_df['Name'] == chart_row['OUTPUT2']]
                                                             if not output2_row.empty:
                                                                 output2_values.append(output2_row['Value'].iloc[0])
-                                                    
+                                                                logger.info(f"Added output2={output2_row['Value'].iloc[0]}")
+
                                                     del outputs_df
-                                                    
+
                                                 except Exception as e:
                                                     logger.error(f"Error processing outputs: {str(e)}")
                                                     continue
-                                                
+
                                                 current_value += float(chart_row['INPUT STEP'])
-                                            
+
                                             # Reset to original value
                                             spreadsheet_service.update_input_cell(sheet_id, str(original_value), input_row)
-                                            
+
                                             # Create placeholder for table
                                             table_placeholder = st.empty()
-                                            
+
                                             # Initial display
                                             results = {'Input': input_values, 'Output1': output1_values}
                                             if output2_values:
                                                 results['Output2'] = output2_values
                                             df = pd.DataFrame(results)
                                             df.columns = [chart_row['INPUT'], chart_row['OUTPUT1']] + ([chart_row['OUTPUT2']] if output2_values else [])
-                                            
+
                                             # Handle different display options
                                             if display_option in ["Display Table", "Display Chart and Table"]:
                                                 table_placeholder.dataframe(df, hide_index=True)
-                                            
+
                                             if display_option in ["Display Chart", "Display Chart and Table"]:
+                                                logger.info(f"Creating {chart_type_lower} chart")
                                                 # Create chart data
                                                 chart_data = pd.DataFrame({
                                                     'Input': input_values,
@@ -134,8 +142,9 @@ class ChartsService:
                                                     **({chart_row['OUTPUT2']: pd.to_numeric(output2_values, errors='coerce')} if output2_values else {})
                                                 })
                                                 # Set chart type based on TYPE column
-                                                chart_type = 'line' if chart_row['TYPE'].lower() == 'line' else 'bar'
-                                                
+                                                chart_type = 'line' if chart_type_lower in ['line', 'line chart'] else 'bar'
+                                                logger.info(f"Using chart type: {chart_type}")
+
                                                 # Create chart
                                                 chart = {
                                                     'data': [{
@@ -157,12 +166,14 @@ class ChartsService:
                                                     })
                                                 st.plotly_chart(chart, height=400)
                                             else:
-                                                # For non-bar charts, just show table
+                                                # For non-chart display options, show table
                                                 table_placeholder.dataframe(df, hide_index=True)
-                                    
+                                    else:
+                                        logger.warning(f"Unsupported chart type: {chart_type_lower}")
+
                                 else:
                                     pass
-
+                                
                 except Exception as e:
                     logger.error(f"Error loading CHARTS: {str(e)}")
                     
