@@ -1,4 +1,3 @@
-
 """Service for handling CHARTS functionality."""
 import logging
 import streamlit as st
@@ -119,7 +118,26 @@ class ChartsService:
                                                 results['Output2'] = output2_values
                                             df = pd.DataFrame(results)
                                             df.columns = [chart_row['INPUT'], chart_row['OUTPUT1']] + ([chart_row['OUTPUT2']] if output2_values else [])
-                                            table_placeholder.dataframe(df, hide_index=True)
+                                            
+                                            # Display both table and chart for BAR type
+                                            if chart_row['TYPE'].lower() in ['bar', 'bar chart']:
+                                                # Show table above chart
+                                                table_placeholder.dataframe(df, hide_index=True)
+                                                
+                                                # Create bar chart
+                                                st.markdown("### Bar Chart View")
+                                                chart_data = pd.DataFrame({
+                                                    'Input': input_values,
+                                                    chart_row['OUTPUT1']: output1_values,
+                                                    **({chart_row['OUTPUT2']: output2_values} if output2_values else {})
+                                                })
+                                                st.bar_chart(
+                                                    chart_data.set_index('Input'),
+                                                    height=400
+                                                )
+                                            else:
+                                                # For non-bar charts, just show table
+                                                table_placeholder.dataframe(df, hide_index=True)
                                     
                 except Exception as e:
                     logger.error(f"Error loading CHARTS: {str(e)}")
