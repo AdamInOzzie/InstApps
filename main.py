@@ -1030,6 +1030,10 @@ def main():
             has_volunteers = 'Volunteers' in sheet_names
             logger.info(f"Has Volunteers sheet: {has_volunteers}")
 
+            # Display Charts dropdown if CHARTS sheet exists
+            if 'CHARTS' in sheet_names:
+                ChartsService.handle_charts(sheet_names, selected_sheet['id'], st.session_state.spreadsheet_service)
+
             # Display OUTPUTS data if it exists
             if has_outputs:
                 logger.info("Displaying OUTPUTS sheet data")
